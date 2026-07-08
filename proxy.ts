@@ -1,0 +1,18 @@
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { getSessionCookie } from "better-auth/cookies";
+
+// UX-only redirect for a fast no-JS bounce. This is NOT the security boundary —
+// every protected Server Component/Action still validates the real session
+// (see lib/auth-session.ts) since proxy/middleware can be bypassed (CVE-2025-29927).
+export function proxy(request: NextRequest) {
+  const sessionCookie = getSessionCookie(request);
+  if (!sessionCookie) {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ["/collection/:path*", "/wrapped/:path*"],
+};
