@@ -121,34 +121,35 @@ export function AddReleaseForm() {
 
   if (!showForm) {
     return (
-      <div className="flex max-w-2xl flex-col gap-6">
-        <div className="relative">
-          <input
-            value={query}
-            onChange={(e) => handleQueryChange(e.target.value)}
-            placeholder="Search Discogs by title or artist..."
-            className="w-full rounded border border-zinc-300 px-3 py-2"
-            autoFocus
-          />
-          {isPending && (
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-zinc-400">
-              Searching…
-            </span>
-          )}
-        </div>
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        <button
-          type="button"
-          onClick={() => {
-            setPrefill({});
-            setShowForm(true);
-          }}
-          className="self-start text-sm text-zinc-600 underline"
-        >
-          Can&apos;t find it? Enter manually
-        </button>
-        <ul className="flex flex-col gap-2">
-          {results.map((r) => {
+      <div className="flex flex-col items-center gap-6">
+        <div className="flex w-full max-w-2xl flex-col gap-6">
+          <div className="relative">
+            <input
+              value={query}
+              onChange={(e) => handleQueryChange(e.target.value)}
+              placeholder="Search Discogs by title or artist..."
+              className="w-full rounded border border-zinc-300 px-3 py-2 text-center"
+              autoFocus
+            />
+            {isPending && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-zinc-400">
+                Searching…
+              </span>
+            )}
+          </div>
+          {error && <p className="text-center text-sm text-red-600">{error}</p>}
+          <button
+            type="button"
+            onClick={() => {
+              setPrefill({});
+              setShowForm(true);
+            }}
+            className="self-center text-sm text-zinc-600 underline"
+          >
+            Can&apos;t find it? Enter manually
+          </button>
+          <ul className="flex flex-col gap-2">
+            {results.map((r) => {
             const image = r.cover_image || r.thumb;
             return (
               <li key={r.id}>
@@ -172,8 +173,9 @@ export function AddReleaseForm() {
                 </button>
               </li>
             );
-          })}
-        </ul>
+            })}
+          </ul>
+        </div>
       </div>
     );
   }
