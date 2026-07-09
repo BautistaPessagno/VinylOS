@@ -10,6 +10,10 @@ import type {
   ReleaseFormOutput,
   CollectionItemFormOutput,
 } from "@/lib/validation/collectionItem";
+import {
+  buildCollectionFilterOptions,
+  type CollectionFilterOptions,
+} from "./collectionFilterOptions";
 
 async function findOrCreateArtistByName(name: string): Promise<number> {
   const [existing] = await db
@@ -191,6 +195,22 @@ export type CollectionFilters = {
   year?: number;
   label?: string;
 };
+
+export async function listCollectionFilterOptions(
+  userId: string,
+): Promise<CollectionFilterOptions> {
+  const rows = await db
+    .select({
+      genres: releases.genres,
+      year: releases.year,
+      labelName: releases.labelName,
+    })
+    .from(collectionItems)
+    .innerJoin(releases, eq(collectionItems.releaseId, releases.id))
+    .where(eq(collectionItems.userId, userId));
+
+  return buildCollectionFilterOptions(rows);
+}
 
 export async function listCollectionItems(
   userId: string,

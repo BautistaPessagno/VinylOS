@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { requireSession } from "@/lib/auth-session";
-import { listCollectionItems } from "@/lib/services/collectionService";
+import {
+  listCollectionFilterOptions,
+  listCollectionItems,
+} from "@/lib/services/collectionService";
+import { CollectionFiltersForm } from "./CollectionFiltersForm";
 import { removeItemAction } from "./actions";
 
 export default async function CollectionPage({
@@ -10,12 +14,21 @@ export default async function CollectionPage({
 }) {
   const session = await requireSession();
   const { genre, year, label } = await searchParams;
+  const selectedFilters = {
+    genre: genre?.trim() || undefined,
+    year: year?.trim() || undefined,
+    label: label?.trim() || undefined,
+  };
+  const selectedYear = selectedFilters.year ? Number(selectedFilters.year) : undefined;
 
-  const items = await listCollectionItems(session.user.id, {
-    genre,
-    year: year ? Number(year) : undefined,
-    label,
-  });
+  const [items, filterOptions] = await Promise.all([
+    listCollectionItems(session.user.id, {
+      genre: selectedFilters.genre,
+      year: Number.isFinite(selectedYear) ? selectedYear : undefined,
+      label: selectedFilters.label,
+    }),
+    listCollectionFilterOptions(session.user.id),
+  ]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -29,35 +42,7 @@ export default async function CollectionPage({
         </Link>
       </div>
 
-      <form className="flex flex-wrap gap-2 text-sm" action="/collection">
-        <input
-          name="genre"
-          defaultValue={genre}
-          placeholder="Genre"
-          className="rounded border border-zinc-300 px-3 py-1.5"
-        />
-        <input
-          name="year"
-          defaultValue={year}
-          placeholder="Year"
-          type="number"
-          className="rounded border border-zinc-300 px-3 py-1.5"
-        />
-        <input
-          name="label"
-          defaultValue={label}
-          placeholder="Label"
-          className="rounded border border-zinc-300 px-3 py-1.5"
-        />
-        <button type="submit" className="rounded border border-zinc-300 px-3 py-1.5">
-          Filter
-        </button>
-        {(genre || year || label) && (
-          <Link href="/collection" className="px-3 py-1.5 text-zinc-500 underline">
-            Clear
-          </Link>
-        )}
-      </form>
+      <CollectionFiltersForm selected={selectedFilters} options={filterOptions} />
 
       {items.length === 0 ? (
         <p className="text-zinc-500">
