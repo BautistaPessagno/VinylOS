@@ -7,6 +7,7 @@ import {
   getPublicUserProfile,
 } from "@/lib/services/friendService";
 import { followUserAction, unfollowUserAction } from "../../friends/actions";
+import { addReleaseToWishlistAction } from "../../wishlist/actions";
 
 function FollowForm({
   userId,
@@ -120,6 +121,15 @@ export default async function UserProfilePage({
                     </span>
                   ))}
                 </div>
+              )}
+              {!followStatus.isSelf && (
+                <form action={addReleaseToWishlistAction} className="mt-auto text-sm">
+                  <input type="hidden" name="releaseId" value={item.releaseId} />
+                  <input type="hidden" name="returnTo" value={returnTo} />
+                  <button type="submit" className="underline">
+                    Wishlist
+                  </button>
+                </form>
               )}
             </div>
           ))}

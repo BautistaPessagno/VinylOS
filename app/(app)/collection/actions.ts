@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth-session";
 import * as discogs from "@/lib/discogs/client";
-import type { DiscogsRelease } from "@/lib/discogs/types";
+import { releaseInputFromDiscogs } from "@/lib/discogs/mapRelease";
 import {
   upsertRelease,
   addCollectionItem,
@@ -27,24 +27,6 @@ export async function searchDiscogsAction(query: string) {
 export async function getAlbumEditionsAction(masterId: number) {
   await requireSession();
   return discogs.getMasterVersions(masterId);
-}
-
-/** Maps a fetched Discogs release detail onto the shape `upsertRelease` expects. */
-function releaseInputFromDiscogs(detail: DiscogsRelease) {
-  return {
-    discogsReleaseId: detail.id,
-    masterId: detail.master_id,
-    title: detail.title,
-    artistNames: detail.artists?.map((a) => a.name) ?? [],
-    year: detail.year,
-    country: detail.country,
-    labelName: detail.labels?.[0]?.name,
-    catalogNumber: detail.labels?.[0]?.catno,
-    genres: detail.genres ?? [],
-    styles: detail.styles ?? [],
-    coverUrl: detail.images?.[0]?.uri ?? "",
-    thumbUrl: detail.images?.[0]?.uri ?? "",
-  };
 }
 
 /** One-click add: fetches the chosen pressing and saves it straight to the collection. */

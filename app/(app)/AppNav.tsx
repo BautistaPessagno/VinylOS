@@ -9,6 +9,7 @@ import { Avatar } from "./Avatar";
 
 const NAV_LINKS = [
   { href: "/collection", label: "Collection" },
+  { href: "/wishlist", label: "Wishlist" },
   { href: "/friends", label: "Friends" },
   { href: "/wrapped", label: "Wrapped" },
   { href: "/recommendations", label: "Recommendations" },

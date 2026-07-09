@@ -121,6 +121,28 @@ export const collectionItems = pgTable(
   ],
 );
 
+export const wishlistItems = pgTable(
+  "wishlist_items",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    releaseId: integer("release_id")
+      .notNull()
+      .references(() => releases.id, { onDelete: "restrict" }),
+    addedAt: timestamp("added_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("wishlist_items_user_release_idx").on(
+      table.userId,
+      table.releaseId,
+    ),
+  ],
+);
+
 export const recommendations = pgTable(
   "recommendations",
   {
