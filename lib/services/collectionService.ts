@@ -196,3 +196,49 @@ export async function listCollectionItems(
     artistNames: artistsByRelease.get(row.releaseId) ?? [],
   }));
 }
+
+export async function listPublicCollectionItems(userId: string) {
+  const rows = await db
+    .select({
+      itemId: collectionItems.id,
+      addedAt: collectionItems.addedAt,
+      releaseId: releases.id,
+      title: releases.title,
+      year: releases.year,
+      country: releases.country,
+      coverUrl: releases.coverUrl,
+      thumbUrl: releases.thumbUrl,
+      genres: releases.genres,
+      labelName: releases.labelName,
+    })
+    .from(collectionItems)
+    .innerJoin(releases, eq(collectionItems.releaseId, releases.id))
+    .where(eq(collectionItems.userId, userId))
+    .orderBy(desc(collectionItems.addedAt));
+
+  if (rows.length === 0) return [];
+
+  const releaseIds = [...new Set(rows.map((r) => r.releaseId))];
+  const artistRows = await db
+    .select({
+      releaseId: releaseArtists.releaseId,
+      artistName: artists.name,
+      joinOrder: releaseArtists.joinOrder,
+    })
+    .from(releaseArtists)
+    .innerJoin(artists, eq(releaseArtists.artistId, artists.id))
+    .where(inArray(releaseArtists.releaseId, releaseIds))
+    .orderBy(releaseArtists.joinOrder);
+
+  const artistsByRelease = new Map<number, string[]>();
+  for (const row of artistRows) {
+    const list = artistsByRelease.get(row.releaseId) ?? [];
+    list.push(row.artistName);
+    artistsByRelease.set(row.releaseId, list);
+  }
+
+  return rows.map((row) => ({
+    ...row,
+    artistNames: artistsByRelease.get(row.releaseId) ?? [],
+  }));
+}

@@ -15,6 +15,13 @@
       "when": 1783544097059,
       "tag": "0001_dusty_obadiah_stane",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783558679507,
+      "tag": "0002_dusty_wolfpack",
+      "breakpoints": true
     }
   ]
 }

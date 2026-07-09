@@ -7,6 +7,7 @@ import {
   jsonb,
   numeric,
   date,
+  index,
   uniqueIndex,
   pgEnum,
 } from "drizzle-orm/pg-core";
@@ -111,5 +112,29 @@ export const collectionItems = pgTable(
       table.userId,
       table.releaseId,
     ),
+  ],
+);
+
+export const userFollows = pgTable(
+  "user_follows",
+  {
+    id: serial("id").primaryKey(),
+    followerUserId: text("follower_user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    followingUserId: text("following_user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("user_follows_pair_idx").on(
+      table.followerUserId,
+      table.followingUserId,
+    ),
+    index("user_follows_follower_idx").on(table.followerUserId),
+    index("user_follows_following_idx").on(table.followingUserId),
   ],
 );

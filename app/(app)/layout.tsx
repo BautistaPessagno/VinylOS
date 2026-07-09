@@ -22,6 +22,9 @@ export default async function AppLayout({
           <Link href="/collection" className="text-sm text-zinc-600 hover:text-black">
             Collection
           </Link>
+          <Link href="/friends" className="text-sm text-zinc-600 hover:text-black">
+            Friends
+          </Link>
           <Link href="/wrapped" className="text-sm text-zinc-600 hover:text-black">
             Wrapped
           </Link>
