@@ -60,7 +60,9 @@ export default async function UserProfilePage({
             Friends
           </Link>
           <h1 className="text-2xl font-semibold">{profile.name}</h1>
-          <p className="text-sm text-zinc-500">{profile.email}</p>
+          {profile.handle && (
+            <p className="text-sm text-zinc-500">@{profile.handle}</p>
+          )}
           <div className="mt-2 flex gap-2 text-xs text-zinc-500">
             <span className="rounded bg-zinc-100 px-2 py-1">
               {items.length} {items.length === 1 ? "record" : "records"}

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOutButton } from "./SignOutButton";
+import { SetUsernamePrompt } from "./SetUsernamePrompt";
 import { Avatar } from "./Avatar";
 
 const NAV_LINKS = [
@@ -40,11 +41,11 @@ function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
 
 export function AppNav({
   name,
-  email,
+  handle,
   image,
 }: {
   name: string;
-  email: string;
+  handle?: string | null;
   image?: string | null;
 }) {
   const pathname = usePathname();
@@ -83,7 +84,13 @@ export function AppNav({
             {menuOpen && (
               <div className="absolute right-0 top-full z-10 mt-2 w-56 rounded-lg border border-zinc-200 bg-white p-3 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
                 <p className="truncate text-sm font-medium">{name}</p>
-                <p className="truncate text-xs text-zinc-500">{email}</p>
+                {handle ? (
+                  <p className="truncate text-xs text-zinc-500">@{handle}</p>
+                ) : (
+                  <div className="mt-2">
+                    <SetUsernamePrompt />
+                  </div>
+                )}
                 <div className="mt-3 border-t border-zinc-200 pt-3 dark:border-zinc-700">
                   <SignOutButton />
                 </div>

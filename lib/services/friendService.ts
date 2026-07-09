@@ -5,7 +5,16 @@ import { and, desc, eq, ilike, inArray, ne, or } from "drizzle-orm";
 export type PublicUserProfile = {
   id: string;
   name: string;
-  email: string;
+  /** Public handle (`@handle`) shown instead of email. Null for accounts (e.g. legacy Google sign-ins) that haven't set one. */
+  handle: string | null;
+  image: string | null;
+};
+
+type UserRow = {
+  id: string;
+  name: string;
+  username: string | null;
+  displayUsername: string | null;
   image: string | null;
 };
 
@@ -28,11 +37,19 @@ export type FollowStatus = {
   followsYou: boolean;
 };
 
-function toPublicUser(row: PublicUserProfile): PublicUserProfile {
+const publicUserColumns = {
+  id: users.id,
+  name: users.name,
+  username: users.username,
+  displayUsername: users.displayUsername,
+  image: users.image,
+} as const;
+
+function toPublicUser(row: UserRow): PublicUserProfile {
   return {
     id: row.id,
     name: row.name,
-    email: row.email,
+    handle: row.displayUsername ?? row.username,
     image: row.image,
   };
 }
@@ -46,17 +63,16 @@ export async function searchUsers(
 
   const pattern = `%${trimmedQuery}%`;
   const rows = await db
-    .select({
-      id: users.id,
-      name: users.name,
-      email: users.email,
-      image: users.image,
-    })
+    .select(publicUserColumns)
     .from(users)
     .where(
       and(
         ne(users.id, viewerUserId),
-        or(ilike(users.name, pattern), ilike(users.email, pattern)),
+        or(
+          ilike(users.name, pattern),
+          ilike(users.username, pattern),
+          ilike(users.displayUsername, pattern),
+        ),
       ),
     )
     .limit(20);
@@ -107,13 +123,7 @@ export async function unfollowUser(followerUserId: string, followingUserId: stri
 
 export async function listFollowing(userId: string): Promise<FollowingUser[]> {
   const rows = await db
-    .select({
-      id: users.id,
-      name: users.name,
-      email: users.email,
-      image: users.image,
-      followedAt: userFollows.createdAt,
-    })
+    .select({ ...publicUserColumns, followedAt: userFollows.createdAt })
     .from(userFollows)
     .innerJoin(users, eq(userFollows.followingUserId, users.id))
     .where(eq(userFollows.followerUserId, userId))
@@ -127,13 +137,7 @@ export async function listFollowing(userId: string): Promise<FollowingUser[]> {
 
 export async function listFollowers(userId: string): Promise<FollowerUser[]> {
   const rows = await db
-    .select({
-      id: users.id,
-      name: users.name,
-      email: users.email,
-      image: users.image,
-      followedAt: userFollows.createdAt,
-    })
+    .select({ ...publicUserColumns, followedAt: userFollows.createdAt })
     .from(userFollows)
     .innerJoin(users, eq(userFollows.followerUserId, users.id))
     .where(eq(userFollows.followingUserId, userId))
@@ -204,12 +208,7 @@ export async function getPublicUserProfile(
   userId: string,
 ): Promise<PublicUserProfile | null> {
   const [profile] = await db
-    .select({
-      id: users.id,
-      name: users.name,
-      email: users.email,
-      image: users.image,
-    })
+    .select(publicUserColumns)
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);

@@ -15,7 +15,7 @@ export default async function AppLayout({
     <div className="flex flex-1 flex-col">
       <AppNav
         name={session.user.name}
-        email={session.user.email}
+        handle={session.user.displayUsername ?? session.user.username ?? null}
         image={session.user.image}
       />
       <main className="flex flex-1 flex-col px-6 py-8">{children}</main>
