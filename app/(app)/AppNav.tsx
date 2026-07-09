@@ -27,8 +27,8 @@ function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
             aria-current={isActive ? "page" : undefined}
             className={
               isActive
-                ? "text-sm font-medium text-black underline decoration-2 underline-offset-4 dark:text-red-500"
-                : "text-sm text-zinc-600 hover:text-black dark:hover:text-red-500"
+                ? "text-sm font-medium text-red-500 underline decoration-2 underline-offset-4"
+                : "text-sm text-zinc-600 hover:text-red-500"
             }
           >
             {label}
@@ -108,7 +108,7 @@ export function AppNav({
           <button
             type="button"
             onClick={() => setMobileOpen((open) => !open)}
-            className="inline-flex h-8 w-8 items-center justify-center rounded text-zinc-600 hover:text-black sm:hidden dark:hover:text-red-500"
+            className="inline-flex h-8 w-8 items-center justify-center rounded text-zinc-600 hover:text-red-500 sm:hidden"
             aria-label="Toggle menu"
           >
             {mobileOpen ? "✕" : "☰"}
