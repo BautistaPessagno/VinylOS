@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
+import authRedirects from "@/lib/authRedirects";
+
+const { buildLoginRedirectUrl } = authRedirects;
 
 // UX-only redirect for a fast no-JS bounce. This is NOT the security boundary —
 // every protected Server Component/Action still validates the real session
@@ -8,7 +11,7 @@ import { getSessionCookie } from "better-auth/cookies";
 export function proxy(request: NextRequest) {
   const sessionCookie = getSessionCookie(request);
   if (!sessionCookie) {
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect(buildLoginRedirectUrl(request.nextUrl));
   }
   return NextResponse.next();
 }
