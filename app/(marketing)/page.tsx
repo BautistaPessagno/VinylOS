@@ -20,6 +20,10 @@ export default async function LandingPage({
   const callbackURL = getSafeAuthCallbackPath(next);
   const loginHref =
     callbackURL === "/collection" ? "/login" : `/login?next=${encodeURIComponent(callbackURL)}`;
+  const signupHref =
+    callbackURL === "/collection"
+      ? "/login?mode=signup"
+      : `/login?mode=signup&next=${encodeURIComponent(callbackURL)}`;
 
   const covers = await listRecentReleaseCovers(16);
 
@@ -37,12 +41,20 @@ export default async function LandingPage({
             <li key={prop}>{prop}</li>
           ))}
         </ul>
-        <Link
-          href={loginHref}
-          className="rounded-full bg-black px-6 py-3 text-white hover:bg-zinc-800"
-        >
-          Sign in with Google
-        </Link>
+        <div className="flex gap-3">
+          <Link
+            href={loginHref}
+            className="rounded-full bg-black px-6 py-3 text-white hover:bg-zinc-800"
+          >
+            Log in
+          </Link>
+          <Link
+            href={signupHref}
+            className="rounded-full bg-black px-6 py-3 text-white hover:bg-zinc-800"
+          >
+            Sign up
+          </Link>
+        </div>
       </div>
 
       <VinylCarousel covers={[...covers].reverse()} />

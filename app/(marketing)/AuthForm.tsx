@@ -10,8 +10,14 @@ type Mode = "signin" | "signup";
 const inputClass =
   "rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-950";
 
-export function AuthForm({ callbackURL }: { callbackURL: string }) {
-  const [mode, setMode] = useState<Mode>("signin");
+export function AuthForm({
+  callbackURL,
+  initialMode = "signin",
+}: {
+  callbackURL: string;
+  initialMode?: Mode;
+}) {
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [identifier, setIdentifier] = useState("");
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
