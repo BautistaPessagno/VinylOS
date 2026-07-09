@@ -91,7 +91,14 @@ export function AppNav({
                     <SetUsernamePrompt />
                   </div>
                 )}
-                <div className="mt-3 border-t border-zinc-200 pt-3 dark:border-zinc-700">
+                <div className="mt-3 flex flex-col gap-2 border-t border-zinc-200 pt-3 dark:border-zinc-700">
+                  <Link
+                    href="/settings"
+                    onClick={() => setMenuOpen(false)}
+                    className="text-sm text-zinc-600 hover:text-black dark:hover:text-red-500"
+                  >
+                    Settings
+                  </Link>
                   <SignOutButton />
                 </div>
               </div>
