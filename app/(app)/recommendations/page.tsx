@@ -5,6 +5,7 @@ import {
   dismissRecommendationAction,
   addRecommendationToCollectionAction,
 } from "./actions";
+import { addReleaseToWishlistAction } from "../wishlist/actions";
 
 export default async function RecommendationsPage() {
   const session = await requireSession();
@@ -60,14 +61,21 @@ export default async function RecommendationsPage() {
                 </span>
                 <span className="text-xs text-zinc-400">{item.reason}</span>
               </div>
-              <div className="flex items-center justify-between text-sm">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
                 <form action={addRecommendationToCollectionAction}>
                   <input type="hidden" name="releaseId" value={item.releaseId} />
                   <button type="submit" className="underline">
                     Add
                   </button>
                 </form>
-                <form action={dismissRecommendationAction}>
+                <form action={addReleaseToWishlistAction}>
+                  <input type="hidden" name="releaseId" value={item.releaseId} />
+                  <input type="hidden" name="returnTo" value="/recommendations" />
+                  <button type="submit" className="underline">
+                    Wishlist
+                  </button>
+                </form>
+                <form action={dismissRecommendationAction} className="ml-auto">
                   <input type="hidden" name="recId" value={item.recId} />
                   <button type="submit" className="text-red-600 underline">
                     Dismiss

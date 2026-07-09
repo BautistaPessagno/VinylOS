@@ -7,6 +7,7 @@ import {
   addAlbumsFromDiscogsAction,
   submitAddReleaseAction,
 } from "../actions";
+import { addAlbumToWishlistFromDiscogsAction } from "../../wishlist/actions";
 import { EditionPicker } from "../EditionPicker";
 import type { DiscogsAlbumGroup } from "@/lib/discogs/types";
 
@@ -45,18 +46,24 @@ function Field({
 function AlbumCard({
   album,
   pendingId,
+  wishlistPendingId,
   onAdd,
+  onWishlist,
   selected,
   onToggleSelect,
 }: {
   album: DiscogsAlbumGroup;
   pendingId: number | null;
+  wishlistPendingId: number | null;
   onAdd: (discogsReleaseId: number) => void;
+  onWishlist: (discogsReleaseId: number) => void;
   selected: boolean;
   onToggleSelect: (album: DiscogsAlbumGroup) => void;
 }) {
   const isPicking = pendingId !== null;
   const isThisPending = pendingId === album.releaseId;
+  const busy = isPicking || wishlistPendingId !== null;
+  const isThisWishlistPending = wishlistPendingId === album.releaseId;
 
   return (
     <li
@@ -85,14 +92,24 @@ function AlbumCard({
             {album.editionCount > 1 ? ` · ${album.editionCount} editions` : ""}
           </span>
         </div>
-        <button
-          type="button"
-          onClick={() => onAdd(album.releaseId)}
-          disabled={isPicking}
-          className="shrink-0 rounded bg-black px-3 py-1.5 text-sm text-white disabled:opacity-50"
-        >
-          {isThisPending ? "Adding…" : "Add"}
-        </button>
+        <div className="flex shrink-0 flex-col gap-1">
+          <button
+            type="button"
+            onClick={() => onAdd(album.releaseId)}
+            disabled={busy}
+            className="rounded bg-black px-3 py-1.5 text-sm text-white disabled:opacity-50"
+          >
+            {isThisPending ? "Adding…" : "Add"}
+          </button>
+          <button
+            type="button"
+            onClick={() => onWishlist(album.releaseId)}
+            disabled={busy}
+            className="rounded border border-zinc-300 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-zinc-600"
+          >
+            {isThisWishlistPending ? "Adding…" : "Wishlist"}
+          </button>
+        </div>
       </div>
       {album.masterId && (
         <EditionPicker masterId={album.masterId} onPick={onAdd} pendingId={pendingId} />
@@ -108,6 +125,7 @@ export function AddReleaseForm() {
   const [isSearching, startSearch] = useTransition();
   const [searchError, setSearchError] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<number | null>(null);
+  const [wishlistPendingId, setWishlistPendingId] = useState<number | null>(null);
   const [, startAdd] = useTransition();
   const [selected, setSelected] = useState<Map<number, DiscogsAlbumGroup>>(new Map());
   const [isBatchAdding, startBatchAdd] = useTransition();
@@ -160,6 +178,14 @@ export function AddReleaseForm() {
       // (rare network/API failure), we don't swallow it here so the redirect isn't
       // masked — the nearest error boundary handles that case.
       await addAlbumFromDiscogsAction(discogsReleaseId);
+    });
+  }
+
+  function handleWishlist(discogsReleaseId: number) {
+    setWishlistPendingId(discogsReleaseId);
+    startAdd(async () => {
+      // Redirects to /wishlist on success (same throw behavior as handleAdd).
+      await addAlbumToWishlistFromDiscogsAction(discogsReleaseId);
     });
   }
 
@@ -237,7 +263,9 @@ export function AddReleaseForm() {
               key={album.key}
               album={album}
               pendingId={pendingId}
+              wishlistPendingId={wishlistPendingId}
               onAdd={handleAdd}
+              onWishlist={handleWishlist}
               selected={selected.has(album.releaseId)}
               onToggleSelect={toggleSelect}
             />
