@@ -229,35 +229,13 @@ drizzle.config.ts
 
 ## 9. Roadmap / Checklist
 
-### Phase 0 — Setup and infrastructure
-
-- [x] Create repo + Next.js 16 project (App Router, TypeScript, Tailwind)
-- [ ] Connect repo to Vercel (automatic deploy + preview deploys) — user-owned step, not done in this pass
-- [x] Install the **Neon** integration from the Vercel Marketplace (auto-provisions `DATABASE_URL` / `DATABASE_URL_UNPOOLED`)
-- [ ] `vercel env pull .env.local` for local development — using a plain `.env` seeded in this workspace instead
-- [x] Configure Drizzle (`drizzle.config.ts`) + `pg` client with Pool + `attachDatabasePool`
-- [x] Configure migrations (use `DATABASE_URL_UNPOOLED` / direct connection to migrate)
-- [ ] Set up **Neon branching per PR** for isolated databases in preview deploys — needs the Vercel project link above
-
 ### Phase 1 — Feature 1: Collection + Wrapped (MVP)
 
-- [x] **App auth** (Better Auth + Drizzle adapter + Google OAuth)
-- [x] Catalog tables (`releases`, `artists`, joins) and user tables (`collection_items`, `user_profiles`)
-- [x] Discogs client with project-wide `User-Agent` + consumer key/secret + rate-limit handling
-- [x] **Record search**: search UI hitting Discogs (+ Last.fm) with the shared project key, no per-user API key needed
 - [ ] **Photo recognition**: capture/upload flow → OCR/vision extraction → feed into Discogs search → user confirms match — deferred out of this MVP pass (see open decisions)
-- [x] Manual add/edit/remove of records (Server Actions), used as the confirm/edit step after search or photo match
-- [x] **Collection** view (grid with covers, filters by genre/year/label)
-- [x] **Wrapped** view: favorite decade, most-collected label, top artist, genre distribution, country (SQL aggregations, computed on-the-fly)
-- [x] Validate session in RSC/Actions (not just in `proxy.ts`)
 
 ### Phase 2 — Feature 2: Recommendations (no Spotify)
 
-- [ ] Last.fm client (`artist.getSimilar`) + cache in `artist_similarity`
-- [ ] `recommendationService`: Discogs co-occurrence (genre/style/label/era)
 - [ ] Add Discogs "community have/want" signal
-- [ ] Combine signals → `score` + `reason`, persist to `recommendations`
-- [ ] **Recommendations** view with feedback (dismiss / add to wantlist)
 - [ ] (Optional) Vercel Cron to refresh recommendations
 
 ### ⏸️ Deferred — Spotify login (future phase)

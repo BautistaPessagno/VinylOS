@@ -7,6 +7,7 @@ import {
   jsonb,
   numeric,
   date,
+  boolean,
   index,
   uniqueIndex,
   pgEnum,
@@ -18,6 +19,11 @@ export * from "./auth-schema";
 export const collectionSource = pgEnum("collection_source", [
   "manual",
   "discogs_sync",
+]);
+
+export const recommendationSource = pgEnum("recommendation_source", [
+  "discogs_cooccurrence",
+  "lastfm_similar",
 ]);
 
 // --- Catalog cache (shared across users, sourced from Discogs/Last.fm) ---
@@ -111,6 +117,57 @@ export const collectionItems = pgTable(
     uniqueIndex("collection_items_user_release_idx").on(
       table.userId,
       table.releaseId,
+    ),
+  ],
+);
+
+export const recommendations = pgTable(
+  "recommendations",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    releaseId: integer("release_id")
+      .notNull()
+      .references(() => releases.id, { onDelete: "restrict" }),
+    score: numeric("score", { precision: 6, scale: 3 }).notNull(),
+    source: recommendationSource("source").notNull(),
+    reason: text("reason").notNull(),
+    generatedAt: timestamp("generated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    dismissed: boolean("dismissed").notNull().default(false),
+  },
+  (table) => [
+    uniqueIndex("recommendations_user_release_idx").on(
+      table.userId,
+      table.releaseId,
+    ),
+    index("recommendations_user_dismissed_idx").on(
+      table.userId,
+      table.dismissed,
+    ),
+  ],
+);
+
+// Last.fm `artist.getSimilar` cache, keyed by artist name (Last.fm has no
+// stable numeric id we can rely on across our catalog).
+export const artistSimilarity = pgTable(
+  "artist_similarity",
+  {
+    id: serial("id").primaryKey(),
+    artistName: text("artist_name").notNull(),
+    similarArtistName: text("similar_artist_name").notNull(),
+    matchScore: numeric("match_score", { precision: 5, scale: 4 }),
+    fetchedAt: timestamp("fetched_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("artist_similarity_pair_idx").on(
+      table.artistName,
+      table.similarArtistName,
     ),
   ],
 );
