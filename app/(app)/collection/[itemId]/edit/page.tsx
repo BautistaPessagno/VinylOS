@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getEditItemData, updateItemAction } from "../../actions";
+import { EditEditionSection } from "./EditEditionSection";
 
 function Field({
   label,
@@ -46,7 +47,29 @@ export default async function EditCollectionItemPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Edit collection item</h1>
+      <div className="flex max-w-2xl items-center gap-3">
+        <div className="h-16 w-16 shrink-0 overflow-hidden rounded bg-zinc-100">
+          {item.coverUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={item.coverUrl} alt="" className="h-full w-full object-cover" />
+          )}
+        </div>
+        <div>
+          <h1 className="text-2xl font-semibold">{item.title}</h1>
+          <p className="text-sm text-zinc-500">
+            {[item.year, item.labelName, item.catalogNumber, item.country]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
+        </div>
+      </div>
+
+      {item.masterId && (
+        <div className="max-w-2xl">
+          <EditEditionSection itemId={item.id} masterId={item.masterId} />
+        </div>
+      )}
+
       <form action={updateItemAction} className="flex max-w-2xl flex-col gap-4">
         <input type="hidden" name="itemId" value={item.id} />
         <Field label="Folder" name="folder" defaultValue={item.folder} />

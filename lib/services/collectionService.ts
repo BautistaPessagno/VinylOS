@@ -44,9 +44,12 @@ async function linkReleaseArtists(releaseId: number, artistIds: number[]) {
  * Either way, the submitted (possibly user-edited) field values are what get persisted —
  * search-add prefills the form but doesn't force the original Discogs values.
  */
-export async function upsertRelease(input: ReleaseFormOutput): Promise<number> {
+export async function upsertRelease(
+  input: ReleaseFormOutput & { masterId?: number },
+): Promise<number> {
   const values = {
     discogsReleaseId: input.discogsReleaseId,
+    masterId: input.masterId,
     title: input.title,
     year: input.year,
     country: input.country,
@@ -96,8 +99,10 @@ export async function addCollectionItem(
       purchaseLocation: input.purchaseLocation,
       source,
     })
+    // Re-adding an album already in the collection is a safe no-op rather than an error.
+    .onConflictDoNothing({ target: [collectionItems.userId, collectionItems.releaseId] })
     .returning({ id: collectionItems.id });
-  return item.id;
+  return item?.id ?? null;
 }
 
 export async function updateCollectionItem(
@@ -128,11 +133,57 @@ export async function removeCollectionItem(userId: string, itemId: number) {
 
 export async function getCollectionItem(userId: string, itemId: number) {
   const [item] = await db
-    .select()
+    .select({
+      id: collectionItems.id,
+      rating: collectionItems.rating,
+      notes: collectionItems.notes,
+      folder: collectionItems.folder,
+      mediaCondition: collectionItems.mediaCondition,
+      sleeveCondition: collectionItems.sleeveCondition,
+      purchasePrice: collectionItems.purchasePrice,
+      purchaseDate: collectionItems.purchaseDate,
+      purchaseLocation: collectionItems.purchaseLocation,
+      releaseId: releases.id,
+      masterId: releases.masterId,
+      title: releases.title,
+      year: releases.year,
+      country: releases.country,
+      labelName: releases.labelName,
+      catalogNumber: releases.catalogNumber,
+      coverUrl: releases.coverUrl,
+    })
     .from(collectionItems)
+    .innerJoin(releases, eq(collectionItems.releaseId, releases.id))
     .where(and(eq(collectionItems.id, itemId), eq(collectionItems.userId, userId)))
     .limit(1);
   return item ?? null;
+}
+
+/**
+ * Repoints a collection item at a different pressing of the same (or a different)
+ * release — used by the advanced edition picker. Falls back to a no-op if the user
+ * already owns the target pressing (would collide with the unique user/release index).
+ */
+export async function updateCollectionItemRelease(
+  userId: string,
+  itemId: number,
+  newReleaseId: number,
+) {
+  const [existing] = await db
+    .select({ id: collectionItems.id })
+    .from(collectionItems)
+    .where(
+      and(eq(collectionItems.userId, userId), eq(collectionItems.releaseId, newReleaseId)),
+    )
+    .limit(1);
+  if (existing) {
+    throw new Error("You already have this edition in your collection.");
+  }
+
+  await db
+    .update(collectionItems)
+    .set({ releaseId: newReleaseId })
+    .where(and(eq(collectionItems.id, itemId), eq(collectionItems.userId, userId)));
 }
 
 export type CollectionFilters = {
@@ -168,6 +219,52 @@ export async function listCollectionItems(
     .from(collectionItems)
     .innerJoin(releases, eq(collectionItems.releaseId, releases.id))
     .where(and(...conditions))
+    .orderBy(desc(collectionItems.addedAt));
+
+  if (rows.length === 0) return [];
+
+  const releaseIds = [...new Set(rows.map((r) => r.releaseId))];
+  const artistRows = await db
+    .select({
+      releaseId: releaseArtists.releaseId,
+      artistName: artists.name,
+      joinOrder: releaseArtists.joinOrder,
+    })
+    .from(releaseArtists)
+    .innerJoin(artists, eq(releaseArtists.artistId, artists.id))
+    .where(inArray(releaseArtists.releaseId, releaseIds))
+    .orderBy(releaseArtists.joinOrder);
+
+  const artistsByRelease = new Map<number, string[]>();
+  for (const row of artistRows) {
+    const list = artistsByRelease.get(row.releaseId) ?? [];
+    list.push(row.artistName);
+    artistsByRelease.set(row.releaseId, list);
+  }
+
+  return rows.map((row) => ({
+    ...row,
+    artistNames: artistsByRelease.get(row.releaseId) ?? [],
+  }));
+}
+
+export async function listPublicCollectionItems(userId: string) {
+  const rows = await db
+    .select({
+      itemId: collectionItems.id,
+      addedAt: collectionItems.addedAt,
+      releaseId: releases.id,
+      title: releases.title,
+      year: releases.year,
+      country: releases.country,
+      coverUrl: releases.coverUrl,
+      thumbUrl: releases.thumbUrl,
+      genres: releases.genres,
+      labelName: releases.labelName,
+    })
+    .from(collectionItems)
+    .innerJoin(releases, eq(collectionItems.releaseId, releases.id))
+    .where(eq(collectionItems.userId, userId))
     .orderBy(desc(collectionItems.addedAt));
 
   if (rows.length === 0) return [];

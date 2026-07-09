@@ -21,6 +21,38 @@ export const discogsSearchResponseSchema = z.object({
   results: z.array(discogsSearchResultSchema),
 });
 
+/**
+ * One album, collapsed from all of its vinyl pressings. `releaseId` points at the
+ * representative pressing (top Discogs match within the group) used for one-click add.
+ */
+export type DiscogsAlbumGroup = {
+  key: string;
+  masterId?: number;
+  releaseId: number;
+  title: string;
+  coverImage?: string;
+  year?: string;
+  genres: string[];
+  editionCount: number;
+};
+
+export const discogsMasterVersionSchema = z.object({
+  id: z.number(),
+  title: z.string(),
+  format: z.string().optional(),
+  label: z.string().optional(),
+  catno: z.string().optional(),
+  country: z.string().optional(),
+  released: z.string().optional(),
+  thumb: z.string().optional(),
+  major_formats: z.array(z.string()).optional(),
+});
+export type DiscogsMasterVersion = z.infer<typeof discogsMasterVersionSchema>;
+
+export const discogsMasterVersionsResponseSchema = z.object({
+  versions: z.array(discogsMasterVersionSchema),
+});
+
 export const discogsReleaseArtistSchema = z.object({
   id: z.number(),
   name: z.string(),

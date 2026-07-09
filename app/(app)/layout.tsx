@@ -19,10 +19,13 @@ export default async function AppLayout({
           <Link href="/collection" className="font-semibold">
             VinylOS
           </Link>
-          <Link href="/collection" className="text-sm text-zinc-600 hover:text-black">
+          <Link href="/collection" className="text-sm text-zinc-600 hover:text-black dark:hover:text-red-500">
             Collection
           </Link>
-          <Link href="/wrapped" className="text-sm text-zinc-600 hover:text-black">
+          <Link href="/friends" className="text-sm text-zinc-600 hover:text-black dark:hover:text-red-500">
+            Friends
+          </Link>
+          <Link href="/wrapped" className="text-sm text-zinc-600 hover:text-black dark:hover:text-red-500">
             Wrapped
           </Link>
         </nav>

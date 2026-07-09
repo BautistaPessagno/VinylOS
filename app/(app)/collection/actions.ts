@@ -4,11 +4,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth-session";
 import * as discogs from "@/lib/discogs/client";
-import { getArtistInfo } from "@/lib/lastfm/client";
+import type { DiscogsRelease } from "@/lib/discogs/types";
 import {
   upsertRelease,
   addCollectionItem,
   updateCollectionItem,
+  updateCollectionItemRelease,
   removeCollectionItem,
   getCollectionItem,
 } from "@/lib/services/collectionService";
@@ -20,17 +21,50 @@ import {
 export async function searchDiscogsAction(query: string) {
   await requireSession();
   if (!query.trim()) return [];
-  return discogs.searchReleases(query);
+  return discogs.searchVinylAlbums(query);
 }
 
-export async function getDiscogsReleaseDetailAction(discogsReleaseId: number) {
+export async function getAlbumEditionsAction(masterId: number) {
   await requireSession();
+  return discogs.getMasterVersions(masterId);
+}
+
+/** Maps a fetched Discogs release detail onto the shape `upsertRelease` expects. */
+function releaseInputFromDiscogs(detail: DiscogsRelease) {
+  return {
+    discogsReleaseId: detail.id,
+    masterId: detail.master_id,
+    title: detail.title,
+    artistNames: detail.artists?.map((a) => a.name) ?? [],
+    year: detail.year,
+    country: detail.country,
+    labelName: detail.labels?.[0]?.name,
+    catalogNumber: detail.labels?.[0]?.catno,
+    genres: detail.genres ?? [],
+    styles: detail.styles ?? [],
+    coverUrl: detail.images?.[0]?.uri ?? "",
+    thumbUrl: detail.images?.[0]?.uri ?? "",
+  };
+}
+
+/** One-click add: fetches the chosen pressing and saves it straight to the collection. */
+export async function addAlbumFromDiscogsAction(discogsReleaseId: number) {
+  const session = await requireSession();
   const detail = await discogs.getRelease(discogsReleaseId);
-  const primaryArtist = detail.artists?.[0]?.name;
-  const artistBio = primaryArtist
-    ? await getArtistInfo(primaryArtist).catch(() => null)
-    : null;
-  return { detail, artistBio };
+  const releaseId = await upsertRelease(releaseInputFromDiscogs(detail));
+  await addCollectionItem(session.user.id, releaseId, {}, "discogs_sync");
+  revalidatePath("/collection");
+  redirect("/collection");
+}
+
+/** Advanced edition picker on the edit page: swap an owned item to a different pressing. */
+export async function changeItemEditionAction(itemId: number, discogsReleaseId: number) {
+  const session = await requireSession();
+  const detail = await discogs.getRelease(discogsReleaseId);
+  const releaseId = await upsertRelease(releaseInputFromDiscogs(detail));
+  await updateCollectionItemRelease(session.user.id, itemId, releaseId);
+  revalidatePath("/collection");
+  revalidatePath(`/collection/${itemId}/edit`);
 }
 
 function parseItemInput(formData: FormData) {
