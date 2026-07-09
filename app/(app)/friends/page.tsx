@@ -11,6 +11,7 @@ import {
 } from "@/lib/services/friendService";
 import { followUserAction, unfollowUserAction } from "./actions";
 import { InviteFriendsButton } from "./InviteFriendsButton";
+import { FriendSearchInput } from "./FriendSearchInput";
 import { Avatar } from "../Avatar";
 
 function formatDate(value: Date) {
@@ -23,12 +24,12 @@ function formatDate(value: Date) {
 
 function UserIdentity({
   name,
-  email,
+  handle,
   image,
   detail,
 }: {
   name: string;
-  email: string;
+  handle: string | null;
   image: string | null;
   detail?: string;
 }) {
@@ -37,7 +38,7 @@ function UserIdentity({
       <Avatar name={name} image={image} size="h-10 w-10" textSize="text-sm" />
       <div className="min-w-0">
         <p className="truncate font-medium">{name}</p>
-        <p className="truncate text-sm text-zinc-500">{email}</p>
+        {handle && <p className="truncate text-sm text-zinc-500">@{handle}</p>}
         {detail && <p className="text-xs text-zinc-400">{detail}</p>}
       </div>
     </div>
@@ -85,7 +86,7 @@ function SearchResultRow({
 }) {
   return (
     <li className="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
-      <UserIdentity name={user.name} email={user.email} image={user.image} />
+      <UserIdentity name={user.name} handle={user.handle} image={user.image} />
       <div className="flex shrink-0 items-center gap-2">
         <Link href={`/users/${user.id}`} className="text-sm underline">
           View collection
@@ -111,7 +112,7 @@ function FollowingRow({
     <li className="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
       <UserIdentity
         name={user.name}
-        email={user.email}
+        handle={user.handle}
         image={user.image}
         detail={`Following since ${formatDate(user.followedAt)}`}
       />
@@ -136,7 +137,7 @@ function FollowerRow({
     <li className="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
       <UserIdentity
         name={user.name}
-        email={user.email}
+        handle={user.handle}
         image={user.image}
         detail={`Followed you on ${formatDate(user.followedAt)}`}
       />
@@ -186,12 +187,7 @@ export default async function FriendsPage({
       <section className="flex flex-col gap-3">
         <h2 className="font-medium">Find collectors</h2>
         <form className="flex max-w-2xl gap-2" action="/friends">
-          <input
-            name="q"
-            defaultValue={query}
-            placeholder="Search by name or email"
-            className="min-w-0 flex-1 rounded border border-zinc-300 px-3 py-2"
-          />
+          <FriendSearchInput defaultValue={query} />
           <button type="submit" className="rounded bg-black px-4 py-2 text-white">
             Search
           </button>
