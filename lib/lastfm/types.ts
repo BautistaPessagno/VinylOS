@@ -12,3 +12,17 @@ export const lastfmArtistInfoSchema = z.object({
   }),
 });
 export type LastfmArtistInfo = z.infer<typeof lastfmArtistInfoSchema>;
+
+export const lastfmSimilarArtistsSchema = z.object({
+  similarartists: z.object({
+    artist: z
+      .array(
+        z.object({
+          name: z.string(),
+          match: z.coerce.number().optional(),
+        }),
+      )
+      .optional(),
+  }),
+});
+export type LastfmSimilarArtists = z.infer<typeof lastfmSimilarArtistsSchema>;

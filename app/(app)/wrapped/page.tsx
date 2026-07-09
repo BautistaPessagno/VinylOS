@@ -14,9 +14,9 @@ function Bar({ label, count, max }: { label: string; count: number; max: number 
   return (
     <div className="flex items-center gap-3 text-sm">
       <span className="w-32 shrink-0 truncate">{label}</span>
-      <div className="h-2 flex-1 rounded bg-zinc-100">
+      <div className="h-2 flex-1 rounded bg-zinc-100 dark:bg-zinc-800">
         <div
-          className="h-2 rounded bg-black"
+          className="h-2 rounded bg-black dark:bg-green-500"
           style={{ width: `${Math.max(4, (count / max) * 100)}%` }}
         />
       </div>
