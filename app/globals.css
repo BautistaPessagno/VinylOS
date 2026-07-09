@@ -17,6 +17,10 @@
     --background: #0a0a0a;
     --foreground: #ededed;
   }
+
+  a:focus-visible {
+    outline-color: #ef4444;
+  }
 }
 
 body {
