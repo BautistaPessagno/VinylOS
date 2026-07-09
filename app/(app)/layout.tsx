@@ -1,8 +1,7 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { SignOutButton } from "./SignOutButton";
+import { AppNav } from "./AppNav";
 
 export default async function AppLayout({
   children,
@@ -10,30 +9,15 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) redirect("/");
+  if (!session) redirect("/login");
 
   return (
     <div className="flex flex-1 flex-col">
-      <header className="flex items-center justify-between border-b border-zinc-200 px-6 py-4">
-        <nav className="flex items-center gap-6">
-          <Link href="/collection" className="font-semibold">
-            VinylOS
-          </Link>
-          <Link href="/collection" className="text-sm text-zinc-600 hover:text-black dark:hover:text-red-500">
-            Collection
-          </Link>
-          <Link href="/friends" className="text-sm text-zinc-600 hover:text-black dark:hover:text-red-500">
-            Friends
-          </Link>
-          <Link href="/wrapped" className="text-sm text-zinc-600 hover:text-black dark:hover:text-red-500">
-            Wrapped
-          </Link>
-        </nav>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-zinc-500">{session.user.email}</span>
-          <SignOutButton />
-        </div>
-      </header>
+      <AppNav
+        name={session.user.name}
+        email={session.user.email}
+        image={session.user.image}
+      />
       <main className="flex flex-1 flex-col px-6 py-8">{children}</main>
     </div>
   );

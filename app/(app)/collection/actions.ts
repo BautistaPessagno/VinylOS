@@ -57,6 +57,18 @@ export async function addAlbumFromDiscogsAction(discogsReleaseId: number) {
   redirect("/collection");
 }
 
+/** Multi-select add: adds each chosen album's default pressing in one batch. */
+export async function addAlbumsFromDiscogsAction(discogsReleaseIds: number[]) {
+  const session = await requireSession();
+  for (const discogsReleaseId of discogsReleaseIds) {
+    const detail = await discogs.getRelease(discogsReleaseId);
+    const releaseId = await upsertRelease(releaseInputFromDiscogs(detail));
+    await addCollectionItem(session.user.id, releaseId, {}, "discogs_sync");
+  }
+  revalidatePath("/collection");
+  redirect("/collection");
+}
+
 /** Advanced edition picker on the edit page: swap an owned item to a different pressing. */
 export async function changeItemEditionAction(itemId: number, discogsReleaseId: number) {
   const session = await requireSession();

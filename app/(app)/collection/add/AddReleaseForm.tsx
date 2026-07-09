@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { searchDiscogsAction, addAlbumFromDiscogsAction, submitAddReleaseAction } from "../actions";
+import {
+  searchDiscogsAction,
+  addAlbumFromDiscogsAction,
+  addAlbumsFromDiscogsAction,
+  submitAddReleaseAction,
+} from "../actions";
 import { EditionPicker } from "../EditionPicker";
 import type { DiscogsAlbumGroup } from "@/lib/discogs/types";
 
@@ -41,17 +46,32 @@ function AlbumCard({
   album,
   pendingId,
   onAdd,
+  selected,
+  onToggleSelect,
 }: {
   album: DiscogsAlbumGroup;
   pendingId: number | null;
   onAdd: (discogsReleaseId: number) => void;
+  selected: boolean;
+  onToggleSelect: (album: DiscogsAlbumGroup) => void;
 }) {
   const isPicking = pendingId !== null;
   const isThisPending = pendingId === album.releaseId;
 
   return (
-    <li className="flex flex-col gap-2 rounded border border-zinc-200 p-3 text-left">
+    <li
+      className={`flex flex-col gap-2 rounded border p-3 text-left ${
+        selected ? "border-black dark:border-white" : "border-zinc-200 dark:border-zinc-700"
+      }`}
+    >
       <div className="flex items-center gap-3">
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={() => onToggleSelect(album)}
+          aria-label={`Select ${album.title}`}
+          className="h-4 w-4 shrink-0"
+        />
         <div className="h-14 w-14 shrink-0 overflow-hidden rounded bg-zinc-100">
           {album.coverImage && (
             // eslint-disable-next-line @next/next/no-img-element
@@ -89,6 +109,8 @@ export function AddReleaseForm() {
   const [searchError, setSearchError] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<number | null>(null);
   const [, startAdd] = useTransition();
+  const [selected, setSelected] = useState<Map<number, DiscogsAlbumGroup>>(new Map());
+  const [isBatchAdding, startBatchAdd] = useTransition();
 
   function handleQueryChange(value: string) {
     setQuery(value);
@@ -96,6 +118,24 @@ export function AddReleaseForm() {
       setResults([]);
       setSearchError(null);
     }
+  }
+
+  function toggleSelect(album: DiscogsAlbumGroup) {
+    setSelected((prev) => {
+      const next = new Map(prev);
+      if (next.has(album.releaseId)) {
+        next.delete(album.releaseId);
+      } else {
+        next.set(album.releaseId, album);
+      }
+      return next;
+    });
+  }
+
+  function handleAddSelected() {
+    startBatchAdd(async () => {
+      await addAlbumsFromDiscogsAction([...selected.keys()]);
+    });
   }
 
   useEffect(() => {
@@ -179,6 +219,11 @@ export function AddReleaseForm() {
           )}
         </div>
         {searchError && <p className="text-center text-sm text-red-600">{searchError}</p>}
+        {results.length > 0 && (
+          <p className="text-center text-sm text-zinc-500">
+            New to VinylOS? Select multiple albums below and add them all at once.
+          </p>
+        )}
         <button
           type="button"
           onClick={() => setShowManualForm(true)}
@@ -186,12 +231,42 @@ export function AddReleaseForm() {
         >
           Can&apos;t find it? Enter manually
         </button>
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col gap-2 pb-4">
           {results.map((album) => (
-            <AlbumCard key={album.key} album={album} pendingId={pendingId} onAdd={handleAdd} />
+            <AlbumCard
+              key={album.key}
+              album={album}
+              pendingId={pendingId}
+              onAdd={handleAdd}
+              selected={selected.has(album.releaseId)}
+              onToggleSelect={toggleSelect}
+            />
           ))}
         </ul>
       </div>
+
+      {selected.size > 0 && (
+        <div className="sticky bottom-4 flex w-full max-w-2xl items-center justify-between rounded-lg border border-zinc-200 bg-white px-4 py-3 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+          <span className="text-sm font-medium">{selected.size} selected</span>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setSelected(new Map())}
+              className="text-sm text-zinc-600 underline"
+            >
+              Clear
+            </button>
+            <button
+              type="button"
+              onClick={handleAddSelected}
+              disabled={isBatchAdding}
+              className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50"
+            >
+              {isBatchAdding ? "Adding…" : `Add ${selected.size} record${selected.size === 1 ? "" : "s"}`}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

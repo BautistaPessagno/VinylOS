@@ -5,7 +5,7 @@ import {
   releaseArtists,
   collectionItems,
 } from "@/lib/db/schema";
-import { eq, and, ilike, arrayContains, desc, inArray } from "drizzle-orm";
+import { eq, and, ilike, arrayContains, desc, inArray, isNotNull, ne } from "drizzle-orm";
 import type {
   ReleaseFormOutput,
   CollectionItemFormOutput,
@@ -246,6 +246,22 @@ export async function listCollectionItems(
     ...row,
     artistNames: artistsByRelease.get(row.releaseId) ?? [],
   }));
+}
+
+/** Recent, real album covers for the marketing landing page's vinyl carousel. */
+export async function listRecentReleaseCovers(limit: number) {
+  const rows = await db
+    .select({
+      releaseId: releases.id,
+      title: releases.title,
+      coverUrl: releases.coverUrl,
+    })
+    .from(releases)
+    .where(and(isNotNull(releases.coverUrl), ne(releases.coverUrl, "")))
+    .orderBy(desc(releases.fetchedAt))
+    .limit(limit);
+
+  return rows as { releaseId: number; title: string; coverUrl: string }[];
 }
 
 export async function listPublicCollectionItems(userId: string) {

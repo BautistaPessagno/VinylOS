@@ -11,6 +11,7 @@ import {
 } from "@/lib/services/friendService";
 import { followUserAction, unfollowUserAction } from "./actions";
 import { InviteFriendsButton } from "./InviteFriendsButton";
+import { Avatar } from "../Avatar";
 
 function formatDate(value: Date) {
   return new Intl.DateTimeFormat("en", {
@@ -23,17 +24,22 @@ function formatDate(value: Date) {
 function UserIdentity({
   name,
   email,
+  image,
   detail,
 }: {
   name: string;
   email: string;
+  image: string | null;
   detail?: string;
 }) {
   return (
-    <div className="min-w-0">
-      <p className="truncate font-medium">{name}</p>
-      <p className="truncate text-sm text-zinc-500">{email}</p>
-      {detail && <p className="text-xs text-zinc-400">{detail}</p>}
+    <div className="flex min-w-0 items-center gap-3">
+      <Avatar name={name} image={image} size="h-10 w-10" textSize="text-sm" />
+      <div className="min-w-0">
+        <p className="truncate font-medium">{name}</p>
+        <p className="truncate text-sm text-zinc-500">{email}</p>
+        {detail && <p className="text-xs text-zinc-400">{detail}</p>}
+      </div>
     </div>
   );
 }
@@ -78,8 +84,8 @@ function SearchResultRow({
   returnTo: string;
 }) {
   return (
-    <li className="flex items-center justify-between gap-3 rounded border border-zinc-200 p-3">
-      <UserIdentity name={user.name} email={user.email} />
+    <li className="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
+      <UserIdentity name={user.name} email={user.email} image={user.image} />
       <div className="flex shrink-0 items-center gap-2">
         <Link href={`/users/${user.id}`} className="text-sm underline">
           View collection
@@ -102,10 +108,11 @@ function FollowingRow({
   returnTo: string;
 }) {
   return (
-    <li className="flex items-center justify-between gap-3 rounded border border-zinc-200 p-3">
+    <li className="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
       <UserIdentity
         name={user.name}
         email={user.email}
+        image={user.image}
         detail={`Following since ${formatDate(user.followedAt)}`}
       />
       <div className="flex shrink-0 items-center gap-2">
@@ -126,10 +133,11 @@ function FollowerRow({
   returnTo: string;
 }) {
   return (
-    <li className="flex items-center justify-between gap-3 rounded border border-zinc-200 p-3">
+    <li className="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
       <UserIdentity
         name={user.name}
         email={user.email}
+        image={user.image}
         detail={`Followed you on ${formatDate(user.followedAt)}`}
       />
       <div className="flex shrink-0 items-center gap-2">
@@ -211,12 +219,16 @@ export default async function FriendsPage({
       </section>
 
       <section className="flex max-w-3xl flex-col gap-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
           <h2 className="font-medium">Following</h2>
-          <span className="text-sm text-zinc-500">{following.length}</span>
+          <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+            {following.length}
+          </span>
         </div>
         {following.length === 0 ? (
-          <p className="text-sm text-zinc-500">No followed collectors yet.</p>
+          <p className="rounded-lg border border-dashed border-zinc-300 p-4 text-sm text-zinc-500 dark:border-zinc-700">
+            You&apos;re not following anyone yet. Search for collectors above to follow them.
+          </p>
         ) : (
           <ul className="flex flex-col gap-2">
             {following.map((user) => (
@@ -227,12 +239,16 @@ export default async function FriendsPage({
       </section>
 
       <section className="flex max-w-3xl flex-col gap-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
           <h2 className="font-medium">Followers</h2>
-          <span className="text-sm text-zinc-500">{followers.length}</span>
+          <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+            {followers.length}
+          </span>
         </div>
         {followers.length === 0 ? (
-          <p className="text-sm text-zinc-500">No followers yet.</p>
+          <p className="rounded-lg border border-dashed border-zinc-300 p-4 text-sm text-zinc-500 dark:border-zinc-700">
+            No followers yet. Share your profile to let others follow you.
+          </p>
         ) : (
           <ul className="flex flex-col gap-2">
             {followers.map((user) => (
