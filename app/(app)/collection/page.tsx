@@ -21,8 +21,11 @@ export default async function CollectionPage({
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Your collection</h1>
-        <Link href="/collection/add" className="rounded bg-black px-4 py-2 text-white">
-          Add a record
+        <Link
+          href="/collection/add"
+          className="rounded-lg bg-black px-5 py-2.5 text-base font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
+        >
+          + Add a record
         </Link>
       </div>
 

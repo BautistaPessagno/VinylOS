@@ -10,6 +10,7 @@ import {
   type UserSearchResult,
 } from "@/lib/services/friendService";
 import { followUserAction, unfollowUserAction } from "./actions";
+import { InviteFriendsButton } from "./InviteFriendsButton";
 
 function formatDate(value: Date) {
   return new Intl.DateTimeFormat("en", {
@@ -206,12 +207,7 @@ export default async function FriendsPage({
       </section>
 
       <section className="flex max-w-3xl flex-col gap-2">
-        <h2 className="font-medium">Your account link</h2>
-        <input
-          readOnly
-          value={profileUrl}
-          className="rounded border border-zinc-300 px-3 py-2 text-sm text-zinc-600"
-        />
+        <InviteFriendsButton profileUrl={profileUrl} />
       </section>
 
       <section className="flex max-w-3xl flex-col gap-3">
