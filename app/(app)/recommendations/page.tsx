@@ -38,7 +38,7 @@ export default async function RecommendationsPage({
           <RecommendationsGrid userId={session.user.id} />
         </Suspense>
       ) : (
-        <ExploreTab genre={genre} />
+        <ExploreTab genre={genre} userId={session.user.id} />
       )}
     </div>
   );

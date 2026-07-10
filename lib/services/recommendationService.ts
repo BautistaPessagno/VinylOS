@@ -4,10 +4,11 @@ import {
   artists,
   releaseArtists,
   collectionItems,
+  wishlistItems,
   recommendations,
   artistSimilarity,
 } from "@/lib/db/schema";
-import { eq, and, inArray, desc, sql } from "drizzle-orm";
+import { eq, and, inArray, desc, sql, notExists } from "drizzle-orm";
 import * as discogs from "@/lib/discogs/client";
 import { getSimilarArtists } from "@/lib/lastfm/client";
 import { upsertRelease } from "@/lib/services/collectionService";
@@ -45,47 +46,71 @@ type Candidate = {
 };
 
 async function getCollectionProfile(userId: string) {
-  const [ownedRows, genreRows, styleRows, labelRows, artistRows] = await Promise.all([
-    db
-      .select({ releaseId: releases.id, discogsReleaseId: releases.discogsReleaseId })
-      .from(collectionItems)
-      .innerJoin(releases, eq(collectionItems.releaseId, releases.id))
-      .where(eq(collectionItems.userId, userId)),
+  // Collection ∪ wishlist form the taste "library": both drive recommendations and are
+  // excluded from output. Wishlist counts lighter (0.5) than owned records (1.0) in the
+  // taste aggregations, since owning something is a stronger signal than wanting it.
+  const [libraryRows, genreRows, styleRows, labelRows, artistRows] = await Promise.all([
+    db.execute<{ release_id: number; discogs_release_id: number | null }>(sql`
+      select r.id as release_id, r.discogs_release_id
+      from releases r
+      where r.id in (
+        select release_id from collection_items where user_id = ${userId}
+        union
+        select release_id from wishlist_items where user_id = ${userId}
+      )
+    `),
     db.execute<{ genre: string; count: number }>(sql`
-      select genre, count(*)::int as count
-      from collection_items ci
-      join releases r on r.id = ci.release_id
+      with user_releases as (
+        select release_id, 1.0::float as weight from collection_items where user_id = ${userId}
+        union all
+        select release_id, 0.5::float as weight from wishlist_items where user_id = ${userId}
+      )
+      select genre, sum(ur.weight)::float as count
+      from user_releases ur
+      join releases r on r.id = ur.release_id
       cross join lateral unnest(r.genres) as genre
-      where ci.user_id = ${userId}
       group by genre
       order by count desc
       limit 5
     `),
     db.execute<{ style: string; count: number }>(sql`
-      select style, count(*)::int as count
-      from collection_items ci
-      join releases r on r.id = ci.release_id
+      with user_releases as (
+        select release_id, 1.0::float as weight from collection_items where user_id = ${userId}
+        union all
+        select release_id, 0.5::float as weight from wishlist_items where user_id = ${userId}
+      )
+      select style, sum(ur.weight)::float as count
+      from user_releases ur
+      join releases r on r.id = ur.release_id
       cross join lateral unnest(r.styles) as style
-      where ci.user_id = ${userId}
       group by style
       order by count desc
       limit 5
     `),
     db.execute<{ label: string; count: number }>(sql`
-      select r.label_name as label, count(*)::int as count
-      from collection_items ci
-      join releases r on r.id = ci.release_id
-      where ci.user_id = ${userId} and r.label_name is not null
+      with user_releases as (
+        select release_id, 1.0::float as weight from collection_items where user_id = ${userId}
+        union all
+        select release_id, 0.5::float as weight from wishlist_items where user_id = ${userId}
+      )
+      select r.label_name as label, sum(ur.weight)::float as count
+      from user_releases ur
+      join releases r on r.id = ur.release_id
+      where r.label_name is not null
       group by r.label_name
       order by count desc
       limit 3
     `),
     db.execute<{ artist: string; count: number }>(sql`
-      select a.name as artist, count(*)::int as count
-      from collection_items ci
-      join release_artists ra on ra.release_id = ci.release_id
+      with user_releases as (
+        select release_id, 1.0::float as weight from collection_items where user_id = ${userId}
+        union all
+        select release_id, 0.5::float as weight from wishlist_items where user_id = ${userId}
+      )
+      select a.name as artist, sum(ur.weight)::float as count
+      from user_releases ur
+      join release_artists ra on ra.release_id = ur.release_id
       join artists a on a.id = ra.artist_id
-      where ci.user_id = ${userId}
       group by a.name
       order by count desc
       limit 10
@@ -93,11 +118,11 @@ async function getCollectionProfile(userId: string) {
   ]);
 
   return {
-    ownedReleaseIds: new Set(ownedRows.map((r) => r.releaseId)),
-    ownedDiscogsReleaseIds: new Set(
-      ownedRows.map((r) => r.discogsReleaseId).filter((id): id is number => id != null),
+    excludedReleaseIds: new Set(libraryRows.rows.map((r) => r.release_id)),
+    excludedDiscogsReleaseIds: new Set(
+      libraryRows.rows.map((r) => r.discogs_release_id).filter((id): id is number => id != null),
     ),
-    ownedArtistNames: new Set(artistRows.rows.map((r) => r.artist.toLowerCase())),
+    libraryArtistNames: new Set(artistRows.rows.map((r) => r.artist.toLowerCase())),
     topGenres: genreRows.rows.map((r) => r.genre),
     topStyles: styleRows.rows.map((r) => r.style),
     topLabels: labelRows.rows.map((r) => r.label),
@@ -126,7 +151,7 @@ async function findCooccurrenceCandidates(
       continue; // one failing lookup shouldn't abort the whole run
     }
     for (const r of results) {
-      if (profile.ownedDiscogsReleaseIds.has(r.id)) continue;
+      if (profile.excludedDiscogsReleaseIds.has(r.id)) continue;
       const existing = scored.get(r.id);
       if (existing) {
         existing.score += 1;
@@ -187,7 +212,7 @@ async function findLastfmCandidates(
     }
     await cacheSimilarArtists(seedArtist, similar);
     for (const s of similar) {
-      if (profile.ownedArtistNames.has(s.name.toLowerCase())) continue;
+      if (profile.libraryArtistNames.has(s.name.toLowerCase())) continue;
       const existing = similarByName.get(s.name);
       const score = s.match * 5;
       if (!existing || score > existing.score) {
@@ -206,7 +231,7 @@ async function findLastfmCandidates(
       const groups = await discogs.searchVinylAlbums(artistName);
       const top = groups[0];
       if (!top) continue;
-      if (profile.ownedDiscogsReleaseIds.has(top.releaseId)) continue;
+      if (profile.excludedDiscogsReleaseIds.has(top.releaseId)) continue;
       const detail = await discogs.getRelease(top.releaseId);
       const releaseId = await upsertRelease(releaseInputFromDiscogs(detail));
       candidates.push({ releaseId, score, source: "lastfm_similar", reason });
@@ -235,7 +260,7 @@ export async function generateRecommendations(userId: string) {
   // from whichever signal contributed the larger share.
   const combined = new Map<number, Candidate>();
   for (const candidate of [...cooccurrence, ...lastfm]) {
-    if (profile.ownedReleaseIds.has(candidate.releaseId)) continue;
+    if (profile.excludedReleaseIds.has(candidate.releaseId)) continue;
     if (dismissedReleaseIds.has(candidate.releaseId)) continue;
     const existing = combined.get(candidate.releaseId);
     if (!existing) {
@@ -287,7 +312,36 @@ export async function listRecommendations(userId: string) {
     })
     .from(recommendations)
     .innerJoin(releases, eq(recommendations.releaseId, releases.id))
-    .where(and(eq(recommendations.userId, userId), eq(recommendations.dismissed, false)))
+    .where(
+      and(
+        eq(recommendations.userId, userId),
+        eq(recommendations.dismissed, false),
+        // Never surface a release the user already owns or has wishlisted, even if it was
+        // added after this recommendation set was generated.
+        notExists(
+          db
+            .select({ one: sql`1` })
+            .from(collectionItems)
+            .where(
+              and(
+                eq(collectionItems.userId, userId),
+                eq(collectionItems.releaseId, recommendations.releaseId),
+              ),
+            ),
+        ),
+        notExists(
+          db
+            .select({ one: sql`1` })
+            .from(wishlistItems)
+            .where(
+              and(
+                eq(wishlistItems.userId, userId),
+                eq(wishlistItems.releaseId, recommendations.releaseId),
+              ),
+            ),
+        ),
+      ),
+    )
     .orderBy(desc(recommendations.score));
 
   if (rows.length === 0) return [];
