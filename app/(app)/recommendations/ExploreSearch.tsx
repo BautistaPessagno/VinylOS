@@ -5,6 +5,7 @@ import {
   isLatestSearchRequest,
   isSearchQueryReady,
   normalizeSearchQuery,
+  searchErrorMessage,
 } from "@/lib/search/searchQuery";
 import { searchExploreAction, type ExploreSearchResult } from "./actions";
 import { ExploreSearchResults } from "./ExploreSearchResults";
@@ -72,9 +73,9 @@ export function ExploreSearch({
           if (isLatestSearchRequest(requestId, latestSearchRequestId.current)) {
             setResult(nextResult);
           }
-        } catch {
+        } catch (caught) {
           if (isLatestSearchRequest(requestId, latestSearchRequestId.current)) {
-            setError("Search is unavailable right now. Try again.");
+            setError(searchErrorMessage(caught));
           }
         } finally {
           if (pendingSearches.current.get(normalizedQuery) === pending) {
@@ -128,6 +129,11 @@ export function ExploreSearch({
           <p className="text-center text-sm text-zinc-500">Enter at least 2 characters</p>
         )}
         {error && <p className="text-center text-sm text-red-600">{error}</p>}
+        {result && result.query === normalizedQuery && !isSearching && !error && (
+          <p className="sr-only">
+            Found {result.artists.length} artists and {result.albums.length} records
+          </p>
+        )}
       </div>
 
       {normalizedQuery.length === 0

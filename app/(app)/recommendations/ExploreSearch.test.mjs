@@ -17,6 +17,8 @@ test("Explore search uses normalized cached latest-only requests", () => {
   assert.match(source, /latestSearchRequestId\s*=\s*useRef/);
   assert.match(source, /focusOnMount/);
   assert.match(source, /aria-live="polite"/);
+  assert.match(source, /searchErrorMessage\(caught\)/);
+  assert.match(source, /Found \{result\.artists\.length\} artists and \{result\.albums\.length\} records/);
 });
 
 test("Explore server action searches Discogs artists and vinyl concurrently", () => {
