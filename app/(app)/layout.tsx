@@ -17,6 +17,7 @@ export default async function AppLayout({
         name={session.user.name}
         handle={session.user.displayUsername ?? session.user.username ?? null}
         image={session.user.image}
+        userId={session.user.id}
       />
       <main className="flex flex-1 flex-col px-6 py-8">{children}</main>
     </div>

@@ -1,5 +1,4 @@
-import { requireSession } from "@/lib/auth-session";
-import { getWrappedStats } from "@/lib/services/wrappedService";
+import type { WrappedStats } from "@/lib/services/wrappedService";
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
@@ -25,14 +24,11 @@ function Bar({ label, count, max }: { label: string; count: number; max: number 
   );
 }
 
-export default async function WrappedPage() {
-  const session = await requireSession();
-  const stats = await getWrappedStats(session.user.id);
-
+export function WrappedSection({ stats }: { stats: WrappedStats }) {
   if (stats.totalRecords === 0) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-semibold">Your Wrapped</h1>
+        <h2 className="text-xl font-semibold">Your Wrapped</h2>
         <p className="text-zinc-500">Add some records to your collection to see your stats.</p>
       </div>
     );
@@ -43,7 +39,7 @@ export default async function WrappedPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="text-2xl font-semibold">Your Wrapped</h1>
+      <h2 className="text-xl font-semibold">Your Wrapped</h2>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <StatCard label="Total records" value={stats.totalRecords.toString()} />
@@ -57,7 +53,7 @@ export default async function WrappedPage() {
 
       {stats.genreDistribution.length > 0 && (
         <div className="flex flex-col gap-2">
-          <h2 className="font-medium">Genres</h2>
+          <h3 className="font-medium">Genres</h3>
           {stats.genreDistribution.map((g) => (
             <Bar key={g.genre} label={g.genre} count={g.count} max={maxGenreCount} />
           ))}
@@ -66,7 +62,7 @@ export default async function WrappedPage() {
 
       {stats.countryDistribution.length > 0 && (
         <div className="flex flex-col gap-2">
-          <h2 className="font-medium">Countries</h2>
+          <h3 className="font-medium">Countries</h3>
           {stats.countryDistribution.map((c) => (
             <Bar key={c.country} label={c.country} count={c.count} max={maxCountryCount} />
           ))}

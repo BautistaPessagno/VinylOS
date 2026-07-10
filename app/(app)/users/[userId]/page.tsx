@@ -1,13 +1,20 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
 import { requireSession } from "@/lib/auth-session";
 import { listPublicCollectionItems } from "@/lib/services/collectionService";
 import {
   getFollowStatus,
   getPublicUserProfile,
 } from "@/lib/services/friendService";
+import { getWrappedStats } from "@/lib/services/wrappedService";
 import { followUserAction, unfollowUserAction } from "../../friends/actions";
 import { addReleaseToWishlistAction } from "../../wishlist/actions";
+import { SettingsForm } from "../../settings/SettingsForm";
+import { PasswordForm } from "../../settings/PasswordForm";
+import { DeleteAccountSection } from "../../settings/DeleteAccountSection";
+import { WrappedSection } from "./WrappedSection";
 
 function FollowForm({
   userId,
@@ -37,13 +44,50 @@ function FollowForm({
   );
 }
 
+function ProfileTabs({
+  userId,
+  active,
+}: {
+  userId: string;
+  active: "profile" | "settings";
+}) {
+  const tabs = [
+    { key: "profile", label: "Profile", href: `/users/${userId}` },
+    { key: "settings", label: "Settings", href: `/users/${userId}?view=settings` },
+  ] as const;
+  return (
+    <nav className="flex gap-6 border-b border-zinc-200 dark:border-zinc-800">
+      {tabs.map(({ key, label, href }) => {
+        const isActive = key === active;
+        return (
+          <Link
+            key={key}
+            href={href}
+            aria-current={isActive ? "page" : undefined}
+            className={
+              isActive
+                ? "-mb-px border-b-2 border-red-500 pb-2 text-sm font-medium text-red-500"
+                : "-mb-px border-b-2 border-transparent pb-2 text-sm text-zinc-600 hover:text-red-500"
+            }
+          >
+            {label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
 export default async function UserProfilePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ userId: string }>;
+  searchParams: Promise<{ view?: string }>;
 }) {
   const session = await requireSession();
   const { userId } = await params;
+  const { view } = await searchParams;
   const profile = await getPublicUserProfile(userId);
   if (!profile) notFound();
 
@@ -51,6 +95,15 @@ export default async function UserProfilePage({
     getFollowStatus(session.user.id, profile.id),
     listPublicCollectionItems(profile.id),
   ]);
+  const isSelf = followStatus.isSelf;
+  const showSettings = isSelf && view === "settings";
+  const wrapped = isSelf && !showSettings ? await getWrappedStats(profile.id) : null;
+  const username = session.user.username ?? session.user.displayUsername ?? "";
+  let hasPassword = false;
+  if (showSettings) {
+    const accounts = await auth.api.listUserAccounts({ headers: await headers() });
+    hasPassword = accounts.some((account) => account.providerId === "credential");
+  }
   const returnTo = `/users/${profile.id}`;
 
   return (
@@ -82,7 +135,28 @@ export default async function UserProfilePage({
         )}
       </div>
 
-      {items.length === 0 ? (
+      {isSelf && (
+        <ProfileTabs
+          userId={profile.id}
+          active={showSettings ? "settings" : "profile"}
+        />
+      )}
+
+      {showSettings ? (
+        <div className="mx-auto flex w-full max-w-lg flex-col gap-10">
+          <SettingsForm
+            name={session.user.name}
+            username={username}
+            email={session.user.email}
+          />
+          {hasPassword && <PasswordForm />}
+          <DeleteAccountSection username={username} />
+        </div>
+      ) : (
+        <>
+          {wrapped && <WrappedSection stats={wrapped} />}
+
+          {items.length === 0 ? (
         <p className="text-zinc-500">No public records yet.</p>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
@@ -134,6 +208,8 @@ export default async function UserProfilePage({
             </div>
           ))}
         </div>
+      )}
+        </>
       )}
     </div>
   );
