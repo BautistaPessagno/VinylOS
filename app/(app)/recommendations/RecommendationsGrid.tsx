@@ -38,7 +38,7 @@ export async function RecommendationsGrid({ userId }: { userId: string }) {
           className="flex flex-col gap-2 rounded border border-zinc-200 p-3 dark:border-zinc-800"
         >
           <Link
-            href={`/album/${item.releaseId}`}
+            href={`/album/${item.releaseId}?from=/recommendations`}
             className="aspect-square w-full overflow-hidden rounded bg-zinc-100 dark:bg-zinc-800"
           >
             {item.coverUrl && (
@@ -51,7 +51,7 @@ export async function RecommendationsGrid({ userId }: { userId: string }) {
             )}
           </Link>
           <div className="flex flex-col">
-            <Link href={`/album/${item.releaseId}`} className="truncate font-medium hover:underline">
+            <Link href={`/album/${item.releaseId}?from=/recommendations`} className="truncate font-medium hover:underline">
               {item.title}
             </Link>
             <span className="truncate text-sm text-zinc-500">

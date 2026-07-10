@@ -108,5 +108,8 @@ export async function openExploreAlbumAction(formData: FormData) {
   const album = String(formData.get("album") ?? "");
 
   const releaseId = await resolveReleaseFromNames(artist, album);
-  redirect(releaseId ? `/album/${releaseId}` : exploreReturnPath(formData));
+  const returnTo = exploreReturnPath(formData);
+  redirect(
+    releaseId ? `/album/${releaseId}?from=${encodeURIComponent(returnTo)}` : returnTo,
+  );
 }

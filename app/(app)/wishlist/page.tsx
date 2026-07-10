@@ -33,7 +33,10 @@ export default async function WishlistPage() {
               key={item.itemId}
               className="flex flex-col gap-2 rounded border border-zinc-200 p-3"
             >
-              <div className="aspect-square w-full overflow-hidden rounded bg-zinc-100">
+              <Link
+                href={`/album/${item.releaseId}?from=/wishlist`}
+                className="aspect-square w-full overflow-hidden rounded bg-zinc-100"
+              >
                 {item.coverUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -42,9 +45,14 @@ export default async function WishlistPage() {
                     className="h-full w-full object-cover"
                   />
                 )}
-              </div>
+              </Link>
               <div className="flex flex-col">
-                <span className="truncate font-medium">{item.title}</span>
+                <Link
+                  href={`/album/${item.releaseId}?from=/wishlist`}
+                  className="truncate font-medium hover:underline"
+                >
+                  {item.title}
+                </Link>
                 <span className="truncate text-sm text-zinc-500">
                   {item.artistNames.join(", ")}
                 </span>

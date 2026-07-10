@@ -17,6 +17,23 @@ function cleanSummary(html?: string): string {
     .trim();
 }
 
+/** Validates a `from` origin the same way server actions validate `returnTo`. */
+function safeFrom(from?: string): string | null {
+  if (typeof from !== "string" || !from.startsWith("/") || from.startsWith("//")) {
+    return null;
+  }
+  return from;
+}
+
+/** Labels the back link based on which page the user arrived from. */
+function backLabel(from: string): string {
+  if (from.startsWith("/collection")) return "Back to your collection";
+  if (from.startsWith("/wishlist")) return "Back to your wishlist";
+  if (from.startsWith("/users/")) return "Back to profile";
+  if (from.startsWith("/artist/")) return "Back to artist";
+  return "Back to Discover";
+}
+
 function metadataBlurb(
   title: string,
   artistNames: string[],
@@ -35,11 +52,14 @@ function metadataBlurb(
 
 export default async function AlbumDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ from?: string }>;
 }) {
   await requireSession();
   const { id } = await params;
+  const { from } = await searchParams;
   const release = await getReleaseById(Number(id));
   if (!release) notFound();
 
@@ -71,12 +91,18 @@ export default async function AlbumDetailPage({
 
   const coverUrl = release.coverUrl || albumInfo?.imageUrl || "";
   const tags = [...(release.genres ?? []), ...(release.styles ?? [])];
-  const returnTo = `/album/${release.releaseId}`;
+  const origin = safeFrom(from);
+  const backHref = origin ?? "/recommendations";
+  const backText = origin ? backLabel(origin) : "Back to Discover";
+  // Keep the origin through add/wishlist actions so the back link survives a round-trip.
+  const returnTo = origin
+    ? `/album/${release.releaseId}?from=${encodeURIComponent(origin)}`
+    : `/album/${release.releaseId}`;
 
   return (
     <div className="flex flex-col gap-6">
-      <Link href="/recommendations" className="text-sm text-zinc-500 hover:text-red-500">
-        ← Back to Discover
+      <Link href={backHref} className="text-sm text-zinc-500 hover:text-red-500">
+        ← {backText}
       </Link>
 
       <div className="flex flex-col gap-6 sm:flex-row">
