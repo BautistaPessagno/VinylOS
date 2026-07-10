@@ -268,6 +268,36 @@ export async function listCollectionItems(
   }));
 }
 
+/** Full catalog details for one release (with ordered artist names), for the album detail page. */
+export async function getReleaseById(releaseId: number) {
+  const [release] = await db
+    .select({
+      releaseId: releases.id,
+      title: releases.title,
+      year: releases.year,
+      country: releases.country,
+      coverUrl: releases.coverUrl,
+      thumbUrl: releases.thumbUrl,
+      genres: releases.genres,
+      styles: releases.styles,
+      labelName: releases.labelName,
+      catalogNumber: releases.catalogNumber,
+    })
+    .from(releases)
+    .where(eq(releases.id, releaseId))
+    .limit(1);
+  if (!release) return null;
+
+  const artistRows = await db
+    .select({ artistName: artists.name })
+    .from(releaseArtists)
+    .innerJoin(artists, eq(releaseArtists.artistId, artists.id))
+    .where(eq(releaseArtists.releaseId, releaseId))
+    .orderBy(releaseArtists.joinOrder);
+
+  return { ...release, artistNames: artistRows.map((r) => r.artistName) };
+}
+
 /** Recent, real album covers for the marketing landing page's vinyl carousel. */
 export async function listRecentReleaseCovers(limit: number) {
   const rows = await db

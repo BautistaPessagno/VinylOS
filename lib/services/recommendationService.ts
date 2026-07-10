@@ -333,3 +333,42 @@ export async function dismissRecommendationForRelease(userId: string, releaseId:
       and(eq(recommendations.userId, userId), eq(recommendations.releaseId, releaseId)),
     );
 }
+
+/**
+ * Marks a release as "not interested" for the user so it won't resurface in future
+ * generation runs — works even when the release isn't a current recommendation (e.g.
+ * dismissed from the Explore-sourced album detail page), inserting a dismissed row with
+ * placeholder score/source/reason.
+ */
+export async function dismissReleaseForUser(userId: string, releaseId: number) {
+  await db
+    .insert(recommendations)
+    .values({
+      userId,
+      releaseId,
+      score: "0",
+      source: "discogs_cooccurrence",
+      reason: "Dismissed",
+      dismissed: true,
+    })
+    .onConflictDoUpdate({
+      target: [recommendations.userId, recommendations.releaseId],
+      set: { dismissed: true },
+    });
+}
+
+/**
+ * Resolves a free-text artist + album (e.g. from a Last.fm Explore card) to a locally
+ * cached release, fetching and upserting the top Discogs vinyl pressing. Returns the
+ * internal release id, or null if nothing matched.
+ */
+export async function resolveReleaseFromNames(
+  artist: string,
+  album: string,
+): Promise<number | null> {
+  const groups = await discogs.searchVinylAlbums(`${artist} ${album}`);
+  const top = groups[0];
+  if (!top) return null;
+  const detail = await discogs.getRelease(top.releaseId);
+  return upsertRelease(releaseInputFromDiscogs(detail));
+}

@@ -1,13 +1,26 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth-session";
 import { addCollectionItem } from "@/lib/services/collectionService";
+import { addWishlistItem } from "@/lib/services/wishlistService";
 import {
   generateRecommendations,
   dismissRecommendation,
   dismissRecommendationForRelease,
+  resolveReleaseFromNames,
 } from "@/lib/services/recommendationService";
+
+const EXPLORE_RETURN = "/recommendations?tab=explore";
+
+function exploreReturnPath(formData: FormData) {
+  const value = formData.get("returnTo");
+  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) {
+    return EXPLORE_RETURN;
+  }
+  return value;
+}
 
 export async function refreshRecommendationsAction() {
   const session = await requireSession();
@@ -32,4 +45,42 @@ export async function addRecommendationToCollectionAction(formData: FormData) {
   await dismissRecommendationForRelease(session.user.id, releaseId);
   revalidatePath("/recommendations");
   revalidatePath("/collection");
+}
+
+/** Resolve an Explore card (Last.fm artist + album) to a release, then add it to the collection. */
+export async function addExploreAlbumAction(formData: FormData) {
+  const session = await requireSession();
+  const artist = String(formData.get("artist") ?? "");
+  const album = String(formData.get("album") ?? "");
+
+  const releaseId = await resolveReleaseFromNames(artist, album);
+  if (releaseId) {
+    await addCollectionItem(session.user.id, releaseId, {}, "manual");
+    revalidatePath("/collection");
+  }
+  redirect(exploreReturnPath(formData));
+}
+
+/** Resolve an Explore card to a release, then add it to the wishlist. */
+export async function wishlistExploreAlbumAction(formData: FormData) {
+  const session = await requireSession();
+  const artist = String(formData.get("artist") ?? "");
+  const album = String(formData.get("album") ?? "");
+
+  const releaseId = await resolveReleaseFromNames(artist, album);
+  if (releaseId) {
+    await addWishlistItem(session.user.id, releaseId);
+    revalidatePath("/wishlist");
+  }
+  redirect(exploreReturnPath(formData));
+}
+
+/** Resolve an Explore card to a release, then open its detail page. */
+export async function openExploreAlbumAction(formData: FormData) {
+  await requireSession();
+  const artist = String(formData.get("artist") ?? "");
+  const album = String(formData.get("album") ?? "");
+
+  const releaseId = await resolveReleaseFromNames(artist, album);
+  redirect(releaseId ? `/album/${releaseId}` : exploreReturnPath(formData));
 }
