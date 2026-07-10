@@ -12,7 +12,7 @@ const NAV_LINKS = [
   { href: "/wishlist", label: "Wishlist" },
   { href: "/friends", label: "Friends" },
   { href: "/wrapped", label: "Wrapped" },
-  { href: "/recommendations", label: "Recommendations" },
+  { href: "/recommendations", label: "Discover" },
 ];
 
 function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
