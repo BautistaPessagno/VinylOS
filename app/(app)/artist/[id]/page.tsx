@@ -57,9 +57,6 @@ export default async function ArtistPage({
           )}
         </div>
         <div className="min-w-0">
-          <p className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-red-500">
-            Discogs artist
-          </p>
           <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{artist.name}</h1>
           {artist.profile && (
             <p className="mt-3 max-w-3xl whitespace-pre-line text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">

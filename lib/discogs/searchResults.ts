@@ -34,12 +34,12 @@ export function groupDiscogsAlbums(
     const { artist, title } = splitDiscogsTitle(result.title);
     groups.set(key, {
       key,
-      masterId: result.master_id,
+      masterId: result.master_id ?? undefined,
       releaseId: result.id,
       artist,
       title,
-      coverImage: result.cover_image || result.thumb,
-      year: result.year,
+      coverImage: result.cover_image || result.thumb || undefined,
+      year: result.year ?? undefined,
       genres: result.genre ?? [],
       editionCount: 1,
     });
