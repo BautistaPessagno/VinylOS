@@ -165,7 +165,10 @@ export default async function UserProfilePage({
               key={item.itemId}
               className="flex flex-col gap-2 rounded border border-zinc-200 p-3"
             >
-              <div className="aspect-square w-full overflow-hidden rounded bg-zinc-100">
+              <Link
+                href={`/album/${item.releaseId}`}
+                className="aspect-square w-full overflow-hidden rounded bg-zinc-100"
+              >
                 {item.coverUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -174,9 +177,14 @@ export default async function UserProfilePage({
                     className="h-full w-full object-cover"
                   />
                 )}
-              </div>
+              </Link>
               <div className="flex flex-col">
-                <span className="truncate font-medium">{item.title}</span>
+                <Link
+                  href={`/album/${item.releaseId}?from=${returnTo}`}
+                  className="truncate font-medium hover:underline"
+                >
+                  {item.title}
+                </Link>
                 <span className="truncate text-sm text-zinc-500">
                   {item.artistNames.join(", ")}
                 </span>
