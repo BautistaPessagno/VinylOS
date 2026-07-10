@@ -273,6 +273,7 @@ export async function getReleaseById(releaseId: number) {
   const [release] = await db
     .select({
       releaseId: releases.id,
+      discogsReleaseId: releases.discogsReleaseId,
       title: releases.title,
       year: releases.year,
       country: releases.country,

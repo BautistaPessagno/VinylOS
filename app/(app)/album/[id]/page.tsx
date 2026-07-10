@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireSession } from "@/lib/auth-session";
 import { getReleaseById } from "@/lib/services/collectionService";
+import { getRelease } from "@/lib/discogs/client";
 import { getAlbumInfo, getArtistInfo } from "@/lib/lastfm/client";
 import { addReleaseToWishlistAction } from "../../wishlist/actions";
 import { addAlbumToCollectionAction, dismissAlbumAction } from "./actions";
@@ -43,10 +44,18 @@ export default async function AlbumDetailPage({
   if (!release) notFound();
 
   const primaryArtist = release.artistNames[0] ?? "";
-  const [albumInfo, artistInfo] = await Promise.all([
+  const [albumInfo, artistInfo, discogsDetail] = await Promise.all([
     primaryArtist ? getAlbumInfo(primaryArtist, release.title) : Promise.resolve(null),
     primaryArtist ? getArtistInfo(primaryArtist) : Promise.resolve(null),
+    release.discogsReleaseId
+      ? getRelease(release.discogsReleaseId).catch(() => null)
+      : Promise.resolve(null),
   ]);
+
+  // Discogs returns tracklist entries in play order; drop non-track rows (headings/indexes).
+  const tracks = (discogsDetail?.tracklist ?? []).filter(
+    (t) => !t.type_ || t.type_ === "track",
+  );
 
   const description =
     cleanSummary(albumInfo?.summary) ||
@@ -137,6 +146,32 @@ export default async function AlbumDetailPage({
           {description}
         </p>
       </div>
+
+      {tracks.length > 0 && (
+        <section aria-labelledby="tracklist-heading" className="max-w-2xl">
+          <h2 id="tracklist-heading" className="mb-2 text-lg font-medium">
+            Tracklist
+          </h2>
+          <ol className="divide-y divide-zinc-100 dark:divide-zinc-800">
+            {tracks.map((track, index) => (
+              <li
+                key={index}
+                className="flex items-baseline gap-3 py-2 text-sm"
+              >
+                <span className="w-8 shrink-0 text-zinc-400">
+                  {track.position || index + 1}
+                </span>
+                <span className="flex-1 text-zinc-700 dark:text-zinc-200">
+                  {track.title}
+                </span>
+                {track.duration && (
+                  <span className="text-zinc-400">{track.duration}</span>
+                )}
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
     </div>
   );
 }

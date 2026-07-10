@@ -102,6 +102,15 @@ export const discogsReleaseArtistSchema = z.object({
   role: z.string().optional(),
 });
 
+export const discogsTrackSchema = z.object({
+  position: z.string().optional(),
+  // Discogs' real field name (trailing underscore): "track" | "heading" | "index".
+  type_: z.string().optional(),
+  title: z.string(),
+  duration: z.string().optional(),
+});
+export type DiscogsTrack = z.infer<typeof discogsTrackSchema>;
+
 export const discogsReleaseSchema = z.object({
   id: z.number(),
   title: z.string(),
@@ -138,5 +147,6 @@ export const discogsReleaseSchema = z.object({
       }),
     )
     .optional(),
+  tracklist: z.array(discogsTrackSchema).optional(),
 });
 export type DiscogsRelease = z.infer<typeof discogsReleaseSchema>;
