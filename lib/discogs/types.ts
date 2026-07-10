@@ -4,22 +4,34 @@ export const discogsSearchResultSchema = z.object({
   id: z.number(),
   type: z.string(),
   title: z.string(),
-  year: z.string().optional(),
-  thumb: z.string().optional(),
-  cover_image: z.string().optional(),
-  format: z.array(z.string()).optional(),
-  label: z.array(z.string()).optional(),
-  genre: z.array(z.string()).optional(),
-  style: z.array(z.string()).optional(),
-  catno: z.string().optional(),
-  country: z.string().optional(),
-  master_id: z.number().optional(),
+  year: z.string().nullish(),
+  thumb: z.string().nullish(),
+  cover_image: z.string().nullish(),
+  format: z.array(z.string()).nullish(),
+  label: z.array(z.string()).nullish(),
+  genre: z.array(z.string()).nullish(),
+  style: z.array(z.string()).nullish(),
+  catno: z.string().nullish(),
+  country: z.string().nullish(),
+  master_id: z.number().nullish(),
 });
 export type DiscogsSearchResult = z.infer<typeof discogsSearchResultSchema>;
 
 export const discogsSearchResponseSchema = z.object({
+  pagination: z
+    .object({
+      page: z.number(),
+      pages: z.number(),
+      per_page: z.number(),
+      items: z.number(),
+    })
+    .optional(),
   results: z.array(discogsSearchResultSchema),
 });
+
+export type DiscogsPagination = NonNullable<
+  z.infer<typeof discogsSearchResponseSchema>["pagination"]
+>;
 
 /**
  * One album, collapsed from all of its vinyl pressings. `releaseId` points at the
@@ -29,11 +41,42 @@ export type DiscogsAlbumGroup = {
   key: string;
   masterId?: number;
   releaseId: number;
+  artist: string;
   title: string;
   coverImage?: string;
   year?: string;
   genres: string[];
   editionCount: number;
+};
+
+export type DiscogsArtistSearchResult = {
+  id: number;
+  name: string;
+  imageUrl?: string;
+  thumbUrl?: string;
+};
+
+const discogsImageSchema = z.object({
+  type: z.string().optional(),
+  uri: z.string(),
+  uri150: z.string().optional(),
+  width: z.number().optional(),
+  height: z.number().optional(),
+});
+
+export const discogsArtistSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  profile: z.string().optional(),
+  images: z.array(discogsImageSchema).optional(),
+});
+export type DiscogsArtist = z.infer<typeof discogsArtistSchema>;
+
+export type DiscogsAlbumPage = {
+  albums: DiscogsAlbumGroup[];
+  page: number;
+  pages: number;
+  totalItems: number;
 };
 
 export const discogsMasterVersionSchema = z.object({

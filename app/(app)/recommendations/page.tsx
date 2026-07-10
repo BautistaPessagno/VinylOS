@@ -9,10 +9,10 @@ import { ExploreTab } from "./ExploreTab";
 export default async function RecommendationsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; genre?: string }>;
+  searchParams: Promise<{ tab?: string; genre?: string; focus?: string }>;
 }) {
   const session = await requireSession();
-  const { tab, genre } = await searchParams;
+  const { tab, genre, focus } = await searchParams;
   const activeTab = tab === "explore" ? "explore" : "recommendations";
 
   return (
@@ -38,7 +38,11 @@ export default async function RecommendationsPage({
           <RecommendationsGrid userId={session.user.id} />
         </Suspense>
       ) : (
-        <ExploreTab genre={genre} userId={session.user.id} />
+        <ExploreTab
+          genre={genre}
+          userId={session.user.id}
+          focusSearch={focus === "search"}
+        />
       )}
     </div>
   );

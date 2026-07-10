@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth-session";
 import * as discogs from "@/lib/discogs/client";
 import { releaseInputFromDiscogs } from "@/lib/discogs/mapRelease";
+import { isSearchQueryReady, normalizeSearchQuery } from "@/lib/search/searchQuery";
 import {
   upsertRelease,
   addCollectionItem,
@@ -20,8 +21,9 @@ import {
 
 export async function searchDiscogsAction(query: string) {
   await requireSession();
-  if (!query.trim()) return [];
-  return discogs.searchVinylAlbums(query);
+  const normalizedQuery = normalizeSearchQuery(query);
+  if (!isSearchQueryReady(normalizedQuery)) return [];
+  return discogs.searchVinylAlbums(normalizedQuery);
 }
 
 export async function getAlbumEditionsAction(masterId: number) {
