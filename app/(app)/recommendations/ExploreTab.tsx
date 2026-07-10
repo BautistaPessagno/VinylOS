@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { listExploreGenres, listExploreAlbums } from "@/lib/services/exploreService";
+import { getLibraryAlbumKeys, albumMatchKey } from "@/lib/services/collectionService";
 import {
   addExploreAlbumAction,
   wishlistExploreAlbumAction,
@@ -11,10 +12,17 @@ import {
  * user owns. Cards render straight from Last.fm data; a Discogs release is resolved only
  * when the user acts on a card (Add / Wishlist / Details).
  */
-export async function ExploreTab({ genre }: { genre?: string }) {
+export async function ExploreTab({ genre, userId }: { genre?: string; userId: string }) {
   const genres = listExploreGenres();
   const selected = genre && genres.includes(genre) ? genre : genres[0];
-  const albums = await listExploreAlbums(selected);
+  const [allAlbums, libraryKeys] = await Promise.all([
+    listExploreAlbums(selected),
+    getLibraryAlbumKeys(userId),
+  ]);
+  // Hide albums the user already owns or has wishlisted (matched by normalized artist+title).
+  const albums = allAlbums.filter(
+    (a) => !libraryKeys.has(albumMatchKey(a.artist, a.album)),
+  );
   const returnTo = `/recommendations?tab=explore&genre=${encodeURIComponent(selected)}`;
 
   return (

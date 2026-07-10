@@ -5,7 +5,7 @@ import {
   releaseArtists,
   collectionItems,
 } from "@/lib/db/schema";
-import { eq, and, ilike, arrayContains, desc, inArray, isNotNull, ne } from "drizzle-orm";
+import { eq, and, ilike, arrayContains, desc, inArray, isNotNull, ne, sql } from "drizzle-orm";
 import type {
   ReleaseFormOutput,
   CollectionItemFormOutput,
@@ -358,4 +358,40 @@ export async function listPublicCollectionItems(userId: string) {
     ...row,
     artistNames: artistsByRelease.get(row.releaseId) ?? [],
   }));
+}
+
+/**
+ * Builds a normalized `artist::title` match key. Since Explore cards are raw Last.fm strings
+ * with no resolved release id, matching is by text — so we lowercase and strip parenthetical/
+ * bracketed suffixes (e.g. "(Remastered)", "[Deluxe Edition]") and punctuation, so
+ * "Abbey Road" and "Abbey Road (Remastered)" collapse to the same key.
+ */
+export function albumMatchKey(artist: string, title: string): string {
+  const normalize = (s: string) =>
+    s
+      .toLowerCase()
+      .replace(/\([^)]*\)/g, "")
+      .replace(/\[[^\]]*\]/g, "")
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+  return `${normalize(artist)}::${normalize(title)}`;
+}
+
+/**
+ * Normalized match keys for every artist/title pair across the user's collection ∪ wishlist.
+ * Used to hide already-owned/wishlisted albums from the Explore tab.
+ */
+export async function getLibraryAlbumKeys(userId: string): Promise<Set<string>> {
+  const result = await db.execute<{ artist: string; title: string }>(sql`
+    select a.name as artist, r.title as title
+    from releases r
+    join release_artists ra on ra.release_id = r.id
+    join artists a on a.id = ra.artist_id
+    where r.id in (
+      select release_id from collection_items where user_id = ${userId}
+      union
+      select release_id from wishlist_items where user_id = ${userId}
+    )
+  `);
+  return new Set(result.rows.map((r) => albumMatchKey(r.artist, r.title)));
 }
