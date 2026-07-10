@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import {
   searchDiscogsAction,
   addAlbumFromDiscogsAction,
@@ -10,6 +10,11 @@ import {
 import { addAlbumToWishlistFromDiscogsAction } from "../../wishlist/actions";
 import { EditionPicker } from "../EditionPicker";
 import type { DiscogsAlbumGroup } from "@/lib/discogs/types";
+import {
+  isLatestSearchRequest,
+  isSearchQueryReady,
+  normalizeSearchQuery,
+} from "@/lib/search/searchQuery";
 
 const SEARCH_DEBOUNCE_MS = 400;
 
@@ -87,6 +92,9 @@ function AlbumCard({
         </div>
         <div className="flex-1">
           <span className="block font-medium">{album.title}</span>
+          <span className="block text-sm text-zinc-600 dark:text-zinc-400">
+            {album.artist}
+          </span>
           <span className="block text-sm text-zinc-500">
             {album.year}
             {album.editionCount > 1 ? ` · ${album.editionCount} editions` : ""}
@@ -129,10 +137,18 @@ export function AddReleaseForm() {
   const [, startAdd] = useTransition();
   const [selected, setSelected] = useState<Map<number, DiscogsAlbumGroup>>(new Map());
   const [isBatchAdding, startBatchAdd] = useTransition();
+  const resultCache = useRef(new Map<string, DiscogsAlbumGroup[]>());
+  const pendingSearches = useRef(
+    new Map<string, Promise<DiscogsAlbumGroup[]>>(),
+  );
+  const latestSearchRequestId = useRef(0);
+  const normalizedQuery = normalizeSearchQuery(query);
+  const queryIsReady = isSearchQueryReady(normalizedQuery);
 
   function handleQueryChange(value: string) {
     setQuery(value);
-    if (!value.trim()) {
+    if (!isSearchQueryReady(value)) {
+      latestSearchRequestId.current += 1;
       setResults([]);
       setSearchError(null);
     }
@@ -157,19 +173,47 @@ export function AddReleaseForm() {
   }
 
   useEffect(() => {
-    if (!query.trim()) return;
+    const requestId = ++latestSearchRequestId.current;
+    if (!isSearchQueryReady(normalizedQuery)) {
+      return;
+    }
+
     const timeout = setTimeout(() => {
       setSearchError(null);
+      const cached = resultCache.current.get(normalizedQuery);
+      if (cached) {
+        if (isLatestSearchRequest(requestId, latestSearchRequestId.current)) {
+          setResults(cached);
+        }
+        return;
+      }
+
       startSearch(async () => {
+        let pending = pendingSearches.current.get(normalizedQuery);
+        if (!pending) {
+          pending = searchDiscogsAction(normalizedQuery);
+          pendingSearches.current.set(normalizedQuery, pending);
+        }
+
         try {
-          setResults(await searchDiscogsAction(query));
+          const nextResults = await pending;
+          resultCache.current.set(normalizedQuery, nextResults);
+          if (isLatestSearchRequest(requestId, latestSearchRequestId.current)) {
+            setResults(nextResults);
+          }
         } catch (err) {
-          setSearchError(err instanceof Error ? err.message : "Search failed");
+          if (isLatestSearchRequest(requestId, latestSearchRequestId.current)) {
+            setSearchError(err instanceof Error ? err.message : "Search failed");
+          }
+        } finally {
+          if (pendingSearches.current.get(normalizedQuery) === pending) {
+            pendingSearches.current.delete(normalizedQuery);
+          }
         }
       });
     }, SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(timeout);
-  }, [query]);
+  }, [normalizedQuery]);
 
   function handleAdd(discogsReleaseId: number) {
     setPendingId(discogsReleaseId);
@@ -238,12 +282,17 @@ export function AddReleaseForm() {
             className="w-full rounded border border-zinc-300 px-3 py-2 text-center"
             autoFocus
           />
-          {isSearching && (
+          {isSearching && queryIsReady && (
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-zinc-400">
               Searching…
             </span>
           )}
         </div>
+        {normalizedQuery.length > 0 && !queryIsReady && (
+          <p className="text-center text-sm text-zinc-500">
+            Enter at least 2 characters
+          </p>
+        )}
         {searchError && <p className="text-center text-sm text-red-600">{searchError}</p>}
         {results.length > 0 && (
           <p className="text-center text-sm text-zinc-500">
