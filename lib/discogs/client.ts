@@ -2,11 +2,21 @@ import {
   discogsReleaseSchema,
   discogsSearchResponseSchema,
   discogsMasterVersionsResponseSchema,
+  discogsArtistSchema,
   type DiscogsRelease,
   type DiscogsSearchResult,
   type DiscogsAlbumGroup,
+  type DiscogsAlbumPage,
+  type DiscogsArtist,
+  type DiscogsArtistSearchResult,
   type DiscogsMasterVersion,
 } from "./types";
+import {
+  groupDiscogsAlbums,
+  mapDiscogsArtists,
+  toDiscogsAlbumPage,
+} from "./searchResults";
+import { isSearchQueryReady, normalizeSearchQuery } from "@/lib/search/searchQuery";
 
 const DISCOGS_API_BASE = "https://api.discogs.com";
 
@@ -40,8 +50,11 @@ async function discogsFetch(url: URL, revalidate?: number) {
 export async function searchReleases(
   query: string,
 ): Promise<DiscogsSearchResult[]> {
+  const normalizedQuery = normalizeSearchQuery(query);
+  if (!isSearchQueryReady(normalizedQuery)) return [];
+
   const url = buildUrl("/database/search", {
-    q: query,
+    q: normalizedQuery,
     type: "release",
     format: "Vinyl",
     per_page: 50,
@@ -64,28 +77,51 @@ export async function getRelease(discogsReleaseId: number): Promise<DiscogsRelea
  */
 export async function searchVinylAlbums(query: string): Promise<DiscogsAlbumGroup[]> {
   const results = await searchReleases(query);
-  const groups = new Map<string, DiscogsAlbumGroup>();
+  return groupDiscogsAlbums(results);
+}
 
-  for (const r of results) {
-    const key = r.master_id ? `m:${r.master_id}` : `r:${r.id}`;
-    const existing = groups.get(key);
-    if (existing) {
-      existing.editionCount += 1;
-      continue;
-    }
-    groups.set(key, {
-      key,
-      masterId: r.master_id,
-      releaseId: r.id,
-      title: r.title,
-      coverImage: r.cover_image || r.thumb,
-      year: r.year,
-      genres: r.genre ?? [],
-      editionCount: 1,
-    });
+export async function searchArtists(
+  query: string,
+): Promise<DiscogsArtistSearchResult[]> {
+  const normalizedQuery = normalizeSearchQuery(query);
+  if (!isSearchQueryReady(normalizedQuery)) return [];
+
+  const url = buildUrl("/database/search", {
+    q: normalizedQuery,
+    type: "artist",
+    per_page: 8,
+  });
+  const data = await discogsFetch(url, 3600);
+  const response = discogsSearchResponseSchema.parse(data);
+  return mapDiscogsArtists(response.results);
+}
+
+export async function getArtist(discogsArtistId: number): Promise<DiscogsArtist> {
+  const url = buildUrl(`/artists/${discogsArtistId}`, {});
+  const data = await discogsFetch(url, 86400);
+  return discogsArtistSchema.parse(data);
+}
+
+export async function searchArtistVinylAlbums(
+  artistName: string,
+  page: number,
+): Promise<DiscogsAlbumPage> {
+  const normalizedArtist = normalizeSearchQuery(artistName);
+  if (!isSearchQueryReady(normalizedArtist)) {
+    return { albums: [], page: 1, pages: 1, totalItems: 0 };
   }
 
-  return [...groups.values()];
+  const safePage = Number.isInteger(page) && page > 0 ? page : 1;
+  const url = buildUrl("/database/search", {
+    artist: normalizedArtist,
+    type: "release",
+    format: "Vinyl",
+    per_page: 50,
+    page: safePage,
+  });
+  const data = await discogsFetch(url, 3600);
+  const response = discogsSearchResponseSchema.parse(data);
+  return toDiscogsAlbumPage(response.results, response.pagination);
 }
 
 export async function getMasterVersions(masterId: number): Promise<DiscogsMasterVersion[]> {
