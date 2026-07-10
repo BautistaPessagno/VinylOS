@@ -5,6 +5,12 @@ import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth-session";
 import { addCollectionItem } from "@/lib/services/collectionService";
 import { addWishlistItem } from "@/lib/services/wishlistService";
+import * as discogs from "@/lib/discogs/client";
+import type {
+  DiscogsAlbumGroup,
+  DiscogsArtistSearchResult,
+} from "@/lib/discogs/types";
+import { isSearchQueryReady, normalizeSearchQuery } from "@/lib/search/searchQuery";
 import {
   generateRecommendations,
   dismissRecommendation,
@@ -13,6 +19,12 @@ import {
 } from "@/lib/services/recommendationService";
 
 const EXPLORE_RETURN = "/recommendations?tab=explore";
+
+export type ExploreSearchResult = {
+  query: string;
+  artists: DiscogsArtistSearchResult[];
+  albums: DiscogsAlbumGroup[];
+};
 
 function exploreReturnPath(formData: FormData) {
   const value = formData.get("returnTo");
@@ -26,6 +38,20 @@ export async function refreshRecommendationsAction() {
   const session = await requireSession();
   await generateRecommendations(session.user.id);
   revalidatePath("/recommendations");
+}
+
+export async function searchExploreAction(query: string): Promise<ExploreSearchResult> {
+  await requireSession();
+  const normalizedQuery = normalizeSearchQuery(query);
+  if (!isSearchQueryReady(normalizedQuery)) {
+    return { query: normalizedQuery, artists: [], albums: [] };
+  }
+
+  const [artists, albums] = await Promise.all([
+    discogs.searchArtists(normalizedQuery),
+    discogs.searchVinylAlbums(normalizedQuery),
+  ]);
+  return { query: normalizedQuery, artists, albums };
 }
 
 export async function dismissRecommendationAction(formData: FormData) {

@@ -15,6 +15,24 @@ const NAV_LINKS = [
   { href: "/recommendations", label: "Discover" },
 ];
 
+const SEARCH_HREF = "/recommendations?tab=explore&focus=search";
+
+function SearchIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      className="h-5 w-5"
+    >
+      <circle cx="11" cy="11" r="7" />
+      <path d="m16.5 16.5 4 4" />
+    </svg>
+  );
+}
+
 function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
   return (
     <>
@@ -67,10 +85,11 @@ export function AppNav({
 
         <div className="flex items-center gap-4">
           <Link
-            href="/collection/add"
-            className="hidden rounded-lg bg-black px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 sm:inline-block dark:bg-white dark:text-black dark:hover:bg-zinc-200"
+            href={SEARCH_HREF}
+            aria-label="Search records and artists"
+            className="hidden h-10 w-10 items-center justify-center rounded-full border border-zinc-300 text-zinc-700 transition-colors hover:border-red-500 hover:text-red-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 sm:inline-flex dark:border-zinc-700 dark:text-zinc-200"
           >
-            + Add
+            <SearchIcon />
           </Link>
 
           <div className="relative">
@@ -121,11 +140,13 @@ export function AppNav({
         <nav className="flex flex-col gap-4 border-t border-zinc-200 px-6 py-4 sm:hidden dark:border-zinc-800">
           <NavLinks pathname={pathname} onNavigate={() => setMobileOpen(false)} />
           <Link
-            href="/collection/add"
+            href={SEARCH_HREF}
             onClick={() => setMobileOpen(false)}
-            className="self-start rounded-lg bg-black px-4 py-2 text-sm font-medium text-white shadow-sm dark:bg-white dark:text-black"
+            aria-label="Search records and artists"
+            className="flex items-center gap-2 text-sm text-zinc-600 hover:text-red-500"
           >
-            + Add
+            <SearchIcon />
+            Search
           </Link>
         </nav>
       )}
