@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { requireSession } from "@/lib/auth-session";
 import { listPublicCollectionItems } from "@/lib/services/collectionService";
+import { listWishlistItems } from "@/lib/services/wishlistService";
 import {
   getFollowStatus,
   getPublicUserProfile,
@@ -44,17 +45,9 @@ function FollowForm({
   );
 }
 
-function ProfileTabs({
-  userId,
-  active,
-}: {
-  userId: string;
-  active: "profile" | "settings";
-}) {
-  const tabs = [
-    { key: "profile", label: "Profile", href: `/users/${userId}` },
-    { key: "settings", label: "Settings", href: `/users/${userId}?view=settings` },
-  ] as const;
+type ProfileTab = { key: string; label: string; href: string };
+
+function ProfileTabs({ tabs, active }: { tabs: ProfileTab[]; active: string }) {
   return (
     <nav className="flex gap-6 border-b border-zinc-200 dark:border-zinc-800">
       {tabs.map(({ key, label, href }) => {
@@ -78,6 +71,82 @@ function ProfileTabs({
   );
 }
 
+// Collection and wishlist items share this shape (see listPublicCollectionItems /
+// listWishlistItems), so one grid renders both tabs.
+type ReleaseGridItem = Awaited<ReturnType<typeof listWishlistItems>>[number];
+
+function ReleaseGrid({
+  items,
+  returnTo,
+  showWishlistAction,
+}: {
+  items: ReleaseGridItem[];
+  returnTo: string;
+  showWishlistAction: boolean;
+}) {
+  const albumHref = (releaseId: number) =>
+    `/album/${releaseId}?from=${encodeURIComponent(returnTo)}`;
+  return (
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+      {items.map((item) => (
+        <div
+          key={item.itemId}
+          className="flex flex-col gap-2 rounded border border-zinc-200 p-3"
+        >
+          <Link
+            href={albumHref(item.releaseId)}
+            className="aspect-square w-full overflow-hidden rounded bg-zinc-100"
+          >
+            {item.coverUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={item.coverUrl}
+                alt={item.title}
+                className="h-full w-full object-cover"
+              />
+            )}
+          </Link>
+          <div className="flex flex-col">
+            <Link
+              href={albumHref(item.releaseId)}
+              className="truncate font-medium hover:underline"
+            >
+              {item.title}
+            </Link>
+            <span className="truncate text-sm text-zinc-500">
+              {item.artistNames.join(", ")}
+            </span>
+            <span className="text-xs text-zinc-400">
+              {item.year} {item.labelName ? `· ${item.labelName}` : ""}
+            </span>
+          </div>
+          {item.genres && item.genres.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {item.genres.slice(0, 2).map((genre) => (
+                <span
+                  key={genre}
+                  className="rounded bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500"
+                >
+                  {genre}
+                </span>
+              ))}
+            </div>
+          )}
+          {showWishlistAction && (
+            <form action={addReleaseToWishlistAction} className="mt-auto text-sm">
+              <input type="hidden" name="releaseId" value={item.releaseId} />
+              <input type="hidden" name="returnTo" value={returnTo} />
+              <button type="submit" className="underline">
+                Wishlist
+              </button>
+            </form>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default async function UserProfilePage({
   params,
   searchParams,
@@ -97,6 +166,11 @@ export default async function UserProfilePage({
   ]);
   const isSelf = followStatus.isSelf;
   const showSettings = isSelf && view === "settings";
+  const showWishlist = !isSelf && view === "wishlist";
+  const wishlistItems =
+    showWishlist && followStatus.isFollowing
+      ? await listWishlistItems(profile.id)
+      : [];
   const wrapped = isSelf && !showSettings ? await getWrappedStats(profile.id) : null;
   const username = session.user.username ?? session.user.displayUsername ?? "";
   let hasPassword = false;
@@ -105,6 +179,7 @@ export default async function UserProfilePage({
     hasPassword = accounts.some((account) => account.providerId === "credential");
   }
   const returnTo = `/users/${profile.id}`;
+  const wishlistReturnTo = `/users/${profile.id}?view=wishlist`;
 
   return (
     <div className="flex flex-col gap-8">
@@ -135,10 +210,29 @@ export default async function UserProfilePage({
         )}
       </div>
 
-      {isSelf && (
+      {isSelf ? (
         <ProfileTabs
-          userId={profile.id}
+          tabs={[
+            { key: "profile", label: "Profile", href: `/users/${profile.id}` },
+            {
+              key: "settings",
+              label: "Settings",
+              href: `/users/${profile.id}?view=settings`,
+            },
+          ]}
           active={showSettings ? "settings" : "profile"}
+        />
+      ) : (
+        <ProfileTabs
+          tabs={[
+            { key: "collection", label: "Collection", href: `/users/${profile.id}` },
+            {
+              key: "wishlist",
+              label: "Wishlist",
+              href: `/users/${profile.id}?view=wishlist`,
+            },
+          ]}
+          active={showWishlist ? "wishlist" : "collection"}
         />
       )}
 
@@ -152,71 +246,42 @@ export default async function UserProfilePage({
           {hasPassword && <PasswordForm />}
           <DeleteAccountSection username={username} />
         </div>
+      ) : showWishlist ? (
+        followStatus.isFollowing ? (
+          wishlistItems.length === 0 ? (
+            <p className="text-zinc-500">Nothing on this wishlist yet.</p>
+          ) : (
+            <ReleaseGrid
+              items={wishlistItems}
+              returnTo={wishlistReturnTo}
+              showWishlistAction
+            />
+          )
+        ) : (
+          <div className="flex flex-col items-start gap-3">
+            <p className="text-zinc-500">
+              Follow {profile.name} to see their wishlist.
+            </p>
+            <FollowForm
+              userId={profile.id}
+              returnTo={wishlistReturnTo}
+              isFollowing={followStatus.isFollowing}
+            />
+          </div>
+        )
       ) : (
         <>
           {wrapped && <WrappedSection stats={wrapped} />}
 
           {items.length === 0 ? (
-        <p className="text-zinc-500">No public records yet.</p>
-      ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {items.map((item) => (
-            <div
-              key={item.itemId}
-              className="flex flex-col gap-2 rounded border border-zinc-200 p-3"
-            >
-              <Link
-                href={`/album/${item.releaseId}`}
-                className="aspect-square w-full overflow-hidden rounded bg-zinc-100"
-              >
-                {item.coverUrl && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={item.coverUrl}
-                    alt={item.title}
-                    className="h-full w-full object-cover"
-                  />
-                )}
-              </Link>
-              <div className="flex flex-col">
-                <Link
-                  href={`/album/${item.releaseId}?from=${returnTo}`}
-                  className="truncate font-medium hover:underline"
-                >
-                  {item.title}
-                </Link>
-                <span className="truncate text-sm text-zinc-500">
-                  {item.artistNames.join(", ")}
-                </span>
-                <span className="text-xs text-zinc-400">
-                  {item.year} {item.labelName ? `· ${item.labelName}` : ""}
-                </span>
-              </div>
-              {item.genres && item.genres.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {item.genres.slice(0, 2).map((genre) => (
-                    <span
-                      key={genre}
-                      className="rounded bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500"
-                    >
-                      {genre}
-                    </span>
-                  ))}
-                </div>
-              )}
-              {!followStatus.isSelf && (
-                <form action={addReleaseToWishlistAction} className="mt-auto text-sm">
-                  <input type="hidden" name="releaseId" value={item.releaseId} />
-                  <input type="hidden" name="returnTo" value={returnTo} />
-                  <button type="submit" className="underline">
-                    Wishlist
-                  </button>
-                </form>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+            <p className="text-zinc-500">No public records yet.</p>
+          ) : (
+            <ReleaseGrid
+              items={items}
+              returnTo={returnTo}
+              showWishlistAction={!isSelf}
+            />
+          )}
         </>
       )}
     </div>
