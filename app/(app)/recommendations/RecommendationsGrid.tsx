@@ -4,9 +4,16 @@ import {
   generateRecommendations,
 } from "@/lib/services/recommendationService";
 import {
+  collectRecommendationGenres,
+  filterRecommendationsByGenre,
+  parseRecommendationSort,
+  sortRecommendations,
+} from "@/lib/services/recommendationSort";
+import {
   dismissRecommendationAction,
   addRecommendationToCollectionAction,
 } from "./actions";
+import { RecommendationsFilters } from "./RecommendationsFilters";
 import { addReleaseToWishlistAction } from "../wishlist/actions";
 
 /**
@@ -14,7 +21,15 @@ import { addReleaseToWishlistAction } from "../wishlist/actions";
  * recommendations) it generates them, then lists; on later visits it shows the cached
  * set immediately. Server components render once per request, so there's no double run.
  */
-export async function RecommendationsGrid({ userId }: { userId: string }) {
+export async function RecommendationsGrid({
+  userId,
+  genre,
+  sort,
+}: {
+  userId: string;
+  genre?: string;
+  sort?: string;
+}) {
   let items = await listRecommendations(userId);
   if (items.length === 0) {
     await generateRecommendations(userId);
@@ -30,9 +45,32 @@ export async function RecommendationsGrid({ userId }: { userId: string }) {
     );
   }
 
+  const normalized = items.map((item) => ({ ...item, genres: item.genres ?? [] }));
+  const genreOptions = collectRecommendationGenres(normalized);
+  const selectedSort = parseRecommendationSort(sort);
+  const visible = sortRecommendations(
+    filterRecommendationsByGenre(normalized, genre),
+    selectedSort,
+  );
+
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-      {items.map((item) => (
+    <div className="flex flex-col gap-6">
+      <RecommendationsFilters
+        selectedGenre={genre?.trim() || undefined}
+        selectedSort={selectedSort}
+        genres={genreOptions}
+      />
+
+      {visible.length === 0 ? (
+        <p className="text-center text-zinc-500">
+          No recommendations match those filters.{" "}
+          <Link href="/recommendations" className="underline">
+            Clear filters.
+          </Link>
+        </p>
+      ) : (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          {visible.map((item) => (
         <div
           key={item.recId}
           className="flex flex-col gap-2 rounded border border-zinc-200 p-3 dark:border-zinc-800"
@@ -81,7 +119,9 @@ export async function RecommendationsGrid({ userId }: { userId: string }) {
             </form>
           </div>
         </div>
-      ))}
+          ))}
+        </div>
+      )}
     </div>
   );
 }

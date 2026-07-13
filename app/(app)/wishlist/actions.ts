@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth-session";
+import { appendToast } from "@/lib/toast/flash";
 import * as discogs from "@/lib/discogs/client";
 import { releaseInputFromDiscogs } from "@/lib/discogs/mapRelease";
 import { upsertRelease, addCollectionItem } from "@/lib/services/collectionService";
@@ -24,12 +25,17 @@ export async function addReleaseToWishlistAction(formData: FormData) {
   const session = await requireSession();
   const releaseId = Number(formData.get("releaseId"));
 
-  await addWishlistItem(session.user.id, releaseId);
+  let code: "wishlist-added" | "wishlist-add-failed" = "wishlist-added";
+  try {
+    await addWishlistItem(session.user.id, releaseId);
+  } catch {
+    code = "wishlist-add-failed";
+  }
 
   const returnTo = getSafeReturnPath(formData);
   revalidatePath(returnTo);
   revalidatePath("/wishlist");
-  redirect(returnTo);
+  redirect(appendToast(returnTo, code));
 }
 
 /** One-click wishlist from Discogs search: fetches the pressing, caches it, then wishlists it. */
@@ -39,7 +45,7 @@ export async function addAlbumToWishlistFromDiscogsAction(discogsReleaseId: numb
   const releaseId = await upsertRelease(releaseInputFromDiscogs(detail));
   await addWishlistItem(session.user.id, releaseId);
   revalidatePath("/wishlist");
-  redirect("/wishlist");
+  redirect(appendToast("/wishlist", "wishlist-added"));
 }
 
 export async function removeFromWishlistAction(formData: FormData) {
@@ -48,6 +54,7 @@ export async function removeFromWishlistAction(formData: FormData) {
 
   await removeWishlistItem(session.user.id, itemId);
   revalidatePath("/wishlist");
+  redirect(appendToast("/wishlist", "wishlist-removed"));
 }
 
 /** Move a wishlisted record into the collection (e.g. once purchased). */
@@ -56,8 +63,14 @@ export async function moveToCollectionAction(formData: FormData) {
   const itemId = Number(formData.get("itemId"));
   const releaseId = Number(formData.get("releaseId"));
 
-  await addCollectionItem(session.user.id, releaseId, {}, "manual");
-  await removeWishlistItem(session.user.id, itemId);
+  let code: "moved-to-collection" | "action-failed" = "moved-to-collection";
+  try {
+    await addCollectionItem(session.user.id, releaseId, {}, "manual");
+    await removeWishlistItem(session.user.id, itemId);
+  } catch {
+    code = "action-failed";
+  }
   revalidatePath("/wishlist");
   revalidatePath("/collection");
+  redirect(appendToast("/wishlist", code));
 }

@@ -7,6 +7,11 @@ import {
   normalizeSearchQuery,
   searchErrorMessage,
 } from "@/lib/search/searchQuery";
+import {
+  ALBUM_SORT_OPTIONS,
+  sortAlbumGroups,
+  type AlbumSortKey,
+} from "@/lib/search/sortAlbums";
 import { searchExploreAction, type ExploreSearchResult } from "./actions";
 import { ExploreSearchResults } from "./ExploreSearchResults";
 
@@ -23,6 +28,7 @@ export function ExploreSearch({
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
   const [result, setResult] = useState<ExploreSearchResult | null>(null);
+  const [sort, setSort] = useState<AlbumSortKey>("relevance");
   const [error, setError] = useState<string | null>(null);
   const [isSearching, startSearch] = useTransition();
   const resultCache = useRef(new Map<string, ExploreSearchResult>());
@@ -138,8 +144,33 @@ export function ExploreSearch({
 
       {normalizedQuery.length === 0
         ? children
-        : result && result.query === normalizedQuery && (
-            <ExploreSearchResults result={result} returnTo={SEARCH_RETURN_PATH} />
+        : result &&
+          result.query === normalizedQuery && (
+            <div className="flex flex-col gap-4">
+              {result.albums.length > 1 && (
+                <div className="flex items-center justify-end gap-2 text-sm">
+                  <label htmlFor="explore-sort" className="text-zinc-500">
+                    Sort records
+                  </label>
+                  <select
+                    id="explore-sort"
+                    value={sort}
+                    onChange={(event) => setSort(event.target.value as AlbumSortKey)}
+                    className="rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-950"
+                  >
+                    {ALBUM_SORT_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <ExploreSearchResults
+                result={{ ...result, albums: sortAlbumGroups(result.albums, sort) }}
+                returnTo={SEARCH_RETURN_PATH}
+              />
+            </div>
           )}
     </div>
   );

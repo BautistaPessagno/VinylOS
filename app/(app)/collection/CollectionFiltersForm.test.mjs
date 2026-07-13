@@ -10,6 +10,26 @@ const React = require("react");
 const ReactDOMServer = require("react-dom/server");
 const ts = require("typescript");
 
+function transpileModule(url) {
+  const filename = fileURLToPath(url);
+  const source = readFileSync(filename, "utf8");
+  const { outputText } = ts.transpileModule(source, {
+    compilerOptions: {
+      esModuleInterop: true,
+      jsx: ts.JsxEmit.ReactJSX,
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2020,
+    },
+  });
+  const mod = { exports: {} };
+  vm.runInNewContext(
+    outputText,
+    { exports: mod.exports, module: mod, require },
+    { filename },
+  );
+  return mod.exports;
+}
+
 function loadCollectionFiltersForm() {
   const filename = fileURLToPath(new URL("./CollectionFiltersForm.tsx", import.meta.url));
   const source = readFileSync(filename, "utf8");
@@ -28,6 +48,11 @@ function loadCollectionFiltersForm() {
       return function Link({ href, children, ...props }) {
         return React.createElement("a", { href, ...props }, children);
       };
+    }
+    if (id === "@/lib/services/collectionSort") {
+      return transpileModule(
+        new URL("../../../lib/services/collectionSort.ts", import.meta.url),
+      );
     }
     return require(id);
   }
@@ -59,7 +84,9 @@ test("collection filters render typeable selectors with owned options", () => {
     }),
   );
 
-  assert.doesNotMatch(html, /<select\b/);
+  // Genre/year/label stay typeable datalist inputs; only sort is a fixed <select>.
+  assert.match(html, /<select(?=[^>]+id="collection-sort")(?=[^>]+name="sort")[^>]*>/);
+  assert.match(html, /<option value="year-desc">Sort: Year \(newest\)<\/option>/);
   assert.match(
     html,
     /<input(?=[^>]+name="genre")(?=[^>]+list="collection-genre-options")[^>]+>/,
