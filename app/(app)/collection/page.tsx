@@ -3,6 +3,7 @@ import { requireSession } from "@/lib/auth-session";
 import {
   listCollectionFilterOptions,
   listCollectionItems,
+  parseCollectionSort,
 } from "@/lib/services/collectionService";
 import { CollectionFiltersForm } from "./CollectionFiltersForm";
 import { removeItemAction } from "./actions";
@@ -10,14 +11,20 @@ import { removeItemAction } from "./actions";
 export default async function CollectionPage({
   searchParams,
 }: {
-  searchParams: Promise<{ genre?: string; year?: string; label?: string }>;
+  searchParams: Promise<{
+    genre?: string;
+    year?: string;
+    label?: string;
+    sort?: string;
+  }>;
 }) {
   const session = await requireSession();
-  const { genre, year, label } = await searchParams;
+  const { genre, year, label, sort } = await searchParams;
   const selectedFilters = {
     genre: genre?.trim() || undefined,
     year: year?.trim() || undefined,
     label: label?.trim() || undefined,
+    sort: parseCollectionSort(sort),
   };
   const selectedYear = selectedFilters.year ? Number(selectedFilters.year) : undefined;
 
@@ -26,6 +33,7 @@ export default async function CollectionPage({
       genre: selectedFilters.genre,
       year: Number.isFinite(selectedYear) ? selectedYear : undefined,
       label: selectedFilters.label,
+      sort: selectedFilters.sort,
     }),
     listCollectionFilterOptions(session.user.id),
   ]);

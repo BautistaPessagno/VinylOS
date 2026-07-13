@@ -6,6 +6,7 @@ import { requireSession } from "@/lib/auth-session";
 import * as discogs from "@/lib/discogs/client";
 import { releaseInputFromDiscogs } from "@/lib/discogs/mapRelease";
 import { isSearchQueryReady, normalizeSearchQuery } from "@/lib/search/searchQuery";
+import { appendToast } from "@/lib/toast/flash";
 import {
   upsertRelease,
   addCollectionItem,
@@ -38,7 +39,7 @@ export async function addAlbumFromDiscogsAction(discogsReleaseId: number) {
   const releaseId = await upsertRelease(releaseInputFromDiscogs(detail));
   await addCollectionItem(session.user.id, releaseId, {}, "discogs_sync");
   revalidatePath("/collection");
-  redirect("/collection");
+  redirect(appendToast("/collection", "collection-added"));
 }
 
 /** Multi-select add: adds each chosen album's default pressing in one batch. */
@@ -50,7 +51,7 @@ export async function addAlbumsFromDiscogsAction(discogsReleaseIds: number[]) {
     await addCollectionItem(session.user.id, releaseId, {}, "discogs_sync");
   }
   revalidatePath("/collection");
-  redirect("/collection");
+  redirect(appendToast("/collection", "collection-added"));
 }
 
 /** Advanced edition picker on the edit page: swap an owned item to a different pressing. */
@@ -101,7 +102,7 @@ export async function submitAddReleaseAction(formData: FormData) {
 
   await addCollectionItem(session.user.id, releaseId, itemInput, source);
   revalidatePath("/collection");
-  redirect("/collection");
+  redirect(appendToast("/collection", "collection-added"));
 }
 
 export async function updateItemAction(formData: FormData) {
@@ -120,6 +121,7 @@ export async function removeItemAction(formData: FormData) {
 
   await removeCollectionItem(session.user.id, itemId);
   revalidatePath("/collection");
+  redirect(appendToast("/collection", "item-removed"));
 }
 
 export async function getEditItemData(itemId: number) {

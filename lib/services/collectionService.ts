@@ -5,7 +5,8 @@ import {
   releaseArtists,
   collectionItems,
 } from "@/lib/db/schema";
-import { eq, and, ilike, arrayContains, desc, inArray, isNotNull, ne, sql } from "drizzle-orm";
+import { eq, and, ilike, arrayContains, asc, desc, inArray, isNotNull, ne, sql } from "drizzle-orm";
+import type { SQL } from "drizzle-orm";
 import type {
   ReleaseFormOutput,
   CollectionItemFormOutput,
@@ -14,6 +15,13 @@ import {
   buildCollectionFilterOptions,
   type CollectionFilterOptions,
 } from "./collectionFilterOptions";
+import type { CollectionSort } from "./collectionSort";
+
+export {
+  COLLECTION_SORT_OPTIONS,
+  parseCollectionSort,
+  type CollectionSort,
+} from "./collectionSort";
 
 async function findOrCreateArtistByName(name: string): Promise<number> {
   const [existing] = await db
@@ -194,6 +202,7 @@ export type CollectionFilters = {
   genre?: string;
   year?: number;
   label?: string;
+  sort?: CollectionSort;
 };
 
 export async function listCollectionFilterOptions(
@@ -221,6 +230,20 @@ export async function listCollectionItems(
   if (filters.label) conditions.push(ilike(releases.labelName, `%${filters.label}%`));
   if (filters.genre) conditions.push(arrayContains(releases.genres, [filters.genre]));
 
+  const sort = filters.sort ?? "added-desc";
+  // `artist` is sorted in-memory below (artist names are fetched separately). Every other
+  // key maps to a release/collection column; missing values sort last via NULLS LAST.
+  const orderBy: SQL =
+    sort === "year-desc"
+      ? sql`${releases.year} desc nulls last`
+      : sort === "year-asc"
+        ? sql`${releases.year} asc nulls last`
+        : sort === "title"
+          ? asc(releases.title)
+          : sort === "country"
+            ? sql`${releases.country} asc nulls last`
+            : desc(collectionItems.addedAt);
+
   const rows = await db
     .select({
       itemId: collectionItems.id,
@@ -239,7 +262,7 @@ export async function listCollectionItems(
     .from(collectionItems)
     .innerJoin(releases, eq(collectionItems.releaseId, releases.id))
     .where(and(...conditions))
-    .orderBy(desc(collectionItems.addedAt));
+    .orderBy(orderBy);
 
   if (rows.length === 0) return [];
 
@@ -262,10 +285,20 @@ export async function listCollectionItems(
     artistsByRelease.set(row.releaseId, list);
   }
 
-  return rows.map((row) => ({
+  const items = rows.map((row) => ({
     ...row,
     artistNames: artistsByRelease.get(row.releaseId) ?? [],
   }));
+
+  if (sort === "artist") {
+    items.sort((a, b) =>
+      (a.artistNames[0] ?? "").localeCompare(b.artistNames[0] ?? "", undefined, {
+        sensitivity: "base",
+      }),
+    );
+  }
+
+  return items;
 }
 
 /** Full catalog details for one release (with ordered artist names), for the album detail page. */

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth-session";
+import { appendToast } from "@/lib/toast/flash";
 import { addCollectionItem } from "@/lib/services/collectionService";
 import {
   dismissReleaseForUser,
@@ -22,10 +23,15 @@ export async function addAlbumToCollectionAction(formData: FormData) {
   const session = await requireSession();
   const releaseId = Number(formData.get("releaseId"));
 
-  await addCollectionItem(session.user.id, releaseId, {}, "manual");
-  await dismissRecommendationForRelease(session.user.id, releaseId);
+  let code: "collection-added" | "collection-add-failed" = "collection-added";
+  try {
+    await addCollectionItem(session.user.id, releaseId, {}, "manual");
+    await dismissRecommendationForRelease(session.user.id, releaseId);
+  } catch {
+    code = "collection-add-failed";
+  }
   revalidatePath("/collection");
-  redirect(safeReturnPath(formData, `/album/${releaseId}`));
+  redirect(appendToast(safeReturnPath(formData, `/album/${releaseId}`), code));
 }
 
 /** Mark this album as "not interested" so it won't resurface in recommendations. */
@@ -35,5 +41,5 @@ export async function dismissAlbumAction(formData: FormData) {
 
   await dismissReleaseForUser(session.user.id, releaseId);
   revalidatePath("/recommendations");
-  redirect(safeReturnPath(formData, "/recommendations"));
+  redirect(appendToast(safeReturnPath(formData, "/recommendations"), "dismissed"));
 }

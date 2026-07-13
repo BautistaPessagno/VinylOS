@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth-session";
+import { appendToast } from "@/lib/toast/flash";
 import { followUser, unfollowUser } from "@/lib/services/friendService";
 
 function getSafeReturnPath(formData: FormData) {
@@ -22,22 +23,32 @@ export async function followUserAction(formData: FormData) {
   const session = await requireSession();
   const targetUserId = getTargetUserId(formData);
 
-  await followUser(session.user.id, targetUserId);
+  let code: "followed" | "action-failed" = "followed";
+  try {
+    await followUser(session.user.id, targetUserId);
+  } catch {
+    code = "action-failed";
+  }
 
   const returnTo = getSafeReturnPath(formData);
   revalidatePath("/friends");
   revalidatePath(returnTo);
-  redirect(returnTo);
+  redirect(appendToast(returnTo, code));
 }
 
 export async function unfollowUserAction(formData: FormData) {
   const session = await requireSession();
   const targetUserId = getTargetUserId(formData);
 
-  await unfollowUser(session.user.id, targetUserId);
+  let code: "unfollowed" | "action-failed" = "unfollowed";
+  try {
+    await unfollowUser(session.user.id, targetUserId);
+  } catch {
+    code = "action-failed";
+  }
 
   const returnTo = getSafeReturnPath(formData);
   revalidatePath("/friends");
   revalidatePath(returnTo);
-  redirect(returnTo);
+  redirect(appendToast(returnTo, code));
 }

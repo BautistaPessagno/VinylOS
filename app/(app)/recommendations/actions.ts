@@ -11,6 +11,7 @@ import type {
   DiscogsArtistSearchResult,
 } from "@/lib/discogs/types";
 import { isSearchQueryReady, normalizeSearchQuery } from "@/lib/search/searchQuery";
+import { appendToast } from "@/lib/toast/flash";
 import {
   generateRecommendations,
   dismissRecommendation,
@@ -60,17 +61,24 @@ export async function dismissRecommendationAction(formData: FormData) {
 
   await dismissRecommendation(session.user.id, recId);
   revalidatePath("/recommendations");
+  redirect(appendToast("/recommendations", "dismissed"));
 }
 
 export async function addRecommendationToCollectionAction(formData: FormData) {
   const session = await requireSession();
   const releaseId = Number(formData.get("releaseId"));
 
-  // The release is already cached locally from generation, so no Discogs fetch needed.
-  await addCollectionItem(session.user.id, releaseId, {}, "manual");
-  await dismissRecommendationForRelease(session.user.id, releaseId);
+  let code: "collection-added" | "collection-add-failed" = "collection-added";
+  try {
+    // The release is already cached locally from generation, so no Discogs fetch needed.
+    await addCollectionItem(session.user.id, releaseId, {}, "manual");
+    await dismissRecommendationForRelease(session.user.id, releaseId);
+  } catch {
+    code = "collection-add-failed";
+  }
   revalidatePath("/recommendations");
   revalidatePath("/collection");
+  redirect(appendToast("/recommendations", code));
 }
 
 /** Resolve an Explore card (Last.fm artist + album) to a release, then add it to the collection. */
@@ -79,12 +87,20 @@ export async function addExploreAlbumAction(formData: FormData) {
   const artist = String(formData.get("artist") ?? "");
   const album = String(formData.get("album") ?? "");
 
+  const returnTo = exploreReturnPath(formData);
   const releaseId = await resolveReleaseFromNames(artist, album);
-  if (releaseId) {
+  if (!releaseId) {
+    redirect(appendToast(returnTo, "not-found"));
+  }
+
+  let code: "collection-added" | "collection-add-failed" = "collection-added";
+  try {
     await addCollectionItem(session.user.id, releaseId, {}, "manual");
     revalidatePath("/collection");
+  } catch {
+    code = "collection-add-failed";
   }
-  redirect(exploreReturnPath(formData));
+  redirect(appendToast(returnTo, code));
 }
 
 /** Resolve an Explore card to a release, then add it to the wishlist. */
@@ -93,12 +109,20 @@ export async function wishlistExploreAlbumAction(formData: FormData) {
   const artist = String(formData.get("artist") ?? "");
   const album = String(formData.get("album") ?? "");
 
+  const returnTo = exploreReturnPath(formData);
   const releaseId = await resolveReleaseFromNames(artist, album);
-  if (releaseId) {
+  if (!releaseId) {
+    redirect(appendToast(returnTo, "not-found"));
+  }
+
+  let code: "wishlist-added" | "wishlist-add-failed" = "wishlist-added";
+  try {
     await addWishlistItem(session.user.id, releaseId);
     revalidatePath("/wishlist");
+  } catch {
+    code = "wishlist-add-failed";
   }
-  redirect(exploreReturnPath(formData));
+  redirect(appendToast(returnTo, code));
 }
 
 /** Resolve an Explore card to a release, then open its detail page. */

@@ -45,6 +45,7 @@ export type DiscogsAlbumGroup = {
   title: string;
   coverImage?: string;
   year?: string;
+  country?: string;
   genres: string[];
   editionCount: number;
 };

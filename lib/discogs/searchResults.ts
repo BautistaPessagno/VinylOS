@@ -40,6 +40,7 @@ export function groupDiscogsAlbums(
       title,
       coverImage: result.cover_image || result.thumb || undefined,
       year: result.year ?? undefined,
+      country: result.country ?? undefined,
       genres: result.genre ?? [],
       editionCount: 1,
     });

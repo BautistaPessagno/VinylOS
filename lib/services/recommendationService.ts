@@ -305,6 +305,7 @@ export async function listRecommendations(userId: string) {
       releaseId: releases.id,
       title: releases.title,
       year: releases.year,
+      genres: releases.genres,
       coverUrl: releases.coverUrl,
       thumbUrl: releases.thumbUrl,
       reason: recommendations.reason,
