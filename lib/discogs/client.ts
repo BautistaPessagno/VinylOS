@@ -80,6 +80,27 @@ export async function searchVinylAlbums(query: string): Promise<DiscogsAlbumGrou
   return groupDiscogsAlbums(results);
 }
 
+/**
+ * Searches vinyl releases containing a track whose title matches the query, grouped
+ * by album. Discogs does not return which track matched — callers resolve that via
+ * the release tracklist (see `findBestTrack`).
+ */
+export async function searchVinylAlbumsByTrack(
+  query: string,
+): Promise<DiscogsAlbumGroup[]> {
+  const normalizedQuery = normalizeSearchQuery(query);
+  if (!isSearchQueryReady(normalizedQuery)) return [];
+
+  const url = buildUrl("/database/search", {
+    track: normalizedQuery,
+    type: "release",
+    format: "Vinyl",
+    per_page: 25,
+  });
+  const data = await discogsFetch(url, 3600);
+  return groupDiscogsAlbums(discogsSearchResponseSchema.parse(data).results);
+}
+
 export async function searchArtists(
   query: string,
 ): Promise<DiscogsArtistSearchResult[]> {

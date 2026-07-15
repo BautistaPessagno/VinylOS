@@ -50,6 +50,16 @@ export type DiscogsAlbumGroup = {
   editionCount: number;
 };
 
+/** A track-search hit resolved to its actual song title via the release tracklist. */
+export type DiscogsSongResult = {
+  key: string;
+  trackTitle: string;
+  artist: string;
+  albumTitle: string;
+  coverImage?: string;
+  year?: string;
+};
+
 export type DiscogsArtistSearchResult = {
   id: number;
   name: string;

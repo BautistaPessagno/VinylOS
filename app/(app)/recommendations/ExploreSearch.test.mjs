@@ -18,10 +18,11 @@ test("Explore search uses normalized cached latest-only requests", () => {
   assert.match(source, /focusOnMount/);
   assert.match(source, /aria-live="polite"/);
   assert.match(source, /searchErrorMessage\(caught\)/);
-  assert.match(source, /Found \{result\.artists\.length\} artists and \{result\.albums\.length\} records/);
+  assert.match(source, /Found \{result\.artists\.length\} artists, \{result\.albums\.length\} records/);
+  assert.match(source, /\{result\.songs\.length\} songs/);
 });
 
-test("Explore server action searches Discogs artists and vinyl concurrently", () => {
+test("Explore server action searches Discogs artists, vinyl, and tracks concurrently", () => {
   const source = readFileSync(actionsPath, "utf8");
   const action = source.slice(source.indexOf("export async function searchExploreAction"));
 
@@ -30,4 +31,16 @@ test("Explore server action searches Discogs artists and vinyl concurrently", ()
   assert.match(action, /Promise\.all/);
   assert.match(action, /discogs\.searchArtists\(normalizedQuery\)/);
   assert.match(action, /discogs\.searchVinylAlbums\(normalizedQuery\)/);
+  assert.match(action, /discogs\.searchVinylAlbumsByTrack\(normalizedQuery\)/);
+  assert.match(action, /resolveSongResults\(normalizedQuery, trackAlbums\)/);
+});
+
+test("song resolution drops releases without a matching track", () => {
+  const source = readFileSync(actionsPath, "utf8");
+
+  assert.match(source, /async function resolveSongResults/);
+  assert.match(source, /findBestTrack\(query, entry\.release\.tracklist \?\? \[\]\)/);
+  assert.match(source, /MAX_SONG_RESULTS = 4/);
+  // Individual tracklist fetch failures must not break the whole search.
+  assert.match(source, /catch \{\s*return null;/);
 });

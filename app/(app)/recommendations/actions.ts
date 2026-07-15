@@ -9,8 +9,10 @@ import * as discogs from "@/lib/discogs/client";
 import type {
   DiscogsAlbumGroup,
   DiscogsArtistSearchResult,
+  DiscogsSongResult,
 } from "@/lib/discogs/types";
 import { isSearchQueryReady, normalizeSearchQuery } from "@/lib/search/searchQuery";
+import { findBestTrack } from "@/lib/search/rankSearchResults";
 import { appendToast } from "@/lib/toast/flash";
 import {
   generateRecommendations,
@@ -25,7 +27,46 @@ export type ExploreSearchResult = {
   query: string;
   artists: DiscogsArtistSearchResult[];
   albums: DiscogsAlbumGroup[];
+  songs: DiscogsSongResult[];
 };
+
+const MAX_SONG_RESULTS = 4;
+
+/**
+ * Resolves track-search album groups to actual song titles by fetching each
+ * release's tracklist. Groups whose tracklist can't be fetched or has no track
+ * matching the query are dropped rather than shown with a guessed title.
+ */
+async function resolveSongResults(
+  query: string,
+  groups: DiscogsAlbumGroup[],
+): Promise<DiscogsSongResult[]> {
+  const releases = await Promise.all(
+    groups.slice(0, MAX_SONG_RESULTS).map(async (group) => {
+      try {
+        return { group, release: await discogs.getRelease(group.releaseId) };
+      } catch {
+        return null;
+      }
+    }),
+  );
+
+  const songs: DiscogsSongResult[] = [];
+  for (const entry of releases) {
+    if (!entry) continue;
+    const track = findBestTrack(query, entry.release.tracklist ?? []);
+    if (!track) continue;
+    songs.push({
+      key: entry.group.key,
+      trackTitle: track.title,
+      artist: entry.group.artist,
+      albumTitle: entry.group.title,
+      coverImage: entry.group.coverImage,
+      year: entry.group.year,
+    });
+  }
+  return songs;
+}
 
 function exploreReturnPath(formData: FormData) {
   const value = formData.get("returnTo");
@@ -45,14 +86,16 @@ export async function searchExploreAction(query: string): Promise<ExploreSearchR
   await requireSession();
   const normalizedQuery = normalizeSearchQuery(query);
   if (!isSearchQueryReady(normalizedQuery)) {
-    return { query: normalizedQuery, artists: [], albums: [] };
+    return { query: normalizedQuery, artists: [], albums: [], songs: [] };
   }
 
-  const [artists, albums] = await Promise.all([
+  const [artists, albums, trackAlbums] = await Promise.all([
     discogs.searchArtists(normalizedQuery),
     discogs.searchVinylAlbums(normalizedQuery),
+    discogs.searchVinylAlbumsByTrack(normalizedQuery),
   ]);
-  return { query: normalizedQuery, artists, albums };
+  const songs = await resolveSongResults(normalizedQuery, trackAlbums);
+  return { query: normalizedQuery, artists, albums, songs };
 }
 
 export async function dismissRecommendationAction(formData: FormData) {

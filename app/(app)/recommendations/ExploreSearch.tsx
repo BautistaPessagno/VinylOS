@@ -98,7 +98,7 @@ export function ExploreSearch({
     <div className="flex flex-col gap-6">
       <div className="mx-auto w-full max-w-3xl">
         <label htmlFor="explore-search" className="sr-only">
-          Search records and artists
+          Search records, artists, and songs
         </label>
         <div className="relative">
           <svg
@@ -118,7 +118,7 @@ export function ExploreSearch({
             type="search"
             value={query}
             onChange={(event) => handleQueryChange(event.target.value)}
-            placeholder="Search artists, bands, and records"
+            placeholder="Search artists, records, and songs"
             autoComplete="off"
             className="w-full rounded-2xl border border-zinc-300 bg-white py-3.5 pl-12 pr-28 text-base shadow-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-zinc-700 dark:bg-zinc-950"
           />
@@ -137,7 +137,8 @@ export function ExploreSearch({
         {error && <p className="text-center text-sm text-red-600">{error}</p>}
         {result && result.query === normalizedQuery && !isSearching && !error && (
           <p className="sr-only">
-            Found {result.artists.length} artists and {result.albums.length} records
+            Found {result.artists.length} artists, {result.albums.length} records, and{" "}
+            {result.songs.length} songs
           </p>
         )}
       </div>

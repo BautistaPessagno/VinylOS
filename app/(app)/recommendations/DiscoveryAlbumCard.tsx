@@ -10,6 +10,8 @@ export type DiscoveryAlbum = {
   imageUrl?: string;
   year?: string;
   editionCount?: number;
+  /** Optional badge, e.g. the track that made this record a track-search match. */
+  containsTrack?: string;
 };
 
 export function DiscoveryAlbumCard({
@@ -42,6 +44,14 @@ export function DiscoveryAlbumCard({
       </form>
 
       <div className="min-w-0">
+        {album.containsTrack && (
+          <p
+            title={`Contains ${album.containsTrack}`}
+            className="mb-1 inline-block max-w-full truncate rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-950 dark:text-red-300"
+          >
+            Contains “{album.containsTrack}”
+          </p>
+        )}
         <p className="truncate font-medium">{album.title}</p>
         <p className="truncate text-sm text-zinc-500">{album.artist}</p>
         {(album.year || (album.editionCount ?? 0) > 1) && (
