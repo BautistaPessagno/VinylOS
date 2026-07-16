@@ -1,11 +1,42 @@
+import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { requireSession } from "@/lib/auth-session";
 import { getReleaseById } from "@/lib/services/collectionService";
 import { getRelease } from "@/lib/discogs/client";
 import { getAlbumInfo, getArtistInfo } from "@/lib/lastfm/client";
 import { addReleaseToWishlistAction } from "../../wishlist/actions";
 import { addAlbumToCollectionAction, dismissAlbumAction } from "./actions";
+import { SubmitButton } from "../../SubmitButton";
+
+// Deduped across generateMetadata and the page render within one request.
+const getReleaseCached = cache(getReleaseById);
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const release = await getReleaseCached(Number(id));
+  if (!release) return { title: "Album not found" };
+
+  const artist = release.artistNames.join(", ");
+  const title = artist ? `${release.title} — ${artist}` : release.title;
+  const description = `${release.title}${artist ? ` by ${artist}` : ""}${
+    release.year ? ` (${release.year})` : ""
+  } on VinylOS.`;
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      ...(release.coverUrl ? { images: [release.coverUrl] } : {}),
+    },
+  };
+}
 
 /** Strips Last.fm's HTML + trailing "Read more on Last.fm" link from a bio/wiki summary. */
 function cleanSummary(html?: string): string {
@@ -60,7 +91,7 @@ export default async function AlbumDetailPage({
   await requireSession();
   const { id } = await params;
   const { from } = await searchParams;
-  const release = await getReleaseById(Number(id));
+  const release = await getReleaseCached(Number(id));
   if (!release) notFound();
 
   const primaryArtist = release.artistNames[0] ?? "";
@@ -134,33 +165,37 @@ export default async function AlbumDetailPage({
             </div>
           )}
 
-          <div className="mt-2 flex flex-wrap items-center gap-3">
-            <form action={addAlbumToCollectionAction}>
+          <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+            <form action={addAlbumToCollectionAction} className="w-full sm:w-auto">
               <input type="hidden" name="releaseId" value={release.releaseId} />
               <input type="hidden" name="returnTo" value={returnTo} />
-              <button
-                type="submit"
-                className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
+              <SubmitButton
+                pendingText="Adding…"
+                className="min-h-11 w-full rounded-lg bg-black px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 active:bg-zinc-800 sm:min-h-0 sm:w-auto dark:bg-white dark:text-black dark:hover:bg-zinc-200 dark:active:bg-zinc-200"
               >
                 Add to collection
-              </button>
+              </SubmitButton>
             </form>
-            <form action={addReleaseToWishlistAction}>
+            <form action={addReleaseToWishlistAction} className="w-full sm:w-auto">
               <input type="hidden" name="releaseId" value={release.releaseId} />
               <input type="hidden" name="returnTo" value={returnTo} />
-              <button
-                type="submit"
-                className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium transition-colors hover:border-zinc-500 dark:border-zinc-700"
+              <SubmitButton
+                pendingText="Adding…"
+                className="min-h-11 w-full rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium transition-colors hover:border-zinc-500 active:border-zinc-500 sm:min-h-0 sm:w-auto dark:border-zinc-700"
               >
                 Wishlist
-              </button>
+              </SubmitButton>
             </form>
-            <form action={dismissAlbumAction}>
+            <form action={dismissAlbumAction} className="w-full sm:w-auto">
               <input type="hidden" name="releaseId" value={release.releaseId} />
-              <input type="hidden" name="returnTo" value="/recommendations" />
-              <button type="submit" className="px-2 py-2 text-sm text-red-600 hover:underline">
+              {/* Dismiss returns to wherever the user came from, like the other actions. */}
+              <input type="hidden" name="returnTo" value={origin ?? "/recommendations"} />
+              <SubmitButton
+                pendingText="Dismissing…"
+                className="min-h-11 w-full px-2 py-2 text-sm text-red-600 hover:underline active:opacity-70 sm:min-h-0 sm:w-auto"
+              >
                 Dismiss
-              </button>
+              </SubmitButton>
             </form>
           </div>
         </div>

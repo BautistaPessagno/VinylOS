@@ -1,6 +1,8 @@
+import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { requireSession } from "@/lib/auth-session";
 import { listPublicCollectionItems } from "@/lib/services/collectionService";
@@ -16,6 +18,28 @@ import { SettingsForm } from "../../settings/SettingsForm";
 import { PasswordForm } from "../../settings/PasswordForm";
 import { DeleteAccountSection } from "../../settings/DeleteAccountSection";
 import { WrappedSection } from "./WrappedSection";
+import { SubmitButton } from "../../SubmitButton";
+
+// Deduped across generateMetadata and the page render within one request.
+const getProfileCached = cache(getPublicUserProfile);
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ userId: string }>;
+}): Promise<Metadata> {
+  const { userId } = await params;
+  const profile = await getProfileCached(userId);
+  if (!profile) return { title: "Profile not found" };
+
+  const title = profile.handle ? `${profile.name} (@${profile.handle})` : profile.name;
+  const description = `${profile.name}'s vinyl collection on VinylOS.`;
+  return {
+    title,
+    description,
+    openGraph: { title, description },
+  };
+}
 
 function FollowForm({
   userId,
@@ -31,16 +55,16 @@ function FollowForm({
     <form action={action}>
       <input type="hidden" name="userId" value={userId} />
       <input type="hidden" name="returnTo" value={returnTo} />
-      <button
-        type="submit"
+      <SubmitButton
+        pendingText={isFollowing ? "Unfollowing…" : "Following…"}
         className={
           isFollowing
-            ? "rounded border border-zinc-300 px-4 py-2 text-sm"
-            : "rounded bg-black px-4 py-2 text-sm text-white"
+            ? "min-h-11 rounded border border-zinc-300 px-4 py-2 text-sm active:bg-zinc-100 sm:min-h-0 dark:border-zinc-700 dark:active:bg-zinc-800"
+            : "min-h-11 rounded bg-black px-4 py-2 text-sm text-white active:bg-zinc-800 sm:min-h-0 dark:bg-white dark:text-black dark:active:bg-zinc-200"
         }
       >
         {isFollowing ? "Unfollow" : "Follow"}
-      </button>
+      </SubmitButton>
     </form>
   );
 }
@@ -59,8 +83,8 @@ function ProfileTabs({ tabs, active }: { tabs: ProfileTab[]; active: string }) {
             aria-current={isActive ? "page" : undefined}
             className={
               isActive
-                ? "-mb-px border-b-2 border-red-500 pb-2 text-sm font-medium text-red-500"
-                : "-mb-px border-b-2 border-transparent pb-2 text-sm text-zinc-600 hover:text-red-500"
+                ? "-mb-px border-b-2 border-red-500 px-1 pb-2 pt-2 text-sm font-medium text-red-500"
+                : "-mb-px border-b-2 border-transparent px-1 pb-2 pt-2 text-sm text-zinc-600 hover:text-red-500 active:text-red-500 dark:text-zinc-300"
             }
           >
             {label}
@@ -91,17 +115,19 @@ function ReleaseGrid({
       {items.map((item) => (
         <div
           key={item.itemId}
-          className="flex flex-col gap-2 rounded border border-zinc-200 p-3"
+          className="flex flex-col gap-2 rounded border border-zinc-200 p-3 dark:border-zinc-800"
         >
           <Link
             href={albumHref(item.releaseId)}
-            className="aspect-square w-full overflow-hidden rounded bg-zinc-100"
+            className="aspect-square w-full overflow-hidden rounded bg-zinc-100 active:opacity-80 dark:bg-zinc-800"
           >
             {item.coverUrl && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={item.coverUrl}
                 alt={item.title}
+                loading="lazy"
+                decoding="async"
                 className="h-full w-full object-cover"
               />
             )}
@@ -125,7 +151,7 @@ function ReleaseGrid({
               {item.genres.slice(0, 2).map((genre) => (
                 <span
                   key={genre}
-                  className="rounded bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500"
+                  className="rounded bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
                 >
                   {genre}
                 </span>
@@ -136,9 +162,12 @@ function ReleaseGrid({
             <form action={addReleaseToWishlistAction} className="mt-auto text-sm">
               <input type="hidden" name="releaseId" value={item.releaseId} />
               <input type="hidden" name="returnTo" value={returnTo} />
-              <button type="submit" className="underline">
+              <SubmitButton
+                pendingText="Adding…"
+                className="-mx-2 min-h-11 px-2 underline active:opacity-70"
+              >
                 Wishlist
-              </button>
+              </SubmitButton>
             </form>
           )}
         </div>
@@ -157,7 +186,7 @@ export default async function UserProfilePage({
   const session = await requireSession();
   const { userId } = await params;
   const { view } = await searchParams;
-  const profile = await getPublicUserProfile(userId);
+  const profile = await getProfileCached(userId);
   if (!profile) notFound();
 
   const [followStatus, items] = await Promise.all([
@@ -183,7 +212,7 @@ export default async function UserProfilePage({
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-zinc-200 pb-6">
+      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-zinc-200 pb-6 dark:border-zinc-800">
         <div className="flex flex-col gap-1">
           <Link href="/friends" className="text-sm text-zinc-500 underline">
             Friends
@@ -192,12 +221,12 @@ export default async function UserProfilePage({
           {profile.handle && (
             <p className="text-sm text-zinc-500">@{profile.handle}</p>
           )}
-          <div className="mt-2 flex gap-2 text-xs text-zinc-500">
-            <span className="rounded bg-zinc-100 px-2 py-1">
+          <div className="mt-2 flex gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+            <span className="rounded bg-zinc-100 px-2 py-1 dark:bg-zinc-800">
               {items.length} {items.length === 1 ? "record" : "records"}
             </span>
             {followStatus.followsYou && (
-              <span className="rounded bg-zinc-100 px-2 py-1">Follows you</span>
+              <span className="rounded bg-zinc-100 px-2 py-1 dark:bg-zinc-800">Follows you</span>
             )}
           </div>
         </div>

@@ -15,6 +15,7 @@ import {
 } from "./actions";
 import { RecommendationsFilters } from "./RecommendationsFilters";
 import { addReleaseToWishlistAction } from "../wishlist/actions";
+import { SubmitButton } from "../SubmitButton";
 
 /**
  * Async server component streamed inside a <Suspense>. On first visit (no cached
@@ -77,13 +78,15 @@ export async function RecommendationsGrid({
         >
           <Link
             href={`/album/${item.releaseId}?from=/recommendations`}
-            className="aspect-square w-full overflow-hidden rounded bg-zinc-100 dark:bg-zinc-800"
+            className="aspect-square w-full overflow-hidden rounded bg-zinc-100 active:opacity-80 dark:bg-zinc-800"
           >
             {item.coverUrl && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={item.coverUrl}
                 alt={item.title}
+                loading="lazy"
+                decoding="async"
                 className="h-full w-full object-cover"
               />
             )}
@@ -100,22 +103,31 @@ export async function RecommendationsGrid({
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
             <form action={addRecommendationToCollectionAction}>
               <input type="hidden" name="releaseId" value={item.releaseId} />
-              <button type="submit" className="underline">
+              <SubmitButton
+                pendingText="Adding…"
+                className="-mx-1 min-h-11 px-1 underline active:opacity-70"
+              >
                 Add
-              </button>
+              </SubmitButton>
             </form>
             <form action={addReleaseToWishlistAction}>
               <input type="hidden" name="releaseId" value={item.releaseId} />
               <input type="hidden" name="returnTo" value="/recommendations" />
-              <button type="submit" className="underline">
+              <SubmitButton
+                pendingText="Adding…"
+                className="-mx-1 min-h-11 px-1 underline active:opacity-70"
+              >
                 Wishlist
-              </button>
+              </SubmitButton>
             </form>
             <form action={dismissRecommendationAction} className="ml-auto">
               <input type="hidden" name="recId" value={item.recId} />
-              <button type="submit" className="text-red-600 underline">
+              <SubmitButton
+                pendingText="Dismissing…"
+                className="-mx-1 min-h-11 px-1 text-red-600 underline active:opacity-70"
+              >
                 Dismiss
-              </button>
+              </SubmitButton>
             </form>
           </div>
         </div>

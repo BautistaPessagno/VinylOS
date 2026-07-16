@@ -13,6 +13,9 @@ import { followUserAction, unfollowUserAction } from "./actions";
 import { InviteFriendsButton } from "./InviteFriendsButton";
 import { FriendSearchInput } from "./FriendSearchInput";
 import { Avatar } from "../Avatar";
+import { SubmitButton } from "../SubmitButton";
+
+export const metadata = { title: "Friends" };
 
 function formatDate(value: Date) {
   return new Intl.DateTimeFormat("en", {
@@ -58,9 +61,12 @@ function FollowForm({
     <form action={followUserAction}>
       <input type="hidden" name="userId" value={userId} />
       <input type="hidden" name="returnTo" value={returnTo} />
-      <button type="submit" className="rounded bg-black px-3 py-1.5 text-sm text-white">
+      <SubmitButton
+        pendingText="Following…"
+        className="min-h-11 rounded bg-black px-3 py-1.5 text-sm text-white active:bg-zinc-800 sm:min-h-0 dark:bg-white dark:text-black dark:active:bg-zinc-200"
+      >
         {label}
-      </button>
+      </SubmitButton>
     </form>
   );
 }
@@ -70,9 +76,12 @@ function UnfollowForm({ userId, returnTo }: { userId: string; returnTo: string }
     <form action={unfollowUserAction}>
       <input type="hidden" name="userId" value={userId} />
       <input type="hidden" name="returnTo" value={returnTo} />
-      <button type="submit" className="rounded border border-zinc-300 px-3 py-1.5 text-sm">
+      <SubmitButton
+        pendingText="Unfollowing…"
+        className="min-h-11 rounded border border-zinc-300 px-3 py-1.5 text-sm active:bg-zinc-100 sm:min-h-0 dark:border-zinc-700 dark:active:bg-zinc-800"
+      >
         Unfollow
-      </button>
+      </SubmitButton>
     </form>
   );
 }
@@ -85,10 +94,13 @@ function SearchResultRow({
   returnTo: string;
 }) {
   return (
-    <li className="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
+    <li className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
       <UserIdentity name={user.name} handle={user.handle} image={user.image} />
       <div className="flex shrink-0 items-center gap-2">
-        <Link href={`/users/${user.id}`} className="text-sm underline">
+        <Link
+          href={`/users/${user.id}`}
+          className="flex min-h-11 items-center px-1 text-sm underline active:opacity-70 sm:min-h-0"
+        >
           View collection
         </Link>
         {user.isFollowing ? (
@@ -109,7 +121,7 @@ function FollowingRow({
   returnTo: string;
 }) {
   return (
-    <li className="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
+    <li className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
       <UserIdentity
         name={user.name}
         handle={user.handle}
@@ -117,7 +129,10 @@ function FollowingRow({
         detail={`Following since ${formatDate(user.followedAt)}`}
       />
       <div className="flex shrink-0 items-center gap-2">
-        <Link href={`/users/${user.id}`} className="text-sm underline">
+        <Link
+          href={`/users/${user.id}`}
+          className="flex min-h-11 items-center px-1 text-sm underline active:opacity-70 sm:min-h-0"
+        >
           View collection
         </Link>
         <UnfollowForm userId={user.id} returnTo={returnTo} />
@@ -134,7 +149,7 @@ function FollowerRow({
   returnTo: string;
 }) {
   return (
-    <li className="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
+    <li className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
       <UserIdentity
         name={user.name}
         handle={user.handle}
@@ -142,11 +157,14 @@ function FollowerRow({
         detail={`Followed you on ${formatDate(user.followedAt)}`}
       />
       <div className="flex shrink-0 items-center gap-2">
-        <Link href={`/users/${user.id}`} className="text-sm underline">
+        <Link
+          href={`/users/${user.id}`}
+          className="flex min-h-11 items-center px-1 text-sm underline active:opacity-70 sm:min-h-0"
+        >
           View collection
         </Link>
         {user.isFollowingBack ? (
-          <span className="rounded bg-zinc-100 px-3 py-1.5 text-sm text-zinc-600">
+          <span className="rounded bg-zinc-100 px-3 py-1.5 text-sm text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
             Following
           </span>
         ) : (
@@ -188,11 +206,17 @@ export default async function FriendsPage({
         <h2 className="font-medium">Find collectors</h2>
         <form className="flex max-w-2xl gap-2" action="/friends">
           <FriendSearchInput defaultValue={query} />
-          <button type="submit" className="rounded bg-black px-4 py-2 text-white">
+          <button
+            type="submit"
+            className="min-h-11 rounded bg-black px-4 py-2 text-white active:bg-zinc-800 dark:bg-white dark:text-black dark:active:bg-zinc-200"
+          >
             Search
           </button>
           {query && (
-            <Link href="/friends" className="px-3 py-2 text-sm text-zinc-500 underline">
+            <Link
+              href="/friends"
+              className="flex min-h-11 items-center px-3 py-2 text-sm text-zinc-500 underline active:opacity-70"
+            >
               Clear
             </Link>
           )}

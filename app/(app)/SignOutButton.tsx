@@ -3,7 +3,7 @@
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 
-export function SignOutButton() {
+export function SignOutButton({ className }: { className?: string }) {
   const router = useRouter();
   return (
     <button
@@ -12,7 +12,7 @@ export function SignOutButton() {
           fetchOptions: { onSuccess: () => router.push("/") },
         })
       }
-      className="text-sm text-zinc-600 hover:text-black"
+      className={`text-left ${className ?? "text-sm text-zinc-600 hover:text-black"}`}
     >
       Sign out
     </button>

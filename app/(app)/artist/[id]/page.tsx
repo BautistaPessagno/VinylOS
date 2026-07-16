@@ -1,9 +1,33 @@
+import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { requireSession } from "@/lib/auth-session";
 import { getArtist, searchArtistVinylAlbums } from "@/lib/discogs/client";
 import { getArtistImageUrl, parsePositiveInteger } from "@/lib/discogs/artistPage";
 import { DiscoveryAlbumCard } from "../../recommendations/DiscoveryAlbumCard";
+
+// Deduped across generateMetadata and the page render within one request.
+const getArtistCached = cache(getArtist);
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const artistId = parsePositiveInteger(id);
+  if (!artistId) return { title: "Artist not found" };
+  try {
+    const artist = await getArtistCached(artistId);
+    return {
+      title: artist.name,
+      description: `${artist.name}'s vinyl releases on VinylOS.`,
+    };
+  } catch {
+    return { title: "Artist" };
+  }
+}
 
 export default async function ArtistPage({
   params,
@@ -19,7 +43,7 @@ export default async function ArtistPage({
 
   let artist;
   try {
-    artist = await getArtist(artistId);
+    artist = await getArtistCached(artistId);
   } catch (error) {
     if (error instanceof Error && error.message.startsWith("Discogs API error 404:")) {
       notFound();
