@@ -2,7 +2,7 @@ import type { WrappedStats } from "@/lib/services/wrappedService";
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex flex-col gap-1 rounded border border-zinc-200 p-4">
+    <div className="flex flex-col gap-1 rounded border border-zinc-200 p-4 dark:border-zinc-800">
       <span className="text-sm text-zinc-500">{label}</span>
       <span className="text-xl font-semibold">{value}</span>
     </div>

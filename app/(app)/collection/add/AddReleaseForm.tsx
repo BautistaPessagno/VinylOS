@@ -9,6 +9,7 @@ import {
 } from "../actions";
 import { addAlbumToWishlistFromDiscogsAction } from "../../wishlist/actions";
 import { EditionPicker } from "../EditionPicker";
+import { SubmitButton } from "../../SubmitButton";
 import type { DiscogsAlbumGroup } from "@/lib/discogs/types";
 import {
   isLatestSearchRequest,
@@ -33,15 +34,19 @@ function Field({
 }) {
   return (
     <label className="flex flex-col gap-1 text-sm">
-      <span className="text-zinc-600">{label}</span>
+      <span className="text-zinc-600 dark:text-zinc-400">{label}</span>
+      {/* 16px on mobile so iOS Safari doesn't zoom the viewport on focus. */}
       {textarea ? (
-        <textarea name={name} className="rounded border border-zinc-300 px-3 py-2" />
+        <textarea
+          name={name}
+          className="rounded border border-zinc-300 px-3 py-2 text-base sm:text-sm dark:border-zinc-700 dark:bg-zinc-950"
+        />
       ) : (
         <input
           name={name}
           type={type}
           required={required}
-          className="rounded border border-zinc-300 px-3 py-2"
+          className="min-h-11 rounded border border-zinc-300 px-3 py-2 text-base sm:min-h-0 sm:text-sm dark:border-zinc-700 dark:bg-zinc-950"
         />
       )}
     </label>
@@ -77,17 +82,26 @@ function AlbumCard({
       }`}
     >
       <div className="flex items-center gap-3">
-        <input
-          type="checkbox"
-          checked={selected}
-          onChange={() => onToggleSelect(album)}
-          aria-label={`Select ${album.title}`}
-          className="h-4 w-4 shrink-0"
-        />
-        <div className="h-14 w-14 shrink-0 overflow-hidden rounded bg-zinc-100">
+        {/* Padded label keeps the checkbox's tap target ~44px without growing the box. */}
+        <label className="-m-3 flex shrink-0 cursor-pointer items-center p-3">
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={() => onToggleSelect(album)}
+            aria-label={`Select ${album.title}`}
+            className="h-5 w-5 shrink-0"
+          />
+        </label>
+        <div className="h-14 w-14 shrink-0 overflow-hidden rounded bg-zinc-100 dark:bg-zinc-800">
           {album.coverImage && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={album.coverImage} alt="" className="h-full w-full object-cover" />
+            <img
+              src={album.coverImage}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              className="h-full w-full object-cover"
+            />
           )}
         </div>
         <div className="flex-1">
@@ -105,7 +119,7 @@ function AlbumCard({
             type="button"
             onClick={() => onAdd(album.releaseId)}
             disabled={busy}
-            className="rounded bg-black px-3 py-1.5 text-sm text-white disabled:opacity-50"
+            className="min-h-11 rounded bg-black px-3 py-1.5 text-sm text-white active:bg-zinc-800 disabled:opacity-50 sm:min-h-0 dark:bg-white dark:text-black dark:active:bg-zinc-200"
           >
             {isThisPending ? "Adding…" : "Add"}
           </button>
@@ -113,7 +127,7 @@ function AlbumCard({
             type="button"
             onClick={() => onWishlist(album.releaseId)}
             disabled={busy}
-            className="rounded border border-zinc-300 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-zinc-600"
+            className="min-h-11 rounded border border-zinc-300 px-3 py-1.5 text-sm active:bg-zinc-100 disabled:opacity-50 sm:min-h-0 dark:border-zinc-600 dark:active:bg-zinc-800"
           >
             {isThisWishlistPending ? "Adding…" : "Wishlist"}
           </button>
@@ -127,6 +141,7 @@ function AlbumCard({
 }
 
 export function AddReleaseForm() {
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [showManualForm, setShowManualForm] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<DiscogsAlbumGroup[]>([]);
@@ -215,6 +230,13 @@ export function AddReleaseForm() {
     return () => clearTimeout(timeout);
   }, [normalizedQuery]);
 
+  // Auto-focus pops the keyboard and can scroll-jump on mobile, so desktop only.
+  useEffect(() => {
+    if (window.matchMedia("(min-width: 640px)").matches) {
+      searchInputRef.current?.focus();
+    }
+  }, []);
+
   function handleAdd(discogsReleaseId: number) {
     setPendingId(discogsReleaseId);
     startAdd(async () => {
@@ -239,7 +261,7 @@ export function AddReleaseForm() {
         <button
           type="button"
           onClick={() => setShowManualForm(false)}
-          className="self-start text-sm text-zinc-600 underline"
+          className="min-h-11 self-start text-sm text-zinc-600 underline active:opacity-70 dark:text-zinc-300"
         >
           ← Back to search
         </button>
@@ -253,7 +275,7 @@ export function AddReleaseForm() {
         <Field label="Genres, comma separated" name="genres" />
         <Field label="Styles, comma separated" name="styles" />
 
-        <hr className="my-2 border-zinc-200" />
+        <hr className="my-2 border-zinc-200 dark:border-zinc-800" />
 
         <Field label="Folder" name="folder" />
         <Field label="Rating (1-5)" name="rating" type="number" />
@@ -264,9 +286,12 @@ export function AddReleaseForm() {
         <Field label="Purchase location" name="purchaseLocation" />
         <Field label="Notes" name="notes" textarea />
 
-        <button type="submit" className="mt-2 self-start rounded bg-black px-4 py-2 text-white">
+        <SubmitButton
+          pendingText="Adding…"
+          className="mt-2 min-h-11 self-start rounded bg-black px-4 py-2 text-white active:bg-zinc-800 dark:bg-white dark:text-black dark:active:bg-zinc-200"
+        >
           Add to collection
-        </button>
+        </SubmitButton>
       </form>
     );
   }
@@ -276,11 +301,11 @@ export function AddReleaseForm() {
       <div className="flex w-full max-w-2xl flex-col gap-6">
         <div className="relative">
           <input
+            ref={searchInputRef}
             value={query}
             onChange={(e) => handleQueryChange(e.target.value)}
             placeholder="Search for an album (vinyl only)..."
-            className="w-full rounded border border-zinc-300 px-3 py-2 text-center"
-            autoFocus
+            className="min-h-11 w-full rounded border border-zinc-300 px-3 py-2 text-base sm:text-sm dark:border-zinc-700 dark:bg-zinc-950"
           />
           {isSearching && queryIsReady && (
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-zinc-400">
@@ -302,7 +327,7 @@ export function AddReleaseForm() {
         <button
           type="button"
           onClick={() => setShowManualForm(true)}
-          className="self-center text-sm text-zinc-600 underline"
+          className="min-h-11 self-center px-2 text-sm text-zinc-600 underline active:opacity-70 dark:text-zinc-300"
         >
           Can&apos;t find it? Enter manually
         </button>
@@ -323,13 +348,14 @@ export function AddReleaseForm() {
       </div>
 
       {selected.size > 0 && (
-        <div className="sticky bottom-4 flex w-full max-w-2xl items-center justify-between rounded-lg border border-zinc-200 bg-white px-4 py-3 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+        // Sticky offset clears the mobile bottom tab bar and the iOS home indicator.
+        <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] flex w-full max-w-2xl items-center justify-between rounded-lg border border-zinc-200 bg-white px-4 py-3 shadow-lg sm:bottom-4 dark:border-zinc-700 dark:bg-zinc-900">
           <span className="text-sm font-medium">{selected.size} selected</span>
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setSelected(new Map())}
-              className="text-sm text-zinc-600 underline"
+              className="min-h-11 px-2 text-sm text-zinc-600 underline active:opacity-70 sm:min-h-0 dark:text-zinc-300"
             >
               Clear
             </button>
@@ -337,7 +363,7 @@ export function AddReleaseForm() {
               type="button"
               onClick={handleAddSelected}
               disabled={isBatchAdding}
-              className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50"
+              className="min-h-11 rounded bg-black px-4 py-2 text-sm text-white active:bg-zinc-800 disabled:opacity-50 sm:min-h-0 dark:bg-white dark:text-black dark:active:bg-zinc-200"
             >
               {isBatchAdding ? "Adding…" : `Add ${selected.size} record${selected.size === 1 ? "" : "s"}`}
             </button>

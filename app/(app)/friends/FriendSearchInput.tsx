@@ -22,7 +22,7 @@ export function FriendSearchInput({ defaultValue }: { defaultValue: string }) {
         list={listId}
         autoComplete="off"
         placeholder="Search by name or username"
-        className="min-w-0 flex-1 rounded border border-zinc-300 px-3 py-2"
+        className="min-h-11 min-w-0 flex-1 rounded border border-zinc-300 px-3 py-2 text-base sm:text-sm dark:border-zinc-700 dark:bg-zinc-950"
       />
       <datalist id={listId}>
         {suggestions.map((suggestion) => (

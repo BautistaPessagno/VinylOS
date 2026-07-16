@@ -42,17 +42,18 @@ export default async function LandingPage({
           ))}
         </ul>
         <div className="flex gap-3">
-          <Link
-            href={loginHref}
-            className="rounded-full bg-black px-6 py-3 text-white hover:bg-zinc-800"
-          >
-            Log in
-          </Link>
+          {/* Sign up is the primary CTA; Log in is the quieter secondary. */}
           <Link
             href={signupHref}
-            className="rounded-full bg-black px-6 py-3 text-white hover:bg-zinc-800"
+            className="rounded-full bg-black px-6 py-3 text-white hover:bg-zinc-800 active:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 dark:active:bg-zinc-200"
           >
             Sign up
+          </Link>
+          <Link
+            href={loginHref}
+            className="rounded-full border border-zinc-300 px-6 py-3 hover:border-zinc-500 active:border-zinc-500 dark:border-zinc-700 dark:hover:border-zinc-500"
+          >
+            Log in
           </Link>
         </div>
       </div>

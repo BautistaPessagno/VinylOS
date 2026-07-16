@@ -14,7 +14,7 @@ function ArtistImage({ name, imageUrl }: { name: string; imageUrl?: string }) {
     <div className="aspect-square overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
       {imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={imageUrl} alt={name} className="h-full w-full object-cover" />
+        <img src={imageUrl} alt={name} loading="lazy" decoding="async" className="h-full w-full object-cover" />
       ) : (
         <div className="flex h-full items-center justify-center text-xl font-semibold text-zinc-500">
           {name.charAt(0).toUpperCase()}
@@ -46,7 +46,7 @@ function HeroCover({ imageUrl, alt }: { imageUrl?: string; alt: string }) {
     <div className="aspect-square w-24 shrink-0 overflow-hidden rounded-xl bg-zinc-200 dark:bg-zinc-800 sm:w-28">
       {imageUrl && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={imageUrl} alt={alt} className="h-full w-full object-cover" />
+        <img src={imageUrl} alt={alt} loading="lazy" decoding="async" className="h-full w-full object-cover" />
       )}
     </div>
   );

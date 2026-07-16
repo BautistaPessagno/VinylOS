@@ -4,7 +4,8 @@ export type CollectionSort =
   | "year-asc"
   | "title"
   | "artist"
-  | "country";
+  | "country"
+  | "rating-desc";
 
 export const COLLECTION_SORT_OPTIONS: { value: CollectionSort; label: string }[] = [
   { value: "added-desc", label: "Recently added" },
@@ -13,6 +14,7 @@ export const COLLECTION_SORT_OPTIONS: { value: CollectionSort; label: string }[]
   { value: "title", label: "Title (A–Z)" },
   { value: "artist", label: "Artist (A–Z)" },
   { value: "country", label: "Country (A–Z)" },
+  { value: "rating-desc", label: "Rating (highest)" },
 ];
 
 export function parseCollectionSort(value: string | undefined): CollectionSort {

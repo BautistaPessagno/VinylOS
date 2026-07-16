@@ -1,5 +1,7 @@
 import { AddReleaseForm } from "./AddReleaseForm";
 
+export const metadata = { title: "Add a record" };
+
 export default function AddReleasePage() {
   return (
     <div className="flex min-h-[80vh] flex-col justify-center gap-6">

@@ -13,7 +13,7 @@ test("artist page loads Discogs identity and paginated vinyl records", () => {
   assert.match(source, /searchParams:\s*Promise<\{ page\?: string \}>/);
   assert.match(source, /await requireSession\(\)/);
   assert.match(source, /await Promise\.all\(\[params, searchParams\]\)/);
-  assert.match(source, /getArtist\(artistId\)/);
+  assert.match(source, /getArtistCached\(artistId\)/);
   assert.match(source, /searchArtistVinylAlbums\(artist\.name, requestedPage\)/);
   assert.match(source, /notFound\(\)/);
   assert.match(source, />\s*Records\s*</);

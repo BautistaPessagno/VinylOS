@@ -23,7 +23,10 @@ export default async function AppLayout({
           image={session.user.image}
           userId={session.user.id}
         />
-        <main className="flex flex-1 flex-col px-6 py-8">{children}</main>
+        {/* Extra bottom padding on mobile clears the fixed bottom tab bar. */}
+        <main className="flex flex-1 flex-col px-6 pt-8 pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:pb-8">
+          {children}
+        </main>
       </div>
       <Suspense fallback={null}>
         <FlashToaster />

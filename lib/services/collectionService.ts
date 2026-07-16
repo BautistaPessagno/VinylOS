@@ -202,7 +202,12 @@ export type CollectionFilters = {
   genre?: string;
   year?: number;
   label?: string;
+  /** Free-text match against release title or any credited artist name. */
+  q?: string;
   sort?: CollectionSort;
+  /** 1-based page. When set, results are windowed to `pageSize` items. */
+  page?: number;
+  pageSize?: number;
 };
 
 export async function listCollectionFilterOptions(
@@ -229,10 +234,27 @@ export async function listCollectionItems(
   if (filters.year) conditions.push(eq(releases.year, filters.year));
   if (filters.label) conditions.push(ilike(releases.labelName, `%${filters.label}%`));
   if (filters.genre) conditions.push(arrayContains(releases.genres, [filters.genre]));
+  if (filters.q) {
+    const pattern = `%${filters.q}%`;
+    conditions.push(
+      sql`(${releases.title} ilike ${pattern} or exists (
+        select 1 from release_artists ra
+        join artists a on a.id = ra.artist_id
+        where ra.release_id = ${releases.id} and a.name ilike ${pattern}
+      ))`,
+    );
+  }
 
   const sort = filters.sort ?? "added-desc";
-  // `artist` is sorted in-memory below (artist names are fetched separately). Every other
-  // key maps to a release/collection column; missing values sort last via NULLS LAST.
+  // Primary (first-credited) artist name, resolved in SQL so artist sort stays correct
+  // when results are paginated.
+  const primaryArtistName = sql`(
+    select a.name from release_artists ra
+    join artists a on a.id = ra.artist_id
+    where ra.release_id = ${releases.id}
+    order by ra.join_order asc limit 1
+  )`;
+  // Every key maps to a release/collection column; missing values sort last via NULLS LAST.
   const orderBy: SQL =
     sort === "year-desc"
       ? sql`${releases.year} desc nulls last`
@@ -240,11 +262,21 @@ export async function listCollectionItems(
         ? sql`${releases.year} asc nulls last`
         : sort === "title"
           ? asc(releases.title)
-          : sort === "country"
-            ? sql`${releases.country} asc nulls last`
-            : desc(collectionItems.addedAt);
+          : sort === "artist"
+            ? sql`${primaryArtistName} asc nulls last`
+            : sort === "country"
+              ? sql`${releases.country} asc nulls last`
+              : sort === "rating-desc"
+                ? sql`${collectionItems.rating} desc nulls last`
+                : desc(collectionItems.addedAt);
 
-  const rows = await db
+  const [{ total }] = await db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(collectionItems)
+    .innerJoin(releases, eq(collectionItems.releaseId, releases.id))
+    .where(and(...conditions));
+
+  let query = db
     .select({
       itemId: collectionItems.id,
       addedAt: collectionItems.addedAt,
@@ -262,9 +294,15 @@ export async function listCollectionItems(
     .from(collectionItems)
     .innerJoin(releases, eq(collectionItems.releaseId, releases.id))
     .where(and(...conditions))
-    .orderBy(orderBy);
+    // Secondary key keeps ordering stable across pages when the primary key ties.
+    .orderBy(orderBy, desc(collectionItems.addedAt), desc(collectionItems.id))
+    .$dynamic();
+  if (filters.page && filters.pageSize) {
+    query = query.limit(filters.pageSize).offset((filters.page - 1) * filters.pageSize);
+  }
+  const rows = await query;
 
-  if (rows.length === 0) return [];
+  if (rows.length === 0) return { items: [], total };
 
   const releaseIds = [...new Set(rows.map((r) => r.releaseId))];
   const artistRows = await db
@@ -290,15 +328,7 @@ export async function listCollectionItems(
     artistNames: artistsByRelease.get(row.releaseId) ?? [],
   }));
 
-  if (sort === "artist") {
-    items.sort((a, b) =>
-      (a.artistNames[0] ?? "").localeCompare(b.artistNames[0] ?? "", undefined, {
-        sensitivity: "base",
-      }),
-    );
-  }
-
-  return items;
+  return { items, total };
 }
 
 /** Full catalog details for one release (with ordered artist names), for the album detail page. */

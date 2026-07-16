@@ -17,8 +17,8 @@ export function TabBar({ active }: { active: "recommendations" | "explore" }) {
             aria-current={isActive ? "page" : undefined}
             className={
               isActive
-                ? "-mb-px border-b-2 border-red-500 pb-2 text-sm font-medium text-red-500"
-                : "-mb-px border-b-2 border-transparent pb-2 text-sm text-zinc-600 hover:text-red-500"
+                ? "-mb-px border-b-2 border-red-500 px-1 pb-2 pt-2 text-sm font-medium text-red-500"
+                : "-mb-px border-b-2 border-transparent px-1 pb-2 pt-2 text-sm text-zinc-600 hover:text-red-500 active:text-red-500 dark:text-zinc-300"
             }
           >
             {label}

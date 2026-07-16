@@ -3,6 +3,7 @@ import {
   openExploreAlbumAction,
   wishlistExploreAlbumAction,
 } from "./actions";
+import { SubmitButton } from "../SubmitButton";
 
 export type DiscoveryAlbum = {
   artist: string;
@@ -37,6 +38,8 @@ export function DiscoveryAlbumCard({
             <img
               src={album.imageUrl}
               alt={`${album.title} by ${album.artist}`}
+              loading="lazy"
+              decoding="async"
               className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.02] motion-reduce:transition-none"
             />
           )}
@@ -70,25 +73,34 @@ export function DiscoveryAlbumCard({
           <input type="hidden" name="artist" value={album.artist} />
           <input type="hidden" name="album" value={album.title} />
           <input type="hidden" name="returnTo" value={returnTo} />
-          <button type="submit" className="underline underline-offset-2">
+          <SubmitButton
+            pendingText="Adding…"
+            className="-mx-1 min-h-11 px-1 underline underline-offset-2 active:opacity-70"
+          >
             Add
-          </button>
+          </SubmitButton>
         </form>
         <form action={wishlistExploreAlbumAction}>
           <input type="hidden" name="artist" value={album.artist} />
           <input type="hidden" name="album" value={album.title} />
           <input type="hidden" name="returnTo" value={returnTo} />
-          <button type="submit" className="underline underline-offset-2">
+          <SubmitButton
+            pendingText="Adding…"
+            className="-mx-1 min-h-11 px-1 underline underline-offset-2 active:opacity-70"
+          >
             Wishlist
-          </button>
+          </SubmitButton>
         </form>
         <form action={openExploreAlbumAction} className="ml-auto">
           <input type="hidden" name="artist" value={album.artist} />
           <input type="hidden" name="album" value={album.title} />
           <input type="hidden" name="returnTo" value={returnTo} />
-          <button type="submit" className="text-zinc-500 underline underline-offset-2">
+          <SubmitButton
+            pendingText="Opening…"
+            className="-mx-1 min-h-11 px-1 text-zinc-500 underline underline-offset-2 active:opacity-70"
+          >
             Details
-          </button>
+          </SubmitButton>
         </form>
       </div>
     </article>

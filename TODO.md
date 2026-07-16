@@ -2,7 +2,7 @@
 
 > **Target stack:** Next.js (App Router) · Vercel (hosting) · Neon (Postgres serverless)
 > **Music data source:** Discogs API (primary) + Last.fm + MusicBrainz (supplementary)
-> **Doc status:** architecture + implementation roadmap
+> **Doc status:** architecture + implementation roadmap · **mobile UX/UI audit added July 2026 → see sections 12–13**
 > **Last technical verification:** July 2026
 
 ---
@@ -284,3 +284,57 @@ VISION_API_KEY=
 - [ ] Normalize genres/styles into tables or keep them as arrays in `releases`? → **MVP: arrays**
 - [x] Connection driver: `pg` + pool (new default) or `@neondatabase/serverless` HTTP? → **`pg` + Pool + `attachDatabasePool`**, per section 1
 - [ ] Which vision/OCR provider for photo recognition (Google Cloud Vision, AWS Rekognition, a multimodal LLM, Discogs image search if it becomes available)? — moot until photo recognition is picked back up
+
+---
+
+## 12. Mobile UX/UI improvements (audit — July 2026)
+
+Findings from a code audit of every route. Ordered by priority; file references point at the code to change.
+
+### P0 — broken or unusable on touch devices
+
+- [x] **Sign out is unreachable on mobile.** The account menu in `app/(app)/AppNav.tsx` opens only via `onMouseEnter`/`onMouseLeave`; on touch there is no hover, and tapping the avatar navigates straight to the profile. The mobile hamburger menu only lists the four nav links + Search — no Profile, Settings, or Sign out. Fix both:
+  - Make the account menu click-toggled (with outside-tap + Escape dismiss), not hover-only.
+  - Add Profile / Settings / Sign out entries to the mobile drawer.
+- [x] **iOS auto-zoom on form fields.** Any input rendering below 16px makes iOS Safari zoom the viewport on focus. Affected: collection filter inputs (`CollectionFiltersForm.tsx`, `text-sm` form), the `Field` components in `collection/add/AddReleaseForm.tsx` and `collection/[itemId]/edit/page.tsx` (inputs inherit `text-sm` from the label wrapper), and the friends search input. Fix: ensure all inputs/selects are ≥16px (`text-base`) at mobile widths. (`ExploreSearch.tsx` already does this correctly with `text-base`.)
+
+### P1 — high-friction on mobile
+
+- [x] **Touch targets below ~44px** throughout:
+  - Hamburger button is `h-8 w-8` (32px) — `AppNav.tsx`.
+  - Card actions are small underlined text links: Edit/Remove (`collection/page.tsx`), Move to collection/Remove (`wishlist/page.tsx`), Add/Wishlist/Details (`DiscoveryAlbumCard.tsx`), Wishlist (`users/[userId]/page.tsx`).
+  - Genre chips `px-3 py-1` (~28px tall) in `ExploreTab.tsx`; selection checkbox `h-4 w-4` (16px) in `AddReleaseForm.tsx`; toast dismiss `×` in `ToastProvider.tsx`.
+  - Fix: give interactive elements `min-h-11`-equivalent hit areas (padding or invisible expanded hit area), keep visual size if desired.
+- [x] **Destructive "Remove" has no confirmation or undo** (`collection/page.tsx`, `wishlist/page.tsx`). One stray tap deletes a record. Add a confirm step, or better on mobile: perform the action with an "Undo" toast (toast infra already exists).
+- [x] **No pending/disabled state on server-action forms.** Album page Add to collection / Wishlist / Dismiss (`album/[id]/page.tsx`), Follow/Unfollow (`friends/page.tsx`, `users/[userId]/page.tsx`), Remove/Move on collection & wishlist. On slow mobile networks nothing visibly happens, inviting double-taps and duplicate submissions. Add a shared `useFormStatus` submit-button component (spinner + `disabled`) and use it in all action forms.
+- [x] **Missing route-level loading states.** Only `artist/[id]/loading.tsx` exists. `album/[id]` fetches Discogs + Last.fm during render — on mobile this is a multi-second blank screen. Add `loading.tsx` skeletons for `album/[id]`, `collection`, `wishlist`, `friends`, and `users/[userId]`.
+- [x] **Consider a fixed bottom tab bar on mobile** (Collection · Wishlist · Discover · Friends, avatar for profile) replacing the hamburger: one-tap section switching is the standard pattern for a 4-section app. Include `env(safe-area-inset-bottom)` padding. Also add safe-area padding to the sticky selection bar in `AddReleaseForm.tsx` (`bottom-4`) and the toast container (`bottom-4`) so they clear the iOS home indicator.
+- [x] **Collection filters stack awkwardly on small screens.** Four inputs + Filter button wrap into a tall multi-row block pushing the grid below the fold (`CollectionFiltersForm.tsx`). Collapse behind a "Filters" disclosure (or bottom sheet) on mobile, show active-filter count on the trigger, and auto-submit the sort `<select>` on change so the separate Filter/Apply button isn't needed.
+- [x] **Explore genre chips wrap into many rows** on narrow screens and the sort form (`ml-auto`) drops unpredictably (`ExploreTab.tsx`). Make the chip row horizontally scrollable (`overflow-x-auto` + scroll snap, no visible scrollbar) on mobile; same trick for profile/discover tab bars if labels grow.
+
+### P2 — polish & consistency
+
+- [x] **Dark-mode gaps.** Many surfaces have no `dark:` variant and render light-on-dark artifacts: collection/wishlist/profile card borders (`border-zinc-200`) and cover placeholders (`bg-zinc-100`), profile record-count & "Follows you" badges, follower "Following" pill, `WrappedSection` stat cards & bars. Inactive nav/tab links use `text-zinc-600` with no dark variant (`AppNav.tsx` NavLinks, `TabBar.tsx`, ProfileTabs) → poor contrast on dark backgrounds. Sweep once, add variants everywhere.
+- [x] **Font inconsistency.** `globals.css` sets `body { font-family: Arial, Helvetica, sans-serif }` while `app/layout.tsx` loads Geist and wires it into `--font-sans`. Geist is effectively unused. Decide (probably Geist) and remove the override.
+- [x] **Images are raw `<img>` with no lazy-loading, `sizes`, or srcset** — heavy on mobile data for cover grids. Minimum: `loading="lazy"` + `decoding="async"` on grid covers. Better: `next/image` with `images.remotePatterns` for Discogs/Last.fm image hosts in `next.config.ts`.
+- [x] **Tap feedback.** All interaction styling is `hover:`-only, which does nothing on touch. Add `active:` states (e.g. `active:scale-[0.98]` / `active:opacity-70`) to buttons, cards, and chips.
+- [x] **Menu a11y.** Hamburger and account menus need `aria-expanded`/`aria-controls`, Escape-to-close, and outside-tap dismiss (`AppNav.tsx`).
+- [x] **Friends rows cram at 375px.** Identity + "View collection" + Follow/Unfollow compete on one line (`friends/page.tsx` rows). Let actions wrap below the identity block on small screens (`flex-wrap` or `sm:` split).
+- [x] **`autoFocus` on the add-record search** (`AddReleaseForm.tsx`) pops the keyboard and can scroll-jump on mobile page load. Intentional? Consider only focusing on desktop widths. Also `text-center` on that input is odd once you type a long query.
+- [x] **Landing CTAs are visually identical** solid-black "Log in" and "Sign up" (`(marketing)/page.tsx`) — differentiate primary vs secondary.
+- [x] **Album page action row** (`album/[id]/page.tsx`): on mobile consider full-width stacked primary/secondary buttons instead of a wrapping inline row; "Dismiss" always sends `returnTo=/recommendations` even when you arrived from collection/wishlist — align it with the origin-aware `returnTo` used by the other two actions.
+
+---
+
+## 13. Overall project gaps (beyond mobile)
+
+- [x] **No error boundaries.** No `error.tsx`, `global-error.tsx`, or custom `not-found.tsx` anywhere — a failed Discogs/Last.fm call or server-action error shows Next's default screen. Add friendly error pages with a retry affordance.
+- [x] **Metadata is a stub.** Title and description are both "VinylOS" (`app/layout.tsx`); no per-page titles (`generateMetadata` for album/artist/profile pages), no Open Graph/Twitter cards (matters for the "Invite friends" share link), no `apple-touch-icon`, `theme-color`, or web app manifest. A minimal PWA manifest would suit the "check my collection at the record store" use case.
+- [x] **Tests exist but nothing runs them.** `*.test.mjs` files sit next to components, but `package.json` has no `test` script and there's no CI. Add `"test": "node --test"` (or equivalent) and a GitHub Actions workflow running lint + test + build on PRs.
+- [x] **Can't search your own collection.** Filters cover genre/year/label, but there's no free-text search by title/artist — the #1 in-store mobile question is "do I already own this?". Add a search input to `/collection` (and consider including owned records in the global search with an "In collection" badge).
+- [x] **Ratings are collected but never shown.** `rating` is editable (`collection/[itemId]/edit`) but doesn't appear on collection cards, the album page, or as a sort/filter. Surface it or drop the field.
+- [x] **No pagination/virtualization on the collection grid** — every record renders at once; will degrade with large collections, especially on mobile.
+- [x] **`proxy.ts` matcher is incomplete.** It fast-redirects `/collection`, `/friends`, `/users` only — `/wishlist`, `/recommendations`, `/album`, `/artist`, `/settings` fall through to the server-side session check (still secure via `requireSession`, but a slower, inconsistent bounce). Add the missing paths.
+- [x] **Shared profile links dead-end at login.** "Invite friends" shares `/users/:id`, but that page requires a session — a non-user lands on the login form with zero context. Consider a public read-only profile (or a teaser + sign-up pitch) for shared links.
+- [x] **README is still create-next-app boilerplate.** Document actual setup: pnpm, required env vars (Discogs/Last.fm keys, `DATABASE_URL`), `pnpm db:push` workflow, and the auth setup.
+- [ ] **Open roadmap items** (carried from section 9): photo-recognition add flow, Discogs have/want signal for recommendations, optional Vercel Cron refresh.

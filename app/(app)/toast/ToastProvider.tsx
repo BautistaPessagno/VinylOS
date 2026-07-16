@@ -58,7 +58,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       <div
         aria-live="polite"
-        className="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex flex-col items-center gap-2 px-4"
+        className="pointer-events-none fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-50 flex flex-col items-center gap-2 px-4 sm:bottom-4"
       >
         {toasts.map((toast) => (
           <div
@@ -75,7 +75,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               type="button"
               onClick={() => dismiss(toast.id)}
               aria-label="Dismiss notification"
-              className="shrink-0 text-lg leading-none opacity-60 transition-opacity hover:opacity-100"
+              className="-m-2.5 shrink-0 p-2.5 text-lg leading-none opacity-60 transition-opacity hover:opacity-100 active:opacity-100"
             >
               ×
             </button>
