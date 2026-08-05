@@ -20,6 +20,8 @@ Also relevant:
 
 ## 2. Public read routes
 
+> **PR:** https://github.com/BautistaPessagno/VinylOS/pull/15 — implemented on `feat/public-read-routes` (base: improvements). Checked off after local verify (`pnpm test` / `lint` / `build`); merge is left for a human.
+
 - [x] Decide the route shape and stick to it: either **(a)** move the publicly-viewable pages into a new `app/(public)/` group with its own layout, or **(b)** keep them in `(app)` and make the layout session-optional. (b) is fewer moved files but means the `(app)` layout stops being the auth boundary — every remaining page in the group must then be verified to call `requireSession()` itself. Prefer (a) if the list of public pages stays small.
   - **Done (a):** `app/(public)/` holds `/users/[userId]`, `/album/[id]`, `/artist/[id]` with a session-optional layout; `(app)` remains the auth boundary for private routes.
 - [x] Public: `/users/[userId]` (profile · collection · wishlist tabs), `/album/[id]`, `/artist/[id]`. Private (unchanged): `/collection`, `/wishlist`, `/recommendations`, `/friends`, `/settings`, `/collection/add`, `/collection/[itemId]/edit`.
