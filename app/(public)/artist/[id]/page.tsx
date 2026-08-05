@@ -2,10 +2,10 @@ import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { requireSession } from "@/lib/auth-session";
+import { getOptionalSession } from "@/lib/auth-session";
 import { getArtist, searchArtistVinylAlbums } from "@/lib/discogs/client";
 import { getArtistImageUrl, parsePositiveInteger } from "@/lib/discogs/artistPage";
-import { DiscoveryAlbumCard } from "../../recommendations/DiscoveryAlbumCard";
+import { DiscoveryAlbumCard } from "@/app/(app)/recommendations/DiscoveryAlbumCard";
 
 // Deduped across generateMetadata and the page render within one request.
 const getArtistCached = cache(getArtist);
@@ -36,7 +36,7 @@ export default async function ArtistPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ page?: string }>;
 }) {
-  await requireSession();
+  const session = await getOptionalSession();
   const [{ id }, { page }] = await Promise.all([params, searchParams]);
   const artistId = parsePositiveInteger(id);
   if (!artistId) notFound();
@@ -59,14 +59,18 @@ export default async function ArtistPage({
 
   const imageUrl = getArtistImageUrl(artist);
   const returnTo = `/artist/${artist.id}?page=${catalog.page}`;
+  const backHref = session
+    ? "/recommendations?tab=explore&focus=search"
+    : "/";
+  const backLabel = session ? "← Back to search" : "← Back to VinylOS";
 
   return (
     <div className="flex flex-col gap-8">
       <Link
-        href="/recommendations?tab=explore&focus=search"
+        href={backHref}
         className="self-start text-sm text-zinc-500 hover:text-red-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
       >
-        ← Back to search
+        {backLabel}
       </Link>
 
       <section className="flex flex-col gap-6 rounded-2xl border border-zinc-200 bg-zinc-100 p-6 sm:flex-row sm:items-center dark:border-zinc-800 dark:bg-zinc-900">
@@ -124,6 +128,7 @@ export default async function ArtistPage({
                   editionCount: album.editionCount,
                 }}
                 returnTo={returnTo}
+                signedIn={Boolean(session)}
               />
             ))}
           </div>

@@ -18,7 +18,7 @@ export default async function LoginPage({
   if (session) redirect(callbackURL);
 
   // Shared "Invite friends" links point at /users/:id — give the invitee context
-  // instead of a bare login form.
+  // instead of a bare login form. Profiles are publicly readable; login is for actions.
   const isInviteLink = callbackURL.startsWith("/users/");
 
   return (
@@ -26,8 +26,8 @@ export default async function LoginPage({
       <div className="flex w-full max-w-sm flex-col gap-6">
         {isInviteLink && (
           <p className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-center text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
-            You&apos;ve been invited to see a vinyl collection on VinylOS. Log in or
-            create a free account to view it.
+            You&apos;ve been invited to a vinyl collection on VinylOS. Log in or create
+            a free account to follow, wishlist, and collect.
           </p>
         )}
         <AuthForm callbackURL={callbackURL} initialMode={initialMode} />

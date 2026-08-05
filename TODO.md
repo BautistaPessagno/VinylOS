@@ -20,12 +20,15 @@ Also relevant:
 
 ## 2. Public read routes
 
-- [ ] Decide the route shape and stick to it: either **(a)** move the publicly-viewable pages into a new `app/(public)/` group with its own layout, or **(b)** keep them in `(app)` and make the layout session-optional. (b) is fewer moved files but means the `(app)` layout stops being the auth boundary — every remaining page in the group must then be verified to call `requireSession()` itself. Prefer (a) if the list of public pages stays small.
-- [ ] Public: `/users/[userId]` (profile · collection · wishlist tabs), `/album/[id]`, `/artist/[id]`. Private (unchanged): `/collection`, `/wishlist`, `/recommendations`, `/friends`, `/settings`, `/collection/add`, `/collection/[itemId]/edit`.
-- [ ] Replace `requireSession()` with an optional-session helper (e.g. `getOptionalSession()` alongside the existing `requireSession` in `lib/auth-session.ts`) on the public pages, and make every session-derived branch tolerate `null` — `getFollowStatus`, `isSelf`, the settings tab, `wrapped`, `showWishlistAction`.
-- [ ] Drop the public paths from the `proxy.ts` matcher. Keep the private ones. **`proxy.ts` is not the security boundary** — it is bypassable by header spoofing (CVE-2025-29927), so the per-page `requireSession()` checks on the private routes must stay regardless of what the matcher covers.
-- [ ] Public-viewer chrome: a signed-out visitor must not see the account menu / bottom tab bar / Sign out (`AppNav.tsx` requires `name`/`userId`). Render a minimal header with a "Sign up" / "Log in" CTA instead.
-- [ ] Verify nothing leaks on a public page: no email, no settings, no private notes / purchase price / purchase location from `collection_items`. Audit what `listPublicCollectionItems` actually selects before exposing it anonymously.
+- [x] Decide the route shape and stick to it: either **(a)** move the publicly-viewable pages into a new `app/(public)/` group with its own layout, or **(b)** keep them in `(app)` and make the layout session-optional. (b) is fewer moved files but means the `(app)` layout stops being the auth boundary — every remaining page in the group must then be verified to call `requireSession()` itself. Prefer (a) if the list of public pages stays small.
+  - **Done (a):** `app/(public)/` holds `/users/[userId]`, `/album/[id]`, `/artist/[id]` with a session-optional layout; `(app)` remains the auth boundary for private routes.
+- [x] Public: `/users/[userId]` (profile · collection · wishlist tabs), `/album/[id]`, `/artist/[id]`. Private (unchanged): `/collection`, `/wishlist`, `/recommendations`, `/friends`, `/settings`, `/collection/add`, `/collection/[itemId]/edit`.
+- [x] Replace `requireSession()` with an optional-session helper (e.g. `getOptionalSession()` alongside the existing `requireSession` in `lib/auth-session.ts`) on the public pages, and make every session-derived branch tolerate `null` — `getFollowStatus`, `isSelf`, the settings tab, `wrapped`, `showWishlistAction`.
+- [x] Drop the public paths from the `proxy.ts` matcher. Keep the private ones. **`proxy.ts` is not the security boundary** — it is bypassable by header spoofing (CVE-2025-29927), so the per-page `requireSession()` checks on the private routes must stay regardless of what the matcher covers.
+- [x] Public-viewer chrome: a signed-out visitor must not see the account menu / bottom tab bar / Sign out (`AppNav.tsx` requires `name`/`userId`). Render a minimal header with a "Sign up" / "Log in" CTA instead.
+  - **Done:** `PublicGuestNav` with Log in / Sign up (round-trips via `?next=`).
+- [x] Verify nothing leaks on a public page: no email, no settings, no private notes / purchase price / purchase location from `collection_items`. Audit what `listPublicCollectionItems` actually selects before exposing it anonymously.
+  - **Audit:** `listPublicCollectionItems` selects only public release fields (title, year, cover, genres, label, artists) — not `notes` / `purchasePrice` / `purchaseLocation`. Settings/email only render when `showSettings && session` (self).
 
 ## 3. Wishlist & collection visibility
 

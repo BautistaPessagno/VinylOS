@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   addExploreAlbumAction,
   openExploreAlbumAction,
@@ -18,10 +19,15 @@ export type DiscoveryAlbum = {
 export function DiscoveryAlbumCard({
   album,
   returnTo,
+  /** When false, hide add/wishlist actions and point guests at login (public artist page). */
+  signedIn = true,
 }: {
   album: DiscoveryAlbum;
   returnTo: string;
+  signedIn?: boolean;
 }) {
+  const loginHref = `/login?next=${encodeURIComponent(returnTo)}`;
+
   return (
     <article className="group flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-3 transition-colors hover:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-600">
       <form action={openExploreAlbumAction}>
@@ -69,28 +75,39 @@ export function DiscoveryAlbumCard({
       </div>
 
       <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-        <form action={addExploreAlbumAction}>
-          <input type="hidden" name="artist" value={album.artist} />
-          <input type="hidden" name="album" value={album.title} />
-          <input type="hidden" name="returnTo" value={returnTo} />
-          <SubmitButton
-            pendingText="Adding…"
+        {signedIn ? (
+          <>
+            <form action={addExploreAlbumAction}>
+              <input type="hidden" name="artist" value={album.artist} />
+              <input type="hidden" name="album" value={album.title} />
+              <input type="hidden" name="returnTo" value={returnTo} />
+              <SubmitButton
+                pendingText="Adding…"
+                className="-mx-1 min-h-11 px-1 underline underline-offset-2 active:opacity-70"
+              >
+                Add
+              </SubmitButton>
+            </form>
+            <form action={wishlistExploreAlbumAction}>
+              <input type="hidden" name="artist" value={album.artist} />
+              <input type="hidden" name="album" value={album.title} />
+              <input type="hidden" name="returnTo" value={returnTo} />
+              <SubmitButton
+                pendingText="Adding…"
+                className="-mx-1 min-h-11 px-1 underline underline-offset-2 active:opacity-70"
+              >
+                Wishlist
+              </SubmitButton>
+            </form>
+          </>
+        ) : (
+          <Link
+            href={loginHref}
             className="-mx-1 min-h-11 px-1 underline underline-offset-2 active:opacity-70"
           >
-            Add
-          </SubmitButton>
-        </form>
-        <form action={wishlistExploreAlbumAction}>
-          <input type="hidden" name="artist" value={album.artist} />
-          <input type="hidden" name="album" value={album.title} />
-          <input type="hidden" name="returnTo" value={returnTo} />
-          <SubmitButton
-            pendingText="Adding…"
-            className="-mx-1 min-h-11 px-1 underline underline-offset-2 active:opacity-70"
-          >
-            Wishlist
-          </SubmitButton>
-        </form>
+            Log in to add
+          </Link>
+        )}
         <form action={openExploreAlbumAction} className="ml-auto">
           <input type="hidden" name="artist" value={album.artist} />
           <input type="hidden" name="album" value={album.title} />
