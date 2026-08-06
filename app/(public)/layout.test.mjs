@@ -15,8 +15,10 @@ test("public layout is session-optional with guest chrome", () => {
   assert.doesNotMatch(source, /redirect\("\/login"\)/);
 });
 
-test("guest nav exposes login and signup CTAs only", () => {
+test("guest nav exposes Explore, login, and signup without member controls", () => {
   const source = readFileSync(guestNavPath, "utf8");
+  assert.match(source, /href="\/explore"/);
+  assert.match(source, />\s*Explore\s*</);
   assert.match(source, /Log in/);
   assert.match(source, /Sign up/);
   assert.doesNotMatch(source, /SignOutButton/);
@@ -28,6 +30,7 @@ test("proxy matcher drops public read paths but keeps private ones", () => {
   assert.doesNotMatch(source, /"\/users\/:path\*"/);
   assert.doesNotMatch(source, /"\/album\/:path\*"/);
   assert.doesNotMatch(source, /"\/artist\/:path\*"/);
+  assert.doesNotMatch(source, /"\/explore\/:path\*"/);
   assert.match(source, /"\/collection\/:path\*"/);
   assert.match(source, /"\/wishlist\/:path\*"/);
   assert.match(source, /"\/settings\/:path\*"/);

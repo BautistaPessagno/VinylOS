@@ -22,7 +22,7 @@ export async function ExploreTab({
 }: {
   genre?: string;
   sort?: string;
-  userId: string;
+  userId?: string;
   focusSearch: boolean;
 }) {
   const genres = listExploreGenres();
@@ -30,29 +30,31 @@ export async function ExploreTab({
   const selectedSort = parseExploreSort(sort);
   const [allAlbums, libraryKeys] = await Promise.all([
     listExploreAlbums(selected),
-    getLibraryAlbumKeys(userId),
+    userId ? getLibraryAlbumKeys(userId) : Promise.resolve(new Set<string>()),
   ]);
   // Hide albums the user already owns or has wishlisted (matched by normalized artist+title).
   const albums = sortExploreAlbums(
     allAlbums.filter((a) => !libraryKeys.has(albumMatchKey(a.artist, a.album))),
     selectedSort,
   );
-  const returnTo = `/recommendations?tab=explore&genre=${encodeURIComponent(selected)}`;
+  const returnParams = new URLSearchParams({ genre: selected });
+  if (selectedSort !== "relevance") returnParams.set("sort", selectedSort);
+  const returnTo = `/explore?${returnParams.toString()}`;
 
   return (
-    <ExploreSearch focusOnMount={focusSearch}>
+    <ExploreSearch focusOnMount={focusSearch} signedIn={Boolean(userId)}>
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
           {/* One scrollable row on mobile instead of chips wrapping into a tall block. */}
           <div className="no-scrollbar -mx-6 flex snap-x gap-2 overflow-x-auto px-6 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
             {genres.map((g) => {
               const isActive = g === selected;
-              const params = new URLSearchParams({ tab: "explore", genre: g });
+              const params = new URLSearchParams({ genre: g });
               if (selectedSort !== "relevance") params.set("sort", selectedSort);
               return (
                 <Link
                   key={g}
-                  href={`/recommendations?${params.toString()}`}
+                  href={`/explore?${params.toString()}`}
                   className={
                     isActive
                       ? "shrink-0 snap-start rounded-full bg-red-500 px-4 py-2 text-sm font-medium capitalize text-white active:opacity-80 sm:px-3 sm:py-1"
@@ -67,10 +69,9 @@ export async function ExploreTab({
 
           {albums.length > 1 && (
             <form
-              action="/recommendations"
+              action="/explore"
               className="flex items-center gap-2 text-sm sm:ml-auto"
             >
-              <input type="hidden" name="tab" value="explore" />
               <input type="hidden" name="genre" value={selected} />
               <label htmlFor="explore-browse-sort" className="text-zinc-500">
                 Sort
@@ -112,6 +113,8 @@ export async function ExploreTab({
                   imageUrl: album.imageUrl,
                 }}
                 returnTo={returnTo}
+                signedIn={Boolean(userId)}
+                guestActionMode="pending"
               />
             ))}
           </div>

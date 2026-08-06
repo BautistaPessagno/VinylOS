@@ -32,6 +32,10 @@ export const TOAST_MESSAGES = {
     message: "We couldn't find that record on Discogs.",
     variant: "error",
   },
+  "pending-action-expired": {
+    message: "That action expired. Please try again.",
+    variant: "error",
+  },
   "action-failed": { message: "Something went wrong. Try again.", variant: "error" },
 } as const satisfies Record<string, ToastMessage>;
 

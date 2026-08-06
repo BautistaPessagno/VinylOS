@@ -1,11 +1,13 @@
 export const MIN_SEARCH_QUERY_LENGTH = 2;
+export const MAX_SEARCH_QUERY_LENGTH = 100;
 
 export function normalizeSearchQuery(value: string): string {
   return value.normalize("NFKC").trim().replace(/\s+/g, " ").toLowerCase();
 }
 
 export function isSearchQueryReady(value: string): boolean {
-  return normalizeSearchQuery(value).length >= MIN_SEARCH_QUERY_LENGTH;
+  const length = normalizeSearchQuery(value).length;
+  return length >= MIN_SEARCH_QUERY_LENGTH && length <= MAX_SEARCH_QUERY_LENGTH;
 }
 
 export function isLatestSearchRequest(

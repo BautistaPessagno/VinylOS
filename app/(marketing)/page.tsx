@@ -41,17 +41,22 @@ export default async function LandingPage({
             <li key={prop}>{prop}</li>
           ))}
         </ul>
-        <div className="flex gap-3">
-          {/* Sign up is the primary CTA; Log in is the quieter secondary. */}
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <Link
+            href="/explore"
+            className="rounded-full bg-black px-6 py-3 text-white hover:bg-zinc-800 active:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 dark:active:bg-zinc-200"
+          >
+            Explore records
+          </Link>
           <Link
             href={signupHref}
-            className="rounded-full bg-black px-6 py-3 text-white hover:bg-zinc-800 active:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 dark:active:bg-zinc-200"
+            className="rounded-full border border-zinc-300 px-6 py-3 hover:border-zinc-500 active:border-zinc-500 dark:border-zinc-700 dark:hover:border-zinc-500"
           >
             Sign up
           </Link>
           <Link
             href={loginHref}
-            className="rounded-full border border-zinc-300 px-6 py-3 hover:border-zinc-500 active:border-zinc-500 dark:border-zinc-700 dark:hover:border-zinc-500"
+            className="rounded-full px-4 py-3 text-zinc-600 hover:text-red-500 active:text-red-500 dark:text-zinc-300"
           >
             Log in
           </Link>

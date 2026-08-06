@@ -14,7 +14,7 @@ const NAV_LINKS = [
   { href: "/recommendations", label: "Discover" },
 ];
 
-const SEARCH_HREF = "/recommendations?tab=explore&focus=search";
+const SEARCH_HREF = "/explore?focus=search";
 
 function SearchIcon() {
   return (
@@ -67,6 +67,7 @@ const TAB_ICONS: Record<string, React.ReactNode> = {
 };
 
 function isActivePath(pathname: string, href: string) {
+  if (href === "/recommendations" && pathname === "/explore") return true;
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 

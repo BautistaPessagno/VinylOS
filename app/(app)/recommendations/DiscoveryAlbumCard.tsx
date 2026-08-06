@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   addExploreAlbumAction,
+  beginExploreAuthAction,
   openExploreAlbumAction,
   wishlistExploreAlbumAction,
 } from "./actions";
@@ -21,10 +22,13 @@ export function DiscoveryAlbumCard({
   returnTo,
   /** When false, hide add/wishlist actions and point guests at login (public artist page). */
   signedIn = true,
+  /** Explore keeps the selected guest action through login; other public cards keep one login link. */
+  guestActionMode = "login-link",
 }: {
   album: DiscoveryAlbum;
   returnTo: string;
   signedIn?: boolean;
+  guestActionMode?: "login-link" | "pending";
 }) {
   const loginHref = `/login?next=${encodeURIComponent(returnTo)}`;
 
@@ -94,6 +98,33 @@ export function DiscoveryAlbumCard({
               <input type="hidden" name="returnTo" value={returnTo} />
               <SubmitButton
                 pendingText="Adding…"
+                className="-mx-1 min-h-11 px-1 underline underline-offset-2 active:opacity-70"
+              >
+                Wishlist
+              </SubmitButton>
+            </form>
+          </>
+        ) : guestActionMode === "pending" ? (
+          <>
+            <form action={beginExploreAuthAction}>
+              <input type="hidden" name="kind" value="collection" />
+              <input type="hidden" name="artist" value={album.artist} />
+              <input type="hidden" name="album" value={album.title} />
+              <input type="hidden" name="returnTo" value={returnTo} />
+              <SubmitButton
+                pendingText="Continuing…"
+                className="-mx-1 min-h-11 px-1 underline underline-offset-2 active:opacity-70"
+              >
+                Add
+              </SubmitButton>
+            </form>
+            <form action={beginExploreAuthAction}>
+              <input type="hidden" name="kind" value="wishlist" />
+              <input type="hidden" name="artist" value={album.artist} />
+              <input type="hidden" name="album" value={album.title} />
+              <input type="hidden" name="returnTo" value={returnTo} />
+              <SubmitButton
+                pendingText="Continuing…"
                 className="-mx-1 min-h-11 px-1 underline underline-offset-2 active:opacity-70"
               >
                 Wishlist
