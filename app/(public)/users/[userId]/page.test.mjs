@@ -10,9 +10,12 @@ test("user profile page is publicly readable with optional session", () => {
   assert.match(source, /getOptionalSession/);
   assert.doesNotMatch(source, /requireSession/);
   assert.match(source, /listPublicCollectionItems/);
+  assert.match(source, /listWishlistItems/);
   assert.match(source, /ANONYMOUS_FOLLOW_STATUS|isFollowing: false/);
   // Settings and email only when viewing own profile while signed in.
   assert.match(source, /showSettings && session/);
-  // Wishlist action forms only for signed-in non-self viewers.
+  // Wishlist is public (no follow gate); action forms only for signed-in non-self.
   assert.match(source, /showWishlistAction/);
+  assert.doesNotMatch(source, /Follow .* to see their wishlist/);
+  assert.doesNotMatch(source, /Log in and follow .* to see their wishlist/);
 });

@@ -121,7 +121,8 @@ export default async function AlbumDetailPage({
     );
 
   const coverUrl = release.coverUrl || albumInfo?.imageUrl || "";
-  const tags = [...(release.genres ?? []), ...(release.styles ?? [])];
+  // Genres and styles can overlap (e.g. "Reggae" in both); keep first occurrence only.
+  const tags = [...new Set([...(release.genres ?? []), ...(release.styles ?? [])])];
   const origin = safeFrom(from);
   // Guests have no Discover tab; fall back to the marketing home when no origin.
   const backHref = origin ?? (session ? "/recommendations" : "/");

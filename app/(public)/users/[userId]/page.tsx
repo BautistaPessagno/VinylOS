@@ -217,12 +217,8 @@ export default async function UserProfilePage({
   const isSelf = followStatus.isSelf;
   const showSettings = isSelf && view === "settings";
   const showWishlist = !isSelf && view === "wishlist";
-  // Wishlist still gated on follow for signed-in viewers (§3 may change this).
-  // Anonymous visitors have no follow relationship, so they see the follow CTA.
-  const wishlistItems =
-    showWishlist && followStatus.isFollowing
-      ? await listWishlistItems(profile.id)
-      : [];
+  // Wishlist is public like collection; only actions (wishlist a record, follow) need auth.
+  const wishlistItems = showWishlist ? await listWishlistItems(profile.id) : [];
   const wrapped = isSelf && !showSettings ? await getWrappedStats(profile.id) : null;
   const username = session
     ? (session.user.username ?? session.user.displayUsername ?? "")
@@ -308,33 +304,14 @@ export default async function UserProfilePage({
           <DeleteAccountSection username={username} />
         </div>
       ) : showWishlist ? (
-        followStatus.isFollowing ? (
-          wishlistItems.length === 0 ? (
-            <p className="text-zinc-500">Nothing on this wishlist yet.</p>
-          ) : (
-            <ReleaseGrid
-              items={wishlistItems}
-              returnTo={wishlistReturnTo}
-              showWishlistAction={showWishlistAction}
-            />
-          )
+        wishlistItems.length === 0 ? (
+          <p className="text-zinc-500">Nothing on this wishlist yet.</p>
         ) : (
-          <div className="flex flex-col items-start gap-3">
-            <p className="text-zinc-500">
-              {session
-                ? `Follow ${profile.name} to see their wishlist.`
-                : `Log in and follow ${profile.name} to see their wishlist.`}
-            </p>
-            {session ? (
-              <FollowForm
-                userId={profile.id}
-                returnTo={wishlistReturnTo}
-                isFollowing={followStatus.isFollowing}
-              />
-            ) : (
-              <SignInCta returnTo={wishlistReturnTo} label="Log in to follow" />
-            )}
-          </div>
+          <ReleaseGrid
+            items={wishlistItems}
+            returnTo={wishlistReturnTo}
+            showWishlistAction={showWishlistAction}
+          />
         )
       ) : (
         <>

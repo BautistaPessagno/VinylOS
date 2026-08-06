@@ -1,25 +1,35 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { requireSession } from "@/lib/auth-session";
 import { listWishlistItems } from "@/lib/services/wishlistService";
 import { moveToCollectionAction, removeFromWishlistAction } from "./actions";
 import { ConfirmSubmitButton, SubmitButton } from "../SubmitButton";
+import { ShareLinkButton } from "../ShareLinkButton";
 
 export const metadata = { title: "Wishlist" };
 
 export default async function WishlistPage() {
   const session = await requireSession();
   const items = await listWishlistItems(session.user.id);
+  const requestHeaders = await headers();
+  const host = requestHeaders.get("host");
+  const protocol = requestHeaders.get("x-forwarded-proto") ?? "http";
+  const sharePath = `/users/${session.user.id}?view=wishlist`;
+  const shareUrl = host ? `${protocol}://${host}${sharePath}` : sharePath;
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Your wishlist</h1>
-        <Link
-          href="/collection/add"
-          className="rounded-lg bg-black px-5 py-2.5 text-base font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
-        >
-          + Find a record
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <ShareLinkButton url={shareUrl} label="Share wishlist" title="My wishlist on VinylOS" />
+          <Link
+            href="/collection/add"
+            className="rounded-lg bg-black px-5 py-2.5 text-base font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
+          >
+            + Find a record
+          </Link>
+        </div>
       </div>
 
       {items.length === 0 ? (

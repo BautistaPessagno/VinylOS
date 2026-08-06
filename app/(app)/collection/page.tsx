@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { requireSession } from "@/lib/auth-session";
 import {
   listCollectionFilterOptions,
@@ -8,6 +9,7 @@ import {
 import { CollectionFiltersForm } from "./CollectionFiltersForm";
 import { removeItemAction } from "./actions";
 import { ConfirmSubmitButton } from "../SubmitButton";
+import { ShareLinkButton } from "../ShareLinkButton";
 
 const PAGE_SIZE = 48;
 
@@ -47,6 +49,11 @@ export default async function CollectionPage({
 }) {
   const session = await requireSession();
   const { q, genre, year, label, sort, page } = await searchParams;
+  const requestHeaders = await headers();
+  const host = requestHeaders.get("host");
+  const protocol = requestHeaders.get("x-forwarded-proto") ?? "http";
+  const sharePath = `/users/${session.user.id}`;
+  const shareUrl = host ? `${protocol}://${host}${sharePath}` : sharePath;
   const selectedFilters = {
     q: q?.trim() || undefined,
     genre: genre?.trim() || undefined,
@@ -91,14 +98,21 @@ export default async function CollectionPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Your collection</h1>
-        <Link
-          href="/collection/add"
-          className="rounded-lg bg-black px-5 py-2.5 text-base font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 active:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 dark:active:bg-zinc-200"
-        >
-          + Add a record
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <ShareLinkButton
+            url={shareUrl}
+            label="Share collection"
+            title="My collection on VinylOS"
+          />
+          <Link
+            href="/collection/add"
+            className="rounded-lg bg-black px-5 py-2.5 text-base font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 active:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 dark:active:bg-zinc-200"
+          >
+            + Add a record
+          </Link>
+        </div>
       </div>
 
       <CollectionFiltersForm selected={selectedFilters} options={filterOptions} />
