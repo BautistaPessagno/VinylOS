@@ -11,7 +11,8 @@ test("artist page loads Discogs identity and paginated vinyl records", () => {
 
   assert.match(source, /params:\s*Promise<\{ id: string \}>/);
   assert.match(source, /searchParams:\s*Promise<\{ page\?: string \}>/);
-  assert.match(source, /await requireSession\(\)/);
+  assert.match(source, /getOptionalSession\(\)/);
+  assert.doesNotMatch(source, /await requireSession\(\)/);
   assert.match(source, /await Promise\.all\(\[params, searchParams\]\)/);
   assert.match(source, /getArtistCached\(artistId\)/);
   assert.match(source, /searchArtistVinylAlbums\(artist\.name, requestedPage\)/);

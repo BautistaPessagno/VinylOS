@@ -17,14 +17,14 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
+  // Public read routes (/users, /album, /artist) are intentionally omitted —
+  // they render for anonymous visitors. Private routes still require a session
+  // cookie here for a fast bounce; per-page requireSession() remains the real boundary.
   matcher: [
     "/collection/:path*",
     "/friends/:path*",
-    "/users/:path*",
     "/wishlist/:path*",
     "/recommendations/:path*",
-    "/album/:path*",
-    "/artist/:path*",
     "/settings/:path*",
   ],
 };

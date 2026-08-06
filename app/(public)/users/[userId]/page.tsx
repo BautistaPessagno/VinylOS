@@ -4,24 +4,31 @@ import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
-import { requireSession } from "@/lib/auth-session";
+import { getOptionalSession } from "@/lib/auth-session";
 import { listPublicCollectionItems } from "@/lib/services/collectionService";
 import { listWishlistItems } from "@/lib/services/wishlistService";
 import {
   getFollowStatus,
   getPublicUserProfile,
+  type FollowStatus,
 } from "@/lib/services/friendService";
 import { getWrappedStats } from "@/lib/services/wrappedService";
-import { followUserAction, unfollowUserAction } from "../../friends/actions";
-import { addReleaseToWishlistAction } from "../../wishlist/actions";
-import { SettingsForm } from "../../settings/SettingsForm";
-import { PasswordForm } from "../../settings/PasswordForm";
-import { DeleteAccountSection } from "../../settings/DeleteAccountSection";
+import { followUserAction, unfollowUserAction } from "@/app/(app)/friends/actions";
+import { addReleaseToWishlistAction } from "@/app/(app)/wishlist/actions";
+import { SettingsForm } from "@/app/(app)/settings/SettingsForm";
+import { PasswordForm } from "@/app/(app)/settings/PasswordForm";
+import { DeleteAccountSection } from "@/app/(app)/settings/DeleteAccountSection";
 import { WrappedSection } from "./WrappedSection";
-import { SubmitButton } from "../../SubmitButton";
+import { SubmitButton } from "@/app/(app)/SubmitButton";
 
 // Deduped across generateMetadata and the page render within one request.
 const getProfileCached = cache(getPublicUserProfile);
+
+const ANONYMOUS_FOLLOW_STATUS: FollowStatus = {
+  isSelf: false,
+  isFollowing: false,
+  followsYou: false,
+};
 
 export async function generateMetadata({
   params,
@@ -66,6 +73,18 @@ function FollowForm({
         {isFollowing ? "Unfollow" : "Follow"}
       </SubmitButton>
     </form>
+  );
+}
+
+function SignInCta({ returnTo, label }: { returnTo: string; label: string }) {
+  const href = `/login?next=${encodeURIComponent(returnTo)}`;
+  return (
+    <Link
+      href={href}
+      className="min-h-11 rounded bg-black px-4 py-2 text-sm text-white active:bg-zinc-800 sm:min-h-0 dark:bg-white dark:text-black dark:active:bg-zinc-200"
+    >
+      {label}
+    </Link>
   );
 }
 
@@ -183,40 +202,50 @@ export default async function UserProfilePage({
   params: Promise<{ userId: string }>;
   searchParams: Promise<{ view?: string }>;
 }) {
-  const session = await requireSession();
+  const session = await getOptionalSession();
   const { userId } = await params;
   const { view } = await searchParams;
   const profile = await getProfileCached(userId);
   if (!profile) notFound();
 
   const [followStatus, items] = await Promise.all([
-    getFollowStatus(session.user.id, profile.id),
+    session
+      ? getFollowStatus(session.user.id, profile.id)
+      : Promise.resolve(ANONYMOUS_FOLLOW_STATUS),
     listPublicCollectionItems(profile.id),
   ]);
   const isSelf = followStatus.isSelf;
   const showSettings = isSelf && view === "settings";
   const showWishlist = !isSelf && view === "wishlist";
+  // Wishlist still gated on follow for signed-in viewers (§3 may change this).
+  // Anonymous visitors have no follow relationship, so they see the follow CTA.
   const wishlistItems =
     showWishlist && followStatus.isFollowing
       ? await listWishlistItems(profile.id)
       : [];
   const wrapped = isSelf && !showSettings ? await getWrappedStats(profile.id) : null;
-  const username = session.user.username ?? session.user.displayUsername ?? "";
+  const username = session
+    ? (session.user.username ?? session.user.displayUsername ?? "")
+    : "";
   let hasPassword = false;
-  if (showSettings) {
+  if (showSettings && session) {
     const accounts = await auth.api.listUserAccounts({ headers: await headers() });
     hasPassword = accounts.some((account) => account.providerId === "credential");
   }
   const returnTo = `/users/${profile.id}`;
   const wishlistReturnTo = `/users/${profile.id}?view=wishlist`;
+  // Wishlist action only for signed-in non-self viewers (server action requires session).
+  const showWishlistAction = Boolean(session) && !isSelf;
 
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-zinc-200 pb-6 dark:border-zinc-800">
         <div className="flex flex-col gap-1">
-          <Link href="/friends" className="text-sm text-zinc-500 underline">
-            Friends
-          </Link>
+          {session ? (
+            <Link href="/friends" className="text-sm text-zinc-500 underline">
+              Friends
+            </Link>
+          ) : null}
           <h1 className="text-2xl font-semibold">{profile.name}</h1>
           {profile.handle && (
             <p className="text-sm text-zinc-500">@{profile.handle}</p>
@@ -230,13 +259,16 @@ export default async function UserProfilePage({
             )}
           </div>
         </div>
-        {!followStatus.isSelf && (
-          <FollowForm
-            userId={profile.id}
-            returnTo={returnTo}
-            isFollowing={followStatus.isFollowing}
-          />
-        )}
+        {!followStatus.isSelf &&
+          (session ? (
+            <FollowForm
+              userId={profile.id}
+              returnTo={returnTo}
+              isFollowing={followStatus.isFollowing}
+            />
+          ) : (
+            <SignInCta returnTo={returnTo} label="Log in to follow" />
+          ))}
       </div>
 
       {isSelf ? (
@@ -265,7 +297,7 @@ export default async function UserProfilePage({
         />
       )}
 
-      {showSettings ? (
+      {showSettings && session ? (
         <div className="mx-auto flex w-full max-w-lg flex-col gap-10">
           <SettingsForm
             name={session.user.name}
@@ -283,19 +315,25 @@ export default async function UserProfilePage({
             <ReleaseGrid
               items={wishlistItems}
               returnTo={wishlistReturnTo}
-              showWishlistAction
+              showWishlistAction={showWishlistAction}
             />
           )
         ) : (
           <div className="flex flex-col items-start gap-3">
             <p className="text-zinc-500">
-              Follow {profile.name} to see their wishlist.
+              {session
+                ? `Follow ${profile.name} to see their wishlist.`
+                : `Log in and follow ${profile.name} to see their wishlist.`}
             </p>
-            <FollowForm
-              userId={profile.id}
-              returnTo={wishlistReturnTo}
-              isFollowing={followStatus.isFollowing}
-            />
+            {session ? (
+              <FollowForm
+                userId={profile.id}
+                returnTo={wishlistReturnTo}
+                isFollowing={followStatus.isFollowing}
+              />
+            ) : (
+              <SignInCta returnTo={wishlistReturnTo} label="Log in to follow" />
+            )}
           </div>
         )
       ) : (
@@ -308,7 +346,7 @@ export default async function UserProfilePage({
             <ReleaseGrid
               items={items}
               returnTo={returnTo}
-              showWishlistAction={!isSelf}
+              showWishlistAction={showWishlistAction}
             />
           )}
         </>
