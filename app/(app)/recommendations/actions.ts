@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth-session";
 import { addCollectionItem } from "@/lib/services/collectionService";
@@ -20,8 +21,16 @@ import {
   dismissRecommendationForRelease,
   resolveReleaseFromNames,
 } from "@/lib/services/recommendationService";
+import {
+  decodePendingExploreAction,
+  encodePendingExploreAction,
+  PENDING_EXPLORE_ACTION_COOKIE,
+  PENDING_EXPLORE_ACTION_MAX_AGE_SECONDS,
+  type PendingExploreActionKind,
+} from "@/lib/pendingExploreAction";
 
-const EXPLORE_RETURN = "/recommendations?tab=explore";
+const EXPLORE_RETURN = "/explore";
+const COMPLETE_EXPLORE_ACTION_PATH = "/auth/complete-explore-action";
 
 export type ExploreSearchResult = {
   query: string;
@@ -83,7 +92,6 @@ export async function refreshRecommendationsAction() {
 }
 
 export async function searchExploreAction(query: string): Promise<ExploreSearchResult> {
-  await requireSession();
   const normalizedQuery = normalizeSearchQuery(query);
   if (!isSearchQueryReady(normalizedQuery)) {
     return { query: normalizedQuery, artists: [], albums: [], songs: [] };
@@ -96,6 +104,78 @@ export async function searchExploreAction(query: string): Promise<ExploreSearchR
   ]);
   const songs = await resolveSongResults(normalizedQuery, trackAlbums);
   return { query: normalizedQuery, artists, albums, songs };
+}
+
+/** Save a guest's selected Explore mutation through login or signup. */
+export async function beginExploreAuthAction(formData: FormData) {
+  const token = encodePendingExploreAction(
+    {
+      kind: String(formData.get("kind") ?? "") as PendingExploreActionKind,
+      artist: String(formData.get("artist") ?? ""),
+      album: String(formData.get("album") ?? ""),
+      returnTo: exploreReturnPath(formData),
+    },
+    process.env.BETTER_AUTH_SECRET ?? "",
+  );
+  const cookieStore = await cookies();
+  cookieStore.set(PENDING_EXPLORE_ACTION_COOKIE, token, {
+    httpOnly: true,
+    maxAge: PENDING_EXPLORE_ACTION_MAX_AGE_SECONDS,
+    path: "/",
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+  });
+  redirect(`/login?next=${encodeURIComponent(COMPLETE_EXPLORE_ACTION_PATH)}`);
+}
+
+/** Consume a signed guest intent after authentication and apply it once. */
+export async function completePendingExploreAction() {
+  const session = await requireSession();
+  const cookieStore = await cookies();
+  const intent = decodePendingExploreAction(
+    cookieStore.get(PENDING_EXPLORE_ACTION_COOKIE)?.value,
+    process.env.BETTER_AUTH_SECRET ?? "",
+  );
+  cookieStore.delete(PENDING_EXPLORE_ACTION_COOKIE);
+
+  if (!intent) {
+    redirect(appendToast(EXPLORE_RETURN, "pending-action-expired"));
+  }
+
+  let releaseId: number | null;
+  try {
+    releaseId = await resolveReleaseFromNames(intent.artist, intent.album);
+  } catch {
+    redirect(appendToast(intent.returnTo, "action-failed"));
+  }
+  if (!releaseId) {
+    redirect(appendToast(intent.returnTo, "not-found"));
+  }
+
+  let code:
+    | "collection-added"
+    | "collection-add-failed"
+    | "wishlist-added"
+    | "wishlist-add-failed";
+  if (intent.kind === "collection") {
+    code = "collection-added";
+    try {
+      await addCollectionItem(session.user.id, releaseId, {}, "manual");
+      revalidatePath("/collection");
+    } catch {
+      code = "collection-add-failed";
+    }
+  } else {
+    code = "wishlist-added";
+    try {
+      await addWishlistItem(session.user.id, releaseId);
+      revalidatePath("/wishlist");
+    } catch {
+      code = "wishlist-add-failed";
+    }
+  }
+  revalidatePath("/explore");
+  redirect(appendToast(intent.returnTo, code));
 }
 
 export async function dismissRecommendationAction(formData: FormData) {

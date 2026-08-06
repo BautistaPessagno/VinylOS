@@ -11,4 +11,6 @@ test("album detail page is publicly readable with optional session", () => {
   assert.doesNotMatch(source, /requireSession/);
   assert.match(source, /Log in to add or wishlist/);
   assert.match(source, /addAlbumToCollectionAction/);
+  assert.match(source, /from\.startsWith\("\/explore"\)/);
+  assert.match(source, /Back to Explore/);
 });

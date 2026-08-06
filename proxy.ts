@@ -9,6 +9,16 @@ const { buildLoginRedirectUrl } = authRedirects;
 // every protected Server Component/Action still validates the real session
 // (see lib/auth-session.ts) since proxy/middleware can be bypassed (CVE-2025-29927).
 export function proxy(request: NextRequest) {
+  if (
+    request.nextUrl.pathname === "/recommendations" &&
+    request.nextUrl.searchParams.get("tab") === "explore"
+  ) {
+    const exploreUrl = new URL(request.nextUrl.toString());
+    exploreUrl.pathname = "/explore";
+    exploreUrl.searchParams.delete("tab");
+    return NextResponse.redirect(exploreUrl);
+  }
+
   const sessionCookie = getSessionCookie(request);
   if (!sessionCookie) {
     return NextResponse.redirect(buildLoginRedirectUrl(request.nextUrl));

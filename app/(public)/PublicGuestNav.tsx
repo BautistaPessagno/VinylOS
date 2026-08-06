@@ -5,7 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 
 /**
  * Minimal header for signed-out visitors on public pages.
- * No account menu, bottom tabs, or search — only brand + auth CTAs.
+ * No account menu, bottom tabs, or search — only brand, Explore, and auth CTAs.
  * Login/signup round-trip back to the page the visitor was viewing.
  */
 export function PublicGuestNav() {
@@ -28,6 +28,12 @@ export function PublicGuestNav() {
           VinylOS
         </Link>
         <div className="flex items-center gap-2 sm:gap-3">
+          <Link
+            href="/explore"
+            className="rounded-lg px-2 py-2 text-sm text-zinc-700 hover:text-red-500 active:text-red-500 sm:px-3 dark:text-zinc-200"
+          >
+            Explore
+          </Link>
           <Link
             href={loginHref}
             className="rounded-lg px-3 py-2 text-sm text-zinc-700 hover:text-red-500 active:text-red-500 dark:text-zinc-200"

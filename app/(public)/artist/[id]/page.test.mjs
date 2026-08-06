@@ -19,6 +19,7 @@ test("artist page loads Discogs identity and paginated vinyl records", () => {
   assert.match(source, /notFound\(\)/);
   assert.match(source, />\s*Records\s*</);
   assert.match(source, /DiscoveryAlbumCard/);
+  assert.match(source, /"\/explore\?focus=search"/);
   assert.match(source, /page=\$\{catalog\.page - 1\}/);
   assert.match(source, /page=\$\{catalog\.page \+ 1\}/);
 });

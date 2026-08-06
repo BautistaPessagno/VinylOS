@@ -122,9 +122,11 @@ const ALBUM_SCORE_CANDIDATES = 3;
 export function ExploreSearchResults({
   result,
   returnTo,
+  signedIn = true,
 }: {
   result: ExploreSearchResult;
   returnTo: string;
+  signedIn?: boolean;
 }) {
   if (
     result.artists.length === 0 &&
@@ -210,6 +212,8 @@ export function ExploreSearchResults({
                     editionCount: album.editionCount,
                   }}
                   returnTo={returnTo}
+                  signedIn={signedIn}
+                  guestActionMode="pending"
                 />
               ))}
             </div>
@@ -235,6 +239,8 @@ export function ExploreSearchResults({
                   containsTrack: song.trackTitle,
                 }}
                 returnTo={returnTo}
+                signedIn={signedIn}
+                guestActionMode="pending"
               />
             ))}
           </div>

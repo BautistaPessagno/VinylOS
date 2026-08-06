@@ -59,10 +59,8 @@ export default async function ArtistPage({
 
   const imageUrl = getArtistImageUrl(artist);
   const returnTo = `/artist/${artist.id}?page=${catalog.page}`;
-  const backHref = session
-    ? "/recommendations?tab=explore&focus=search"
-    : "/";
-  const backLabel = session ? "← Back to search" : "← Back to VinylOS";
+  const backHref = "/explore?focus=search";
+  const backLabel = "← Back to search";
 
   return (
     <div className="flex flex-col gap-8">

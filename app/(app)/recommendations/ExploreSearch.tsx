@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition, type ReactNode } from "reac
 import {
   isLatestSearchRequest,
   isSearchQueryReady,
+  MAX_SEARCH_QUERY_LENGTH,
   normalizeSearchQuery,
   searchErrorMessage,
 } from "@/lib/search/searchQuery";
@@ -16,13 +17,15 @@ import { searchExploreAction, type ExploreSearchResult } from "./actions";
 import { ExploreSearchResults } from "./ExploreSearchResults";
 
 const SEARCH_DEBOUNCE_MS = 400;
-const SEARCH_RETURN_PATH = "/recommendations?tab=explore&focus=search";
+const SEARCH_RETURN_PATH = "/explore?focus=search";
 
 export function ExploreSearch({
   focusOnMount,
+  signedIn = true,
   children,
 }: {
   focusOnMount: boolean;
+  signedIn?: boolean;
   children: ReactNode;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -118,6 +121,7 @@ export function ExploreSearch({
             type="search"
             value={query}
             onChange={(event) => handleQueryChange(event.target.value)}
+            maxLength={MAX_SEARCH_QUERY_LENGTH}
             placeholder="Search artists, records, and songs"
             autoComplete="off"
             className="w-full rounded-2xl border border-zinc-300 bg-white py-3.5 pl-12 pr-28 text-base shadow-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-zinc-700 dark:bg-zinc-950"
@@ -170,6 +174,7 @@ export function ExploreSearch({
               <ExploreSearchResults
                 result={{ ...result, albums: sortAlbumGroups(result.albums, sort) }}
                 returnTo={SEARCH_RETURN_PATH}
+                signedIn={signedIn}
               />
             </div>
           )}

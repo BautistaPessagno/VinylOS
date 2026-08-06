@@ -62,6 +62,7 @@ function backLabel(from: string): string {
   if (from.startsWith("/wishlist")) return "Back to your wishlist";
   if (from.startsWith("/users/")) return "Back to profile";
   if (from.startsWith("/artist/")) return "Back to artist";
+  if (from.startsWith("/explore")) return "Back to Explore";
   return "Back to Discover";
 }
 
@@ -124,9 +125,8 @@ export default async function AlbumDetailPage({
   // Genres and styles can overlap (e.g. "Reggae" in both); keep first occurrence only.
   const tags = [...new Set([...(release.genres ?? []), ...(release.styles ?? [])])];
   const origin = safeFrom(from);
-  // Guests have no Discover tab; fall back to the marketing home when no origin.
-  const backHref = origin ?? (session ? "/recommendations" : "/");
-  const backText = origin ? backLabel(origin) : session ? "Back to Discover" : "Back to VinylOS";
+  const backHref = origin ?? (session ? "/recommendations" : "/explore");
+  const backText = origin ? backLabel(origin) : session ? "Back to Discover" : "Back to Explore";
   // Keep the origin through add/wishlist actions so the back link survives a round-trip.
   const returnTo = origin
     ? `/album/${release.releaseId}?from=${encodeURIComponent(origin)}`

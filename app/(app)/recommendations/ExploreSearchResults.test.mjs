@@ -58,11 +58,15 @@ function loadResults() {
     }
     if (id === "./DiscoveryAlbumCard") {
       return {
-        DiscoveryAlbumCard({ album }) {
+        DiscoveryAlbumCard({ album, guestActionMode, signedIn }) {
           const label = album.containsTrack
             ? `Contains ${album.containsTrack}: ${album.title} — ${album.artist}`
             : `${album.title} — ${album.artist}`;
-          return React.createElement("article", null, label);
+          const guestActions =
+            !signedIn && guestActionMode === "pending"
+              ? " Guest Add Guest Wishlist"
+              : "";
+          return React.createElement("article", null, label, guestActions);
         },
       };
     }
@@ -188,4 +192,40 @@ test("mixed search explains when Discogs finds nothing", () => {
   );
 
   assert.match(html, /No artists, records or songs found for “missing”/);
+});
+
+test("guest record search results retain separate deferred actions", () => {
+  const ExploreSearchResults = loadResults();
+  const html = ReactDOMServer.renderToStaticMarkup(
+    React.createElement(ExploreSearchResults, {
+      result: {
+        query: "charly",
+        artists: [],
+        albums: [
+          {
+            key: "m:1",
+            releaseId: 10,
+            artist: "Charly Garcia",
+            title: "Clics Modernos",
+            genres: ["Rock"],
+            editionCount: 3,
+          },
+          {
+            key: "m:2",
+            releaseId: 11,
+            artist: "Charly Garcia",
+            title: "Piano Bar",
+            genres: ["Rock"],
+            editionCount: 2,
+          },
+        ],
+        songs: [],
+      },
+      returnTo,
+      signedIn: false,
+    }),
+  );
+
+  assert.match(html, /Piano Bar/);
+  assert.match(html, /Guest Add Guest Wishlist/);
 });
