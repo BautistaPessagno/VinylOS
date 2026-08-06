@@ -168,9 +168,8 @@ export async function wishlistExploreAlbumAction(formData: FormData) {
   redirect(appendToast(returnTo, code));
 }
 
-/** Resolve an Explore card to a release, then open its detail page. */
+/** Resolve a Discogs release and navigate to its public album page. No session required. */
 export async function openExploreAlbumAction(formData: FormData) {
-  await requireSession();
   const artist = String(formData.get("artist") ?? "");
   const album = String(formData.get("album") ?? "");
 
