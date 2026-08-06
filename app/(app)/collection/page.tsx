@@ -22,7 +22,7 @@ function RatingStars({ rating }: { rating: number }) {
       className="text-xs tracking-tight text-amber-500"
     >
       {"★".repeat(rating)}
-      <span className="text-zinc-300 dark:text-zinc-600">{"★".repeat(5 - rating)}</span>
+      <span className="text-room-rule">{"★".repeat(5 - rating)}</span>
     </span>
   );
 }
@@ -108,7 +108,7 @@ export default async function CollectionPage({
           />
           <Link
             href="/collection/add"
-            className="rounded-lg bg-black px-5 py-2.5 text-base font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 active:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 dark:active:bg-zinc-200"
+            className="rounded-lg bg-room-accent px-5 py-2.5 text-base font-medium text-room-on-accent shadow-sm transition-colors hover:opacity-90 active:opacity-90"
           >
             + Add a record
           </Link>
@@ -119,21 +119,21 @@ export default async function CollectionPage({
 
       {items.length === 0 ? (
         total > 0 && currentPage > 1 ? (
-          <p className="text-zinc-500">
+          <p className="text-room-dim">
             Nothing on this page.{" "}
             <Link href={pageHref(currentParams, 1)} className="underline">
               Back to the first page.
             </Link>
           </p>
         ) : hasActiveFilters ? (
-          <p className="text-zinc-500">
+          <p className="text-room-dim">
             No records match.{" "}
             <Link href="/collection" className="underline">
               Clear the search and filters.
             </Link>
           </p>
         ) : (
-          <p className="text-zinc-500">
+          <p className="text-room-dim">
             No records yet.{" "}
             <Link href="/collection/add" className="underline">
               Add your first one.
@@ -145,11 +145,11 @@ export default async function CollectionPage({
           {items.map((item) => (
             <div
               key={item.itemId}
-              className="flex flex-col gap-2 rounded border border-zinc-200 p-3 dark:border-zinc-800"
+              className="flex flex-col gap-2 rounded border border-room-rule p-3"
             >
               <Link
                 href={`/album/${item.releaseId}?from=/collection`}
-                className="aspect-square w-full overflow-hidden rounded bg-zinc-100 active:opacity-80 dark:bg-zinc-800"
+                className="aspect-square w-full overflow-hidden rounded bg-room-sunk active:opacity-80"
               >
                 {item.coverUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -169,10 +169,10 @@ export default async function CollectionPage({
                 >
                   {item.title}
                 </Link>
-                <span className="truncate text-sm text-zinc-500">
+                <span className="truncate text-sm text-room-dim">
                   {item.artistNames.join(", ")}
                 </span>
-                <span className="text-xs text-zinc-400">
+                <span className="text-xs text-room-dim">
                   {item.year} {item.labelName ? `· ${item.labelName}` : ""}
                 </span>
                 {item.rating ? <RatingStars rating={item.rating} /> : null}
@@ -189,7 +189,7 @@ export default async function CollectionPage({
                   <ConfirmSubmitButton
                     confirmLabel="Really remove?"
                     pendingText="Removing…"
-                    className="-mx-2 min-h-11 px-2 text-red-600 underline active:opacity-70"
+                    className="-mx-2 min-h-11 px-2 text-room-danger underline active:opacity-70"
                   >
                     Remove
                   </ConfirmSubmitButton>
@@ -210,9 +210,9 @@ export default async function CollectionPage({
               ← Previous
             </Link>
           ) : (
-            <span className="px-2 text-zinc-400">← Previous</span>
+            <span className="px-2 text-room-dim">← Previous</span>
           )}
-          <span className="text-zinc-500">
+          <span className="text-room-dim">
             Page {Math.min(currentPage, pageCount)} of {pageCount}
           </span>
           {currentPage < pageCount ? (
@@ -223,7 +223,7 @@ export default async function CollectionPage({
               Next →
             </Link>
           ) : (
-            <span className="px-2 text-zinc-400">Next →</span>
+            <span className="px-2 text-room-dim">Next →</span>
           )}
         </nav>
       )}

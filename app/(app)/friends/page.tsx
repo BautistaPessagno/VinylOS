@@ -41,8 +41,8 @@ function UserIdentity({
       <Avatar name={name} image={image} size="h-10 w-10" textSize="text-sm" />
       <div className="min-w-0">
         <p className="truncate font-medium">{name}</p>
-        {handle && <p className="truncate text-sm text-zinc-500">@{handle}</p>}
-        {detail && <p className="text-xs text-zinc-400">{detail}</p>}
+        {handle && <p className="truncate text-sm text-room-dim">@{handle}</p>}
+        {detail && <p className="text-xs text-room-dim">{detail}</p>}
       </div>
     </div>
   );
@@ -63,7 +63,7 @@ function FollowForm({
       <input type="hidden" name="returnTo" value={returnTo} />
       <SubmitButton
         pendingText="Following…"
-        className="min-h-11 rounded bg-black px-3 py-1.5 text-sm text-white active:bg-zinc-800 sm:min-h-0 dark:bg-white dark:text-black dark:active:bg-zinc-200"
+        className="min-h-11 rounded bg-room-accent px-3 py-1.5 text-sm text-room-on-accent active:opacity-90 sm:min-h-0"
       >
         {label}
       </SubmitButton>
@@ -78,7 +78,7 @@ function UnfollowForm({ userId, returnTo }: { userId: string; returnTo: string }
       <input type="hidden" name="returnTo" value={returnTo} />
       <SubmitButton
         pendingText="Unfollowing…"
-        className="min-h-11 rounded border border-zinc-300 px-3 py-1.5 text-sm active:bg-zinc-100 sm:min-h-0 dark:border-zinc-700 dark:active:bg-zinc-800"
+        className="min-h-11 rounded border border-room-rule px-3 py-1.5 text-sm active:bg-room-sunk sm:min-h-0"
       >
         Unfollow
       </SubmitButton>
@@ -94,7 +94,7 @@ function SearchResultRow({
   returnTo: string;
 }) {
   return (
-    <li className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
+    <li className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-room-rule p-3">
       <UserIdentity name={user.name} handle={user.handle} image={user.image} />
       <div className="flex shrink-0 items-center gap-2">
         <Link
@@ -121,7 +121,7 @@ function FollowingRow({
   returnTo: string;
 }) {
   return (
-    <li className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
+    <li className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-room-rule p-3">
       <UserIdentity
         name={user.name}
         handle={user.handle}
@@ -149,7 +149,7 @@ function FollowerRow({
   returnTo: string;
 }) {
   return (
-    <li className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
+    <li className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-room-rule p-3">
       <UserIdentity
         name={user.name}
         handle={user.handle}
@@ -164,7 +164,7 @@ function FollowerRow({
           View collection
         </Link>
         {user.isFollowingBack ? (
-          <span className="rounded bg-zinc-100 px-3 py-1.5 text-sm text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+          <span className="rounded bg-room-surface px-3 py-1.5 text-sm text-room-dim">
             Following
           </span>
         ) : (
@@ -208,14 +208,14 @@ export default async function FriendsPage({
           <FriendSearchInput defaultValue={query} />
           <button
             type="submit"
-            className="min-h-11 rounded bg-black px-4 py-2 text-white active:bg-zinc-800 dark:bg-white dark:text-black dark:active:bg-zinc-200"
+            className="min-h-11 rounded bg-room-accent px-4 py-2 text-room-on-accent active:opacity-90"
           >
             Search
           </button>
           {query && (
             <Link
               href="/friends"
-              className="flex min-h-11 items-center px-3 py-2 text-sm text-zinc-500 underline active:opacity-70"
+              className="flex min-h-11 items-center px-3 py-2 text-sm text-room-dim underline active:opacity-70"
             >
               Clear
             </Link>
@@ -224,7 +224,7 @@ export default async function FriendsPage({
         {query && (
           <ul className="flex max-w-3xl flex-col gap-2">
             {searchResults.length === 0 ? (
-              <li className="text-sm text-zinc-500">No users found.</li>
+              <li className="text-sm text-room-dim">No users found.</li>
             ) : (
               searchResults.map((user) => (
                 <SearchResultRow key={user.id} user={user} returnTo={returnTo} />
@@ -241,12 +241,12 @@ export default async function FriendsPage({
       <section className="flex max-w-3xl flex-col gap-3">
         <div className="flex items-center gap-2">
           <h2 className="font-medium">Following</h2>
-          <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+          <span className="rounded-full bg-room-surface px-2 py-0.5 text-xs text-room-dim">
             {following.length}
           </span>
         </div>
         {following.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-zinc-300 p-4 text-sm text-zinc-500 dark:border-zinc-700">
+          <p className="rounded-lg border border-dashed border-room-rule p-4 text-sm text-room-dim">
             You&apos;re not following anyone yet. Search for collectors above to follow them.
           </p>
         ) : (
@@ -261,12 +261,12 @@ export default async function FriendsPage({
       <section className="flex max-w-3xl flex-col gap-3">
         <div className="flex items-center gap-2">
           <h2 className="font-medium">Followers</h2>
-          <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+          <span className="rounded-full bg-room-surface px-2 py-0.5 text-xs text-room-dim">
             {followers.length}
           </span>
         </div>
         {followers.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-zinc-300 p-4 text-sm text-zinc-500 dark:border-zinc-700">
+          <p className="rounded-lg border border-dashed border-room-rule p-4 text-sm text-room-dim">
             No followers yet. Share your profile to let others follow you.
           </p>
         ) : (

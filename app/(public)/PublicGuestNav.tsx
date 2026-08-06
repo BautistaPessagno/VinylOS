@@ -22,7 +22,7 @@ export function PublicGuestNav() {
     : "/login?mode=signup";
 
   return (
-    <header className="border-b border-zinc-200 dark:border-zinc-800">
+    <header className="border-b border-room-rule">
       <div className="flex items-center justify-between px-6 py-4">
         <Link href="/" className="font-semibold">
           VinylOS
@@ -30,19 +30,19 @@ export function PublicGuestNav() {
         <div className="flex items-center gap-2 sm:gap-3">
           <Link
             href="/explore"
-            className="rounded-lg px-2 py-2 text-sm text-zinc-700 hover:text-red-500 active:text-red-500 sm:px-3 dark:text-zinc-200"
+            className="rounded-lg px-2 py-2 text-sm text-room-fg hover:text-room-accent active:text-room-accent sm:px-3"
           >
             Explore
           </Link>
           <Link
             href={loginHref}
-            className="rounded-lg px-3 py-2 text-sm text-zinc-700 hover:text-red-500 active:text-red-500 dark:text-zinc-200"
+            className="rounded-lg px-3 py-2 text-sm text-room-fg hover:text-room-accent active:text-room-accent"
           >
             Log in
           </Link>
           <Link
             href={signupHref}
-            className="rounded-lg bg-black px-3 py-2 text-sm font-medium text-white hover:bg-zinc-800 active:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
+            className="rounded-lg bg-room-accent px-3 py-2 text-sm font-medium text-room-on-accent hover:opacity-90 active:opacity-90"
           >
             Sign up
           </Link>

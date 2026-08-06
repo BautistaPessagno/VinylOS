@@ -1,4 +1,5 @@
 import { getOptionalSession } from "@/lib/auth-session";
+import { MAX_SEARCH_QUERY_LENGTH } from "@/lib/search/searchQuery";
 import { ExploreTab } from "@/app/(app)/recommendations/ExploreTab";
 import { TabBar } from "@/app/(app)/recommendations/TabBar";
 
@@ -11,9 +12,10 @@ export default async function ExplorePage({
     genre?: string;
     focus?: string;
     sort?: string;
+    q?: string;
   }>;
 }) {
-  const [session, { genre, focus, sort }] = await Promise.all([
+  const [session, { genre, focus, sort, q }] = await Promise.all([
     getOptionalSession(),
     searchParams,
   ]);
@@ -27,6 +29,7 @@ export default async function ExplorePage({
         sort={sort}
         userId={session?.user.id}
         focusSearch={focus === "search"}
+        initialQuery={q?.slice(0, MAX_SEARCH_QUERY_LENGTH)}
       />
     </div>
   );

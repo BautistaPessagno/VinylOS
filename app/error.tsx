@@ -16,19 +16,19 @@ export default function Error({
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-16 text-center">
       <h1 className="text-2xl font-semibold">Something went wrong</h1>
-      <p className="max-w-md text-zinc-500">
+      <p className="max-w-md text-room-dim">
         We couldn&apos;t load this page. It might be a hiccup with an external music
         service — trying again usually fixes it.
       </p>
       <button
         type="button"
         onClick={() => unstable_retry()}
-        className="min-h-11 rounded-lg bg-black px-5 py-2.5 font-medium text-white hover:bg-zinc-800 active:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 dark:active:bg-zinc-200"
+        className="min-h-11 rounded-lg bg-room-accent px-5 py-2.5 font-medium text-room-on-accent hover:opacity-90 active:opacity-90"
       >
         Try again
       </button>
       {error.digest && (
-        <p className="text-xs text-zinc-400">Error reference: {error.digest}</p>
+        <p className="text-xs text-room-dim">Error reference: {error.digest}</p>
       )}
     </div>
   );

@@ -19,11 +19,13 @@ export async function ExploreTab({
   sort,
   userId,
   focusSearch,
+  initialQuery,
 }: {
   genre?: string;
   sort?: string;
   userId?: string;
   focusSearch: boolean;
+  initialQuery?: string;
 }) {
   const genres = listExploreGenres();
   const selected = genre && genres.includes(genre) ? genre : genres[0];
@@ -42,7 +44,11 @@ export async function ExploreTab({
   const returnTo = `/explore?${returnParams.toString()}`;
 
   return (
-    <ExploreSearch focusOnMount={focusSearch} signedIn={Boolean(userId)}>
+    <ExploreSearch
+      focusOnMount={focusSearch}
+      initialQuery={initialQuery}
+      signedIn={Boolean(userId)}
+    >
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
           {/* One scrollable row on mobile instead of chips wrapping into a tall block. */}
@@ -57,8 +63,8 @@ export async function ExploreTab({
                   href={`/explore?${params.toString()}`}
                   className={
                     isActive
-                      ? "shrink-0 snap-start rounded-full bg-red-500 px-4 py-2 text-sm font-medium capitalize text-white active:opacity-80 sm:px-3 sm:py-1"
-                      : "shrink-0 snap-start rounded-full border border-zinc-200 px-4 py-2 text-sm capitalize text-zinc-600 hover:border-red-500 hover:text-red-500 active:border-red-500 active:text-red-500 sm:px-3 sm:py-1 dark:border-zinc-700 dark:text-zinc-300"
+                      ? "shrink-0 snap-start rounded-full bg-room-accent px-4 py-2 text-sm font-medium capitalize text-room-on-accent active:opacity-80 sm:px-3 sm:py-1"
+                      : "shrink-0 snap-start rounded-full border border-room-rule px-4 py-2 text-sm capitalize text-room-dim hover:border-room-accent hover:text-room-accent active:border-room-accent active:text-room-accent sm:px-3 sm:py-1"
                   }
                 >
                   {g}
@@ -73,14 +79,14 @@ export async function ExploreTab({
               className="flex items-center gap-2 text-sm sm:ml-auto"
             >
               <input type="hidden" name="genre" value={selected} />
-              <label htmlFor="explore-browse-sort" className="text-zinc-500">
+              <label htmlFor="explore-browse-sort" className="text-room-dim">
                 Sort
               </label>
               <select
                 id="explore-browse-sort"
                 name="sort"
                 defaultValue={selectedSort}
-                className="min-h-11 rounded border border-zinc-300 px-2 py-1.5 text-base sm:min-h-0 sm:text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                className="min-h-11 rounded border border-room-rule px-2 py-1.5 text-base sm:min-h-0 sm:text-sm"
               >
                 {EXPLORE_SORT_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -90,7 +96,7 @@ export async function ExploreTab({
               </select>
               <button
                 type="submit"
-                className="min-h-11 rounded border border-zinc-300 px-3 py-1.5 active:bg-zinc-100 sm:min-h-0 dark:border-zinc-700 dark:active:bg-zinc-800"
+                className="min-h-11 rounded border border-room-rule px-3 py-1.5 active:bg-room-sunk sm:min-h-0"
               >
                 Apply
               </button>
@@ -99,7 +105,7 @@ export async function ExploreTab({
         </div>
 
         {albums.length === 0 ? (
-          <p className="text-center text-zinc-500">
+          <p className="text-center text-room-dim">
             Couldn&apos;t load albums for this genre right now. Try another.
           </p>
         ) : (

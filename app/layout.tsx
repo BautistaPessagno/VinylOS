@@ -1,16 +1,27 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Bodoni_Moda, IBM_Plex_Mono, Mulish } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Display face for headings — a Bodoni revival, the register of a record sleeve.
+const bodoni = Bodoni_Moda({
+  variable: "--font-bodoni",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const mulish = Mulish({
+  variable: "--font-mulish",
   subsets: ["latin"],
+  display: "swap",
+});
+
+// Small caps-ish labels: eyebrows, tags, catalogue numbers.
+const plexMono = IBM_Plex_Mono({
+  variable: "--font-plex-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  display: "swap",
 });
 
 const DESCRIPTION =
@@ -42,9 +53,11 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
+  // Must track --room-bg in globals.css, or the browser chrome frames the app in
+  // a ground it no longer uses.
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+    { media: "(prefers-color-scheme: light)", color: "#e9e6ee" },
+    { media: "(prefers-color-scheme: dark)", color: "#0e0d11" },
   ],
   // Needed for env(safe-area-inset-*) to take effect on notched iPhones.
   viewportFit: "cover",
@@ -58,7 +71,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${mulish.variable} ${bodoni.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         {children}

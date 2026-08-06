@@ -31,7 +31,7 @@ export default async function RecommendationsPage({
           <form action={refreshRecommendationsAction}>
             <SubmitButton
               pendingText="Refreshing…"
-              className="rounded-lg bg-black px-5 py-2.5 text-base font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 active:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 dark:active:bg-zinc-200"
+              className="rounded-lg bg-room-accent px-5 py-2.5 text-base font-medium text-room-on-accent shadow-sm transition-colors hover:opacity-90 active:opacity-90"
             >
               Refresh recommendations
             </SubmitButton>

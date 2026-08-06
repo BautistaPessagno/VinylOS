@@ -1,0 +1,312 @@
+/*
+ * A deck seen from above. Geometry is expressed against the container's height
+ * (`height: n%` + `aspect-ratio: 1` keeps circles circular whatever the width),
+ * with the platter pushed left so the tonearm has room on the right.
+ *
+ * The deck is a physical object, so its colours are fixed rather than themed —
+ * a turntable is dark in a dark room and dark in a bright one. Only the shadow
+ * and the label change with the surrounding palette.
+ */
+
+.deck {
+  position: relative;
+  width: min(520px, 92vw);
+  aspect-ratio: 1.18;
+  flex-shrink: 0;
+}
+
+.plinth {
+  position: absolute;
+  inset: 0;
+  border-radius: 3%/3.5%;
+  background: linear-gradient(163deg, #262330 0%, #15131b 52%, #0a090d 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 24px 60px rgba(6, 5, 9, 0.45);
+}
+
+/* --- platter ------------------------------------------------------------ */
+
+.platter {
+  position: absolute;
+  left: 40%;
+  top: 50%;
+  height: 84%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background:
+    repeating-radial-gradient(
+      circle at 50% 50%,
+      rgba(255, 255, 255, 0.05) 0 1px,
+      transparent 1px 3px
+    ),
+    radial-gradient(circle at 38% 30%, #504b5c 0%, #2c2934 58%, #1a1821 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 6px 18px rgba(0, 0, 0, 0.5);
+}
+
+/* Pitch markers around the platter rim — the ring you strobe against. */
+.strobeRing {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(237, 230, 218, 0.45) 0deg 0.9deg,
+    transparent 0.9deg 4deg
+  );
+  -webkit-mask: radial-gradient(
+    circle,
+    transparent 0 93%,
+    #000 93.5% 98%,
+    transparent 98.5%
+  );
+  mask: radial-gradient(
+    circle,
+    transparent 0 93%,
+    #000 93.5% 98%,
+    transparent 98.5%
+  );
+}
+
+/* --- the record, sitting on top ----------------------------------------- */
+
+.recordLink {
+  position: absolute;
+  left: 40%;
+  top: 50%;
+  height: 74%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  z-index: 2;
+  display: block;
+}
+.recordLink:focus-visible {
+  outline: 2px solid var(--room-accent);
+  outline-offset: 4px;
+}
+
+.record {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    repeating-radial-gradient(
+      circle at 50% 50%,
+      rgba(255, 255, 255, 0.055) 0 1px,
+      transparent 1px 4px
+    ),
+    radial-gradient(circle at 34% 28%, #38333f 0%, #1a1820 44%, #08070b 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 4px 14px rgba(0, 0, 0, 0.55);
+}
+/*
+ * Declared here rather than reused from globals.css: CSS Modules rewrite
+ * animation names to their scoped form, so a reference to a global keyframe
+ * silently resolves to nothing.
+ */
+@keyframes revolve {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinning {
+  animation: revolve 7s linear infinite;
+}
+
+.label {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 34%;
+  height: 34%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  overflow: hidden;
+  background: #d8d2c4;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.45);
+}
+.label img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.28s ease;
+}
+
+/* Sits inside the record's box, so 50%/50% is the spindle hole rather than the
+   middle of the plinth. Outside `.record` itself, so it doesn't spin. */
+.spindle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 3.6%;
+  height: 3.6%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: #c9c3d2;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.55);
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* --- tonearm ------------------------------------------------------------ */
+
+/*
+ * Pivot sits at the arm's right edge (88% across, 21% down). The arm is a
+ * horizontal bar with origin at the right; 0deg points left (−), −90deg
+ * points up (|). Rest parks it nearly vertical on the rest post; −27deg
+ * lays the head on the outer groove (solved from the platter centre).
+ */
+.tonearm {
+  position: absolute;
+  left: 60.8%;
+  top: 21.2%;
+  width: 27.2%;
+  height: 6px;
+  margin-top: -3px;
+  transform-origin: 100% 50%;
+  transform: rotate(-82deg);
+  transition: transform 1.45s cubic-bezier(0.22, 0.7, 0.25, 1);
+  z-index: 4;
+  pointer-events: none;
+}
+.armDown .tonearm {
+  transform: rotate(-27deg);
+}
+
+.armTube {
+  position: absolute;
+  left: 8%;
+  right: 4%;
+  top: 50%;
+  height: 3px;
+  margin-top: -1.5px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #d5cfdd, #7c7688);
+}
+
+.armHead {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 13%;
+  height: 11px;
+  margin-top: -5.5px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #ded8e6, #605b6d);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
+}
+
+.armPivot {
+  position: absolute;
+  right: -7%;
+  top: 50%;
+  width: 15%;
+  aspect-ratio: 1;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: linear-gradient(160deg, #bdb7c8, #6b6577);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.counterweight {
+  position: absolute;
+  right: -24%;
+  top: 50%;
+  width: 14%;
+  height: 13px;
+  margin-top: -6.5px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #4c4757, #23202b);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* --- controls ----------------------------------------------------------- */
+
+.speeds {
+  position: absolute;
+  left: 5%;
+  bottom: 6%;
+  display: flex;
+  gap: 6px;
+  z-index: 3;
+}
+
+.speed {
+  min-width: 30px;
+  padding: 3px 6px;
+  border: 0;
+  border-radius: 2px;
+  background: #100f14;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.09);
+  color: #8b8598;
+  font-family: var(--font-mono), monospace;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+  text-align: center;
+}
+.speedOn {
+  color: #efe7db;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+    0 0 8px color-mix(in oklab, var(--room-accent) 55%, transparent);
+}
+
+.power {
+  position: absolute;
+  left: 5.5%;
+  top: 8%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2a2733;
+  transition: background 0.4s ease, box-shadow 0.4s ease;
+  z-index: 3;
+}
+.running .power {
+  background: var(--room-accent);
+  box-shadow: 0 0 9px var(--room-accent);
+}
+
+/* Pitch fader — the slot reads as a control even at this size. */
+.pitch {
+  position: absolute;
+  right: 7%;
+  bottom: 9%;
+  width: 9px;
+  height: 27%;
+  border-radius: 4px;
+  background: #0c0b0f;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  z-index: 3;
+}
+.pitchHandle {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 20px;
+  height: 8px;
+  transform: translate(-50%, -50%);
+  border-radius: 2px;
+  background: linear-gradient(180deg, #cac4d6, #6e6879);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinning {
+    animation: none;
+  }
+  .tonearm {
+    transition: none;
+  }
+}

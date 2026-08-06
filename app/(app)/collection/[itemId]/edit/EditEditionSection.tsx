@@ -38,7 +38,7 @@ export function EditEditionSection({
         pendingId={pendingId}
         label="Advanced: change edition"
       />
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-room-danger">{error}</p>}
     </div>
   );
 }

@@ -27,11 +27,24 @@ function loadLandingPage() {
         return React.createElement("a", { href, ...props }, children);
       };
     }
-    if (id === "./VinylCarousel") {
-      return { VinylCarousel: () => React.createElement("div") };
+    // Both are client components; the landing page only has to hand them data.
+    if (id === "./Turntable") {
+      return {
+        Turntable: ({ covers }) =>
+          React.createElement("div", { "data-covers": covers.length }),
+      };
+    }
+    if (id === "./LandingSearch") {
+      return {
+        LandingSearch: ({ genres }) =>
+          React.createElement("form", { action: "/explore" }, genres.join(",")),
+      };
     }
     if (id === "@/lib/services/collectionService") {
       return { listRecentReleaseCovers: async () => [] };
+    }
+    if (id === "@/lib/services/exploreService") {
+      return { listExploreGenres: () => ["rock", "jazz"] };
     }
     if (id === "@/lib/authRedirects") {
       return { getSafeAuthCallbackPath: () => "/collection" };
@@ -47,17 +60,39 @@ function loadLandingPage() {
   return mod.exports.default;
 }
 
-test("the guest landing page leads with Explore before account actions", async () => {
+async function renderLandingPage() {
   const LandingPage = loadLandingPage();
-  const html = ReactDOMServer.renderToStaticMarkup(
+  return ReactDOMServer.renderToStaticMarkup(
     await LandingPage({ searchParams: Promise.resolve({}) }),
   );
+}
 
-  const exploreIndex = html.indexOf('href="/explore"');
+test("the guest landing page leads with search before account actions", async () => {
+  const html = await renderLandingPage();
+
+  const searchIndex = html.indexOf('action="/explore"');
   const signupIndex = html.indexOf('href="/login?mode=signup"');
   const loginIndex = html.indexOf('href="/login"');
-  assert.ok(exploreIndex >= 0, "Explore is linked from the landing page");
-  assert.ok(exploreIndex < signupIndex, "Explore appears before Sign up");
+
+  assert.ok(searchIndex >= 0, "the search form is on the landing page");
+  assert.ok(searchIndex < signupIndex, "search appears before Sign up");
   assert.ok(signupIndex < loginIndex, "Log in is the quietest final action");
-  assert.match(html, /Explore records/);
+});
+
+test("the landing page hands genres to the search chips", async () => {
+  const html = await renderLandingPage();
+  assert.match(html, /rock,jazz/);
+});
+
+/*
+ * The palette now lives on :root, so there is no ground class left to assert on.
+ * What still matters is that the page names palette *roles* — a literal colour
+ * here would be a shade that no longer flips with the scheme.
+ */
+test("the landing page paints in palette roles, not fixed shades", async () => {
+  const html = await renderLandingPage();
+
+  assert.match(html, /text-room-dim/);
+  assert.match(html, /bg-room-accent/);
+  assert.doesNotMatch(html, /zinc-|text-white\b/);
 });

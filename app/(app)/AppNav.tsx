@@ -83,8 +83,8 @@ function NavLinks({ pathname }: { pathname: string }) {
             aria-current={isActive ? "page" : undefined}
             className={
               isActive
-                ? "text-sm font-medium text-red-500 underline decoration-2 underline-offset-4"
-                : "text-sm text-zinc-600 hover:text-red-500 active:text-red-500 dark:text-zinc-300"
+                ? "text-sm font-medium text-room-accent underline decoration-2 underline-offset-4"
+                : "text-sm text-room-dim hover:text-room-accent active:text-room-accent"
             }
           >
             {label}
@@ -100,7 +100,7 @@ function BottomTabBar({ pathname }: { pathname: string }) {
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-200 bg-white pb-[env(safe-area-inset-bottom)] sm:hidden dark:border-zinc-800 dark:bg-zinc-950"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-room-rule bg-room-surface pb-[env(safe-area-inset-bottom)] sm:hidden"
     >
       <div className="flex">
         {NAV_LINKS.map(({ href, label }) => {
@@ -112,8 +112,8 @@ function BottomTabBar({ pathname }: { pathname: string }) {
               aria-current={isActive ? "page" : undefined}
               className={`flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 py-1.5 text-[11px] active:opacity-70 ${
                 isActive
-                  ? "font-medium text-red-500"
-                  : "text-zinc-600 dark:text-zinc-300"
+                  ? "font-medium text-room-accent"
+                  : "text-room-dim"
               }`}
             >
               {TAB_ICONS[href]}
@@ -162,7 +162,7 @@ function AccountMenu({
   }, [open]);
 
   const itemClass =
-    "block rounded px-2 py-2.5 text-sm text-zinc-700 hover:bg-zinc-100 active:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800 dark:active:bg-zinc-800";
+    "block rounded px-2 py-2.5 text-sm text-room-fg hover:bg-room-sunk active:bg-room-sunk";
 
   return (
     <div ref={containerRef} className="relative">
@@ -173,22 +173,22 @@ function AccountMenu({
         aria-haspopup="true"
         aria-expanded={open}
         aria-controls={menuId}
-        className="flex items-center rounded-full p-1.5 hover:bg-zinc-100 active:bg-zinc-100 dark:hover:bg-zinc-800 dark:active:bg-zinc-800"
+        className="flex items-center rounded-full p-1.5 hover:bg-room-sunk active:bg-room-sunk"
       >
         <Avatar name={name} image={image} />
       </button>
       {open && (
         <div id={menuId} className="absolute right-0 top-full z-50 pt-2">
-          <div className="w-56 rounded-lg border border-zinc-200 bg-white p-3 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+          <div className="w-56 rounded-lg border border-room-rule bg-room-surface p-3 shadow-lg">
             <p className="truncate text-sm font-medium">{name}</p>
             {handle ? (
-              <p className="truncate text-xs text-zinc-500">@{handle}</p>
+              <p className="truncate text-xs text-room-dim">@{handle}</p>
             ) : (
               <div className="mt-2">
                 <SetUsernamePrompt />
               </div>
             )}
-            <div className="mt-3 flex flex-col border-t border-zinc-200 pt-2 dark:border-zinc-700">
+            <div className="mt-3 flex flex-col border-t border-room-rule pt-2">
               <Link
                 href={`/users/${userId}`}
                 onClick={() => setOpen(false)}
@@ -226,7 +226,7 @@ export function AppNav({
   const pathname = usePathname();
 
   return (
-    <header className="border-b border-zinc-200 dark:border-zinc-800">
+    <header className="border-b border-room-rule">
       <div className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-6">
           <Link href="/collection" className="font-semibold">
@@ -241,7 +241,7 @@ export function AppNav({
           <Link
             href={SEARCH_HREF}
             aria-label="Search records and artists"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full text-zinc-700 transition-colors hover:text-red-500 active:text-red-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 sm:border sm:border-zinc-300 sm:hover:border-red-500 dark:text-zinc-200 sm:dark:border-zinc-700"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full text-room-fg transition-colors hover:text-room-accent active:text-room-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-room-accent sm:border sm:border-room-rule sm:hover:border-room-accent"
           >
             <SearchIcon />
           </Link>

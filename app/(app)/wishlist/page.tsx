@@ -25,7 +25,7 @@ export default async function WishlistPage() {
           <ShareLinkButton url={shareUrl} label="Share wishlist" title="My wishlist on VinylOS" />
           <Link
             href="/collection/add"
-            className="rounded-lg bg-black px-5 py-2.5 text-base font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
+            className="rounded-lg bg-room-accent px-5 py-2.5 text-base font-medium text-room-on-accent shadow-sm transition-colors hover:opacity-90"
           >
             + Find a record
           </Link>
@@ -33,7 +33,7 @@ export default async function WishlistPage() {
       </div>
 
       {items.length === 0 ? (
-        <p className="text-zinc-500">
+        <p className="text-room-dim">
           Nothing on your wishlist yet.{" "}
           <Link href="/collection/add" className="underline">
             Search for a record to add.
@@ -44,11 +44,11 @@ export default async function WishlistPage() {
           {items.map((item) => (
             <div
               key={item.itemId}
-              className="flex flex-col gap-2 rounded border border-zinc-200 p-3 dark:border-zinc-800"
+              className="flex flex-col gap-2 rounded border border-room-rule p-3"
             >
               <Link
                 href={`/album/${item.releaseId}?from=/wishlist`}
-                className="aspect-square w-full overflow-hidden rounded bg-zinc-100 active:opacity-80 dark:bg-zinc-800"
+                className="aspect-square w-full overflow-hidden rounded bg-room-sunk active:opacity-80"
               >
                 {item.coverUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -68,10 +68,10 @@ export default async function WishlistPage() {
                 >
                   {item.title}
                 </Link>
-                <span className="truncate text-sm text-zinc-500">
+                <span className="truncate text-sm text-room-dim">
                   {item.artistNames.join(", ")}
                 </span>
-                <span className="text-xs text-zinc-400">
+                <span className="text-xs text-room-dim">
                   {item.year} {item.labelName ? `· ${item.labelName}` : ""}
                 </span>
               </div>
@@ -91,7 +91,7 @@ export default async function WishlistPage() {
                   <ConfirmSubmitButton
                     confirmLabel="Really remove?"
                     pendingText="Removing…"
-                    className="-mx-2 min-h-11 px-2 text-red-600 underline active:opacity-70"
+                    className="-mx-2 min-h-11 px-2 text-room-danger underline active:opacity-70"
                   >
                     Remove
                   </ConfirmSubmitButton>

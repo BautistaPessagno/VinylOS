@@ -8,7 +8,7 @@ import { SignInButton } from "./SignInButton";
 type Mode = "signin" | "signup";
 
 const inputClass =
-  "rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-950";
+  "rounded border border-room-rule px-3 py-2";
 
 export function AuthForm({
   callbackURL,
@@ -75,7 +75,7 @@ export function AuthForm({
         <h1 className="text-2xl font-semibold tracking-tight">
           {mode === "signin" ? "Sign in to VinylOS" : "Create your VinylOS account"}
         </h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="text-sm text-room-dim">
           Track your collection and follow other collectors.
         </p>
       </div>
@@ -83,7 +83,7 @@ export function AuthForm({
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-sm">
         {mode === "signin" ? (
           <label className="flex flex-col gap-1">
-            <span className="text-zinc-600 dark:text-zinc-400">Email or username</span>
+            <span className="text-room-dim">Email or username</span>
             <input
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
@@ -96,7 +96,7 @@ export function AuthForm({
         ) : (
           <>
             <label className="flex flex-col gap-1">
-              <span className="text-zinc-600 dark:text-zinc-400">Email</span>
+              <span className="text-room-dim">Email</span>
               <input
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -107,7 +107,7 @@ export function AuthForm({
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-zinc-600 dark:text-zinc-400">Username</span>
+              <span className="text-room-dim">Username</span>
               <input
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -120,8 +120,8 @@ export function AuthForm({
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-zinc-600 dark:text-zinc-400">
-                Display name <span className="text-zinc-400">(optional)</span>
+              <span className="text-room-dim">
+                Display name <span className="text-room-dim">(optional)</span>
               </span>
               <input
                 value={name}
@@ -140,7 +140,7 @@ export function AuthForm({
         </datalist>
 
         <label className="flex flex-col gap-1">
-          <span className="text-zinc-600 dark:text-zinc-400">Password</span>
+          <span className="text-room-dim">Password</span>
           <input
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -152,12 +152,12 @@ export function AuthForm({
           />
         </label>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-room-danger">{error}</p>}
 
         <button
           type="submit"
           disabled={pending}
-          className="rounded-full bg-black px-6 py-3 text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
+          className="rounded-full bg-room-accent px-6 py-3 text-room-on-accent hover:opacity-90 disabled:opacity-50"
         >
           {pending
             ? mode === "signin"
@@ -169,7 +169,7 @@ export function AuthForm({
         </button>
       </form>
 
-      <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">
+      <p className="text-center text-sm text-room-dim">
         {mode === "signin" ? "New to VinylOS? " : "Already have an account? "}
         <button
           type="button"
@@ -183,10 +183,10 @@ export function AuthForm({
         </button>
       </p>
 
-      <div className="flex items-center gap-3 text-xs text-zinc-400">
-        <span className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" />
+      <div className="flex items-center gap-3 text-xs text-room-dim">
+        <span className="h-px flex-1 bg-room-sunk" />
         or
-        <span className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" />
+        <span className="h-px flex-1 bg-room-sunk" />
       </div>
 
       <div className="flex justify-center">

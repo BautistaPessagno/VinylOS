@@ -12,7 +12,7 @@ export function SignOutButton({ className }: { className?: string }) {
           fetchOptions: { onSuccess: () => router.push("/") },
         })
       }
-      className={`text-left ${className ?? "text-sm text-zinc-600 hover:text-black"}`}
+      className={`text-left ${className ?? "text-sm text-room-dim hover:text-room-fg"}`}
     >
       Sign out
     </button>

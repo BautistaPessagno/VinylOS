@@ -11,12 +11,12 @@ import { DiscoveryAlbumCard } from "./DiscoveryAlbumCard";
 
 function ArtistImage({ name, imageUrl }: { name: string; imageUrl?: string }) {
   return (
-    <div className="aspect-square overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
+    <div className="aspect-square overflow-hidden rounded-full bg-room-sunk">
       {imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={imageUrl} alt={name} loading="lazy" decoding="async" className="h-full w-full object-cover" />
       ) : (
-        <div className="flex h-full items-center justify-center text-xl font-semibold text-zinc-500">
+        <div className="flex h-full items-center justify-center text-xl font-semibold text-room-dim">
           {name.charAt(0).toUpperCase()}
         </div>
       )}
@@ -25,7 +25,7 @@ function ArtistImage({ name, imageUrl }: { name: string; imageUrl?: string }) {
 }
 
 const HERO_CARD_CLASS =
-  "flex min-h-40 w-full items-center gap-5 rounded-2xl border border-zinc-200 bg-zinc-100 p-5 text-left transition-colors hover:border-red-400 hover:bg-zinc-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800";
+  "flex min-h-40 w-full items-center gap-5 rounded-2xl border border-room-rule bg-room-surface p-5 text-left transition-colors hover:border-room-accent hover:bg-room-sunk focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-room-accent";
 
 function TopArtistCard({ artist }: { artist: DiscogsArtistSearchResult }) {
   return (
@@ -35,7 +35,7 @@ function TopArtistCard({ artist }: { artist: DiscogsArtistSearchResult }) {
       </div>
       <div className="min-w-0">
         <p className="truncate text-2xl font-semibold sm:text-3xl">{artist.name}</p>
-        <p className="mt-2 text-sm text-zinc-500">Artist</p>
+        <p className="mt-2 text-sm text-room-dim">Artist</p>
       </div>
     </Link>
   );
@@ -43,7 +43,7 @@ function TopArtistCard({ artist }: { artist: DiscogsArtistSearchResult }) {
 
 function HeroCover({ imageUrl, alt }: { imageUrl?: string; alt: string }) {
   return (
-    <div className="aspect-square w-24 shrink-0 overflow-hidden rounded-xl bg-zinc-200 dark:bg-zinc-800 sm:w-28">
+    <div className="aspect-square w-24 shrink-0 overflow-hidden rounded-xl bg-room-sunk sm:w-28">
       {imageUrl && (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={imageUrl} alt={alt} loading="lazy" decoding="async" className="h-full w-full object-cover" />
@@ -73,7 +73,7 @@ function TopAlbumCard({
           <span className="block truncate text-2xl font-semibold sm:text-3xl">
             {album.title}
           </span>
-          <span className="mt-2 block text-sm text-zinc-500">
+          <span className="mt-2 block text-sm text-room-dim">
             Record · {album.artist}
           </span>
         </span>
@@ -102,13 +102,13 @@ function TopSongCard({
           alt={`${song.albumTitle} by ${song.artist}`}
         />
         <span className="min-w-0">
-          <span className="mb-1 inline-block max-w-full truncate rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700 dark:bg-red-950 dark:text-red-300">
+          <span className="mb-1 inline-block max-w-full truncate rounded-full bg-room-accent/10 px-2.5 py-0.5 text-xs font-medium text-room-accent">
             Contains “{song.trackTitle}”
           </span>
           <span className="block truncate text-2xl font-semibold sm:text-3xl">
             {song.albumTitle}
           </span>
-          <span className="mt-1 block truncate text-sm text-zinc-500">
+          <span className="mt-1 block truncate text-sm text-room-dim">
             Record · {song.artist}
           </span>
         </span>
@@ -134,7 +134,7 @@ export function ExploreSearchResults({
     result.songs.length === 0
   ) {
     return (
-      <p className="rounded-xl border border-dashed border-zinc-300 px-5 py-10 text-center text-zinc-500 dark:border-zinc-700">
+      <p className="rounded-xl border border-dashed border-room-rule px-5 py-10 text-center text-room-dim">
         No artists, records or songs found for “{result.query}”
       </p>
     );
@@ -181,11 +181,11 @@ export function ExploreSearchResults({
                 <Link
                   key={artist.id}
                   href={`/artist/${artist.id}`}
-                  className="rounded-xl border border-zinc-200 p-3 transition-colors hover:border-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 dark:border-zinc-800"
+                  className="rounded-xl border border-room-rule p-3 transition-colors hover:border-room-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-room-accent"
                 >
                   <ArtistImage name={artist.name} imageUrl={artist.imageUrl || artist.thumbUrl} />
                   <p className="mt-3 truncate font-medium">{artist.name}</p>
-                  <p className="text-xs text-zinc-500">Artist</p>
+                  <p className="text-xs text-room-dim">Artist</p>
                 </Link>
               ))}
             </div>

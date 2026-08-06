@@ -25,7 +25,7 @@ export default async function PublicLayout({
         ) : (
           <Suspense
             fallback={
-              <header className="border-b border-zinc-200 dark:border-zinc-800">
+              <header className="border-b border-room-rule">
                 <div className="flex items-center justify-between px-6 py-4">
                   <span className="font-semibold">VinylOS</span>
                 </div>

@@ -1,15 +1,11 @@
 import Link from "next/link";
-import { VinylCarousel } from "./VinylCarousel";
+import { Turntable } from "./Turntable";
+import { LandingSearch } from "./LandingSearch";
 import { listRecentReleaseCovers } from "@/lib/services/collectionService";
+import { listExploreGenres } from "@/lib/services/exploreService";
 import authRedirects from "@/lib/authRedirects";
 
 const { getSafeAuthCallbackPath } = authRedirects;
-
-const VALUE_PROPS = [
-  "Track every record you own, down to the pressing.",
-  "See yearly stats with Wrapped.",
-  "Follow friends and browse their collections.",
-];
 
 export default async function LandingPage({
   searchParams,
@@ -25,45 +21,43 @@ export default async function LandingPage({
       ? "/login?mode=signup"
       : `/login?mode=signup&next=${encodeURIComponent(callbackURL)}`;
 
-  const covers = await listRecentReleaseCovers(16);
+  const covers = await listRecentReleaseCovers(12);
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-10 py-12">
-      <VinylCarousel covers={covers} />
-
-      <div className="flex flex-col items-center gap-6 px-6 text-center">
-        <h1 className="text-4xl font-semibold tracking-tight">VinylOS</h1>
-        <p className="max-w-md text-zinc-600">
-          Track your vinyl collection, see your stats, and find what to buy next.
+    <div className="flex flex-1 flex-col items-center gap-12 px-6 py-12">
+      <div className="flex w-full max-w-2xl flex-col items-center gap-6 text-center">
+        <p className="font-mono text-[0.72rem] uppercase tracking-[0.16em] text-room-dim">
+          VinylOS
         </p>
-        <ul className="flex flex-col gap-1 text-sm text-zinc-500">
-          {VALUE_PROPS.map((prop) => (
-            <li key={prop}>{prop}</li>
-          ))}
-        </ul>
-        <div className="flex flex-wrap items-center justify-center gap-3">
-          <Link
-            href="/explore"
-            className="rounded-full bg-black px-6 py-3 text-white hover:bg-zinc-800 active:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 dark:active:bg-zinc-200"
-          >
-            Explore records
-          </Link>
-          <Link
-            href={signupHref}
-            className="rounded-full border border-zinc-300 px-6 py-3 hover:border-zinc-500 active:border-zinc-500 dark:border-zinc-700 dark:hover:border-zinc-500"
-          >
-            Sign up
-          </Link>
-          <Link
-            href={loginHref}
-            className="rounded-full px-4 py-3 text-zinc-600 hover:text-red-500 active:text-red-500 dark:text-zinc-300"
-          >
-            Log in
-          </Link>
-        </div>
+        <h1 className="font-display text-4xl leading-[1.05] tracking-tight text-balance sm:text-6xl">
+          Every record you own,{" "}
+          <em className="text-room-accent">down to the pressing.</em>
+        </h1>
+        <p className="max-w-md text-room-dim">
+          Search a few thousand records, follow what your friends are spinning,
+          and see your year in vinyl.
+        </p>
+        <LandingSearch genres={listExploreGenres()} />
       </div>
 
-      <VinylCarousel covers={[...covers].reverse()} />
+      <Turntable covers={covers} />
+
+      <hr className="strobe-rule w-full max-w-2xl border-0" />
+
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <Link
+          href={signupHref}
+          className="rounded-full bg-room-accent px-6 py-3 text-room-on-accent transition hover:opacity-90"
+        >
+          Sign up
+        </Link>
+        <Link
+          href={loginHref}
+          className="rounded-full px-4 py-3 text-room-dim transition hover:text-room-fg"
+        >
+          Log in
+        </Link>
+      </div>
     </div>
   );
 }

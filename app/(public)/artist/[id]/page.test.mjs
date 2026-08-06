@@ -27,6 +27,6 @@ test("artist page loads Discogs identity and paginated vinyl records", () => {
 test("artist route has immediate loading feedback", () => {
   const source = readFileSync(loadingPath, "utf8");
 
-  assert.match(source, /animate-pulse/);
+  assert.match(source, /sheen/);
   assert.match(source, /grid-cols-2/);
 });

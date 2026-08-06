@@ -25,12 +25,18 @@ function loadPage(session) {
     if (id === "@/lib/auth-session") {
       return { getOptionalSession: async () => session };
     }
+    if (id === "@/lib/search/searchQuery") {
+      return { MAX_SEARCH_QUERY_LENGTH: 100 };
+    }
     if (id === "@/app/(app)/recommendations/ExploreTab") {
       return {
-        ExploreTab({ userId }) {
+        ExploreTab({ userId, initialQuery }) {
           return React.createElement(
             "div",
-            { "data-user-id": userId ?? "guest" },
+            {
+              "data-user-id": userId ?? "guest",
+              "data-initial-query": initialQuery ?? "",
+            },
             "Explore catalog",
           );
         },
@@ -65,6 +71,26 @@ test("guests can render Explore without a For You tab", async () => {
   assert.match(html, /Explore catalog/);
   assert.match(html, /data-user-id="guest"/);
   assert.doesNotMatch(html, /For You/);
+});
+
+test("a query handed over from the landing page seeds the search", async () => {
+  const Page = loadPage(null);
+  const element = await Page({
+    searchParams: Promise.resolve({ q: "bill evans" }),
+  });
+  const html = ReactDOMServer.renderToStaticMarkup(element);
+
+  assert.match(html, /data-initial-query="bill evans"/);
+});
+
+test("an over-long q is truncated before it reaches the search box", async () => {
+  const Page = loadPage(null);
+  const element = await Page({
+    searchParams: Promise.resolve({ q: "a".repeat(250) }),
+  });
+  const html = ReactDOMServer.renderToStaticMarkup(element);
+
+  assert.match(html, new RegExp(`data-initial-query="a{100}"`));
 });
 
 test("members see Discover tabs and pass their identity into Explore", async () => {

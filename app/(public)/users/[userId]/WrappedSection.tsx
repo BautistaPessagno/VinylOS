@@ -2,8 +2,8 @@ import type { WrappedStats } from "@/lib/services/wrappedService";
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex flex-col gap-1 rounded border border-zinc-200 p-4 dark:border-zinc-800">
-      <span className="text-sm text-zinc-500">{label}</span>
+    <div className="flex flex-col gap-1 rounded border border-room-rule p-4">
+      <span className="text-sm text-room-dim">{label}</span>
       <span className="text-xl font-semibold">{value}</span>
     </div>
   );
@@ -13,13 +13,13 @@ function Bar({ label, count, max }: { label: string; count: number; max: number 
   return (
     <div className="flex items-center gap-3 text-sm">
       <span className="w-32 shrink-0 truncate">{label}</span>
-      <div className="h-2 flex-1 rounded bg-zinc-100 dark:bg-zinc-800">
+      <div className="h-2 flex-1 rounded bg-room-surface">
         <div
-          className="h-2 rounded bg-green-500"
+          className="h-2 rounded bg-room-accent-2"
           style={{ width: `${Math.max(4, (count / max) * 100)}%` }}
         />
       </div>
-      <span className="w-8 shrink-0 text-right text-zinc-500">{count}</span>
+      <span className="w-8 shrink-0 text-right text-room-dim">{count}</span>
     </div>
   );
 }
@@ -29,7 +29,7 @@ export function WrappedSection({ stats }: { stats: WrappedStats }) {
     return (
       <div className="flex flex-col gap-4">
         <h2 className="text-xl font-semibold">Your Wrapped</h2>
-        <p className="text-zinc-500">Add some records to your collection to see your stats.</p>
+        <p className="text-room-dim">Add some records to your collection to see your stats.</p>
       </div>
     );
   }

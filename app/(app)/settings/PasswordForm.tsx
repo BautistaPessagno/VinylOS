@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { authClient } from "@/lib/auth-client";
 
 const inputClass =
-  "rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-950";
+  "rounded border border-room-rule px-3 py-2";
 
 export function PasswordForm() {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -43,7 +43,7 @@ export function PasswordForm() {
       <h2 className="text-lg font-medium">Password</h2>
 
       <label className="flex flex-col gap-1">
-        <span className="text-zinc-600 dark:text-zinc-400">Current password</span>
+        <span className="text-room-dim">Current password</span>
         <input
           value={currentPassword}
           onChange={(e) => setCurrentPassword(e.target.value)}
@@ -55,7 +55,7 @@ export function PasswordForm() {
       </label>
 
       <label className="flex flex-col gap-1">
-        <span className="text-zinc-600 dark:text-zinc-400">New password</span>
+        <span className="text-room-dim">New password</span>
         <input
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
@@ -67,15 +67,15 @@ export function PasswordForm() {
         />
       </label>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-room-danger">{error}</p>}
       {success && !error && (
-        <p className="text-sm text-green-600 dark:text-green-500">Password changed.</p>
+        <p className="text-sm text-room-accent-2">Password changed.</p>
       )}
 
       <button
         type="submit"
         disabled={pending}
-        className="self-start rounded-lg bg-black px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
+        className="self-start rounded-lg bg-room-accent px-4 py-2 text-sm font-medium text-room-on-accent shadow-sm transition-colors hover:opacity-90 disabled:opacity-50"
       >
         {pending ? "Saving…" : "Change password"}
       </button>
