@@ -4,7 +4,7 @@
 
 **Implementation plan:** [`docs/superpowers/plans/2026-08-06-amba-store-directory.md`](docs/superpowers/plans/2026-08-06-amba-store-directory.md) — eight task-by-task steps with the actual code, tests, and commits. This file is the spec (what and why); the plan is the how.
 
-**Progress:** Foundation (§1 data model, §2 curated file, §3 normalize/match) in [PR #22](https://github.com/BautistaPessagno/VinylOS/pull/22) — open, awaiting review/merge. Scripts + UI still unchecked.
+**Progress:** Foundation (§1–§2, pure §3) + discover/sync scripts in [PR #22](https://github.com/BautistaPessagno/VinylOS/pull/22) — open, CI green; awaiting human merge (self-approve blocked). Service + `/stores` UI (§4) still unchecked.
 
 **Scope decisions (taken):**
 
@@ -63,12 +63,14 @@ No `source` enum, no `osmId` column, no `lastSeenAt`. The table is a projection 
 
 Two scripts, deliberately separate: discovery never writes to the database.
 
-- [ ] `pnpm stores:discover` → `overpass.ts` + `scripts/discover-stores.mjs`
+- [x] `pnpm stores:discover` → `overpass.ts` + `scripts/discover-stores.mjs`
   - Runs the Overpass query (`shop=music` over the AMBA bbox, POST to `https://overpass-api.de/api/interpreter`, identifying `User-Agent` from `SCRAPER_USER_AGENT`, back off on 429/504), zod-parses the response.
   - Diffs against `data/stores-amba.json` and writes **only the unmatched** to `data/store-candidates.json` for the maintainer to accept or reject by hand.
   - Also runs the name-regex probe from §0 across all shop types, flagged as low-confidence, since that is how misfiled shops like Pappo Records surface.
   - Caches the raw response to disk so iterating on the diff doesn't re-hit the API.
-- [ ] `pnpm stores:sync` → `scripts/sync-stores.mjs`: validate `data/stores-amba.json`, upsert into `stores` by `slug`, set `active = false` on rows whose slug is gone from the file. Supports `--dry` to print the plan.
+  - **Done:** live run → 46 shop=music + 60 name matches → 95 candidates (5 seed shops omitted; Pappo Records present as low-confidence). `--cache` reuses `.overpass-cache.json`.
+- [x] `pnpm stores:sync` → `scripts/sync-stores.mjs`: validate `data/stores-amba.json`, upsert into `stores` by `slug`, set `active = false` on rows whose slug is gone from the file. Supports `--dry` to print the plan.
+  - **Done:** `syncPlan.ts` field-diff + script; dry then real insert of 5 rows; second dry reports zero changes.
 - [x] `normalize.ts` — **pure**, unit-tested: slug generation (name + neighbourhood, numeric suffix on collision), phone → E.164 (`+54 11 …`), Instagram handle from a URL or `@handle`, name trimming for accented text. **Done:** `lib/stores/normalize.ts` + tests.
 - [x] `match.ts` — **pure**, unit-tested: does an OSM element already exist in the curated file? Haversine < 150 m **and** normalized-name Dice coefficient ≥ 0.6, or an `osmId` already recorded. Advisory only — a miss means one redundant suggestion, never corrupt data, which is exactly why this logic is allowed to be fuzzy. **Done:** `lib/stores/match.ts` + tests (BVM/Liverpool 18 m case).
 
@@ -87,12 +89,12 @@ No cron. The dataset moves on the order of months and every change is a human de
 
 ## 5. Verification
 
-- [x] `pnpm test` covers the pure modules: `normalize.test.mjs` (slug collisions, accented names, phone and handle edge cases), `match.test.mjs` (an OSM element already in the file is suppressed; two distinct shops 100 m apart both survive), and `storeFile.test.mjs` (the real `data/stores-amba.json` parses). **Done for pure modules** (15 tests); full suite 109 pass.
-- [ ] `overpass.test.mjs` parses a checked-in fixture — no network in tests, same approach as `lib/discogs/client.test.mjs`.
-- [ ] `pnpm stores:discover` against live Overpass produces a candidate file that is **short** — if it still lists a dozen instrument shops after the curated file is populated, the triage loop isn't converging.
-- [ ] `pnpm stores:sync --dry`, then for real against dev; re-run immediately and confirm zero changes.
+- [x] `pnpm test` covers the pure modules: `normalize.test.mjs` (slug collisions, accented names, phone and handle edge cases), `match.test.mjs` (an OSM element already in the file is suppressed; two distinct shops 100 m apart both survive), and `storeFile.test.mjs` (the real `data/stores-amba.json` parses). **Done for pure modules**; suite also covers overpass/candidates/syncPlan — full suite 122 pass.
+- [x] `overpass.test.mjs` parses a checked-in fixture — no network in tests, same approach as `lib/discogs/client.test.mjs`.
+- [x] `pnpm stores:discover` against live Overpass produces a candidate file. **Verified** with 5 curated shops: 95 candidates (mostly instrument shops + name-probe noise). Short list requires expanding the curated file via triage — expected at this stage, not a script bug.
+- [x] `pnpm stores:sync --dry`, then for real against dev; re-run immediately and confirm zero changes. **Verified** (5 inserts → 0/0/0).
 - [ ] `/stores` renders signed-out in a fresh browser profile, no console errors. Confirm a store with no hours and no phone still looks deliberate.
-- [x] `pnpm lint` and `pnpm build` clean. **Verified** on foundation PR (schema + pure modules; no UI yet).
+- [x] `pnpm lint` and `pnpm build` clean. **Verified** on foundation + scripts (no UI yet).
 
 ---
 

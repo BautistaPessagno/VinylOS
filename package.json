@@ -12,7 +12,9 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "auth:generate": "better-auth generate --config lib/auth.ts --output lib/db/auth-schema.ts -y"
+    "auth:generate": "better-auth generate --config lib/auth.ts --output lib/db/auth-schema.ts -y",
+    "stores:discover": "node scripts/discover-stores.mjs",
+    "stores:sync": "node scripts/sync-stores.mjs"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
