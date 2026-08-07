@@ -1,66 +1,106 @@
-# TODO — Share links + public read-only browsing
+# TODO — Record-store directory for AMBA (`/stores`)
 
-**Goal:** anyone with a link — signed in or not, account or no account — can view a user's profile, collection, and wishlist. Only _actions_ (follow, add to collection, add to wishlist, edit, remove) require an account; attempting one sends the visitor to login/signup and then **completes the intended action** on return instead of just dumping them on the page.
+**Goal:** a public `/stores` page listing the physical record shops of AMBA (CABA + Gran Buenos Aires) — name, address, neighbourhood, hours, contact, map link.
 
-Suggested remaining order: **5 → 4 leftovers → 6**. Public read access (§2) and wishlist visibility (§3) are done; sign-in-then-apply (§5) is the main gap that still makes public pages less useful; share polish (§4) and verification (§6) follow.
+**Implementation plan:** [`docs/superpowers/plans/2026-08-06-amba-store-directory.md`](docs/superpowers/plans/2026-08-06-amba-store-directory.md) — eight task-by-task steps with the actual code, tests, and commits. This file is the spec (what and why); the plan is the how.
 
-## 1. Current state (what's left)
+**Scope decisions (taken):**
 
-**Done (merged):**
+- **Physical shops only.** No per-release price or stock scraping. "Where can I buy _this record_" is a different feature, explicitly out of scope.
+- **AMBA first.** The schema carries `city`/`province` so other markets can be added later without a migration.
+- **Standalone `/stores` destination**, public (no login), in `app/(public)/` next to `explore`.
+- **A curated, git-tracked JSON file is the source of truth.** OpenStreetMap is a _discovery feed_ that suggests candidates for human triage — it does not write to the database. See §0 for why.
+- **Google Places rejected**: its ToS forbids persisting most fields past 30 days and requires results be drawn on a Google Map, which rules out an owned directory. OSM's ODbL permits permanent storage with attribution.
 
-- Public read routes live under `app/(public)/` (`/users/[userId]`, `/album/[id]`, `/artist/[id]`) with session-optional layout + `PublicGuestNav`. Shipped in [PR #15](https://github.com/BautistaPessagno/VinylOS/pull/15).
-- `(app)` layout still gates private routes with `if (!session) redirect("/login")`.
-- `proxy.ts` matcher no longer covers public paths; private paths still bounce unauthenticated visitors. Per-page `requireSession()` remains the real security boundary.
-- Public pages use `getOptionalSession()`; session-derived branches tolerate `null`.
-- Wishlists on profiles are fully public (follow gate dropped) — same model as collection.
-- Share affordance shipped for own collection + wishlist via `ShareLinkButton` ([PR #17](https://github.com/BautistaPessagno/VinylOS/pull/17)); `InviteFriendsButton` reuses it.
+Order: **1 → 2 → 3 → 4 → 5.** Sections 6–8 are follow-ups, not v1. The plan's Tasks 1–8 map onto these sections: Task 1 → §1–§2, Tasks 2–6 → §3, Tasks 7–8 → §4, with §5's checks distributed through every task.
 
-**Still open:**
+---
 
-- Sign-in-then-apply (§5): guests get "Log in to …" CTAs with `?next=` back to the page, but login/signup only returns them to the page — it does **not** complete follow / add-to-collection / add-to-wishlist.
-- Share button missing on profile pages (own + another user); OG share cards are thin (no cover/image, wishlist view not specialized).
-- Manual verification (§6) and pending-action tests once §5 lands.
+## 0. What the OSM data actually looks like
 
-## 2. Public read routes — **done**
+Measured against live Overpass on the AMBA bbox before writing any of this. **These numbers are why the design below inverts the usual scrape→DB flow.**
 
-Shipped in [PR #15](https://github.com/BautistaPessagno/VinylOS/pull/15) (`feat/public-read-routes`), merged via improvements stack.
+`shop=music` over `-34.95,-58.90,-34.32,-58.15` returns **47 elements**, and:
 
-- [x] Route shape **(a):** `app/(public)/` holds `/users/[userId]`, `/album/[id]`, `/artist/[id]` with a session-optional layout; `(app)` remains the auth boundary for private routes.
-- [x] Public: `/users/[userId]` (profile · collection · wishlist tabs), `/album/[id]`, `/artist/[id]`. Private (unchanged): `/collection`, `/wishlist`, `/recommendations`, `/friends`, `/settings`, `/collection/add`, `/collection/[itemId]/edit`.
-- [x] `getOptionalSession()` in `lib/auth-session.ts`; public pages use it and tolerate `null` for `getFollowStatus`, `isSelf`, settings, `wrapped`, `showWishlistAction`.
-- [x] Public paths dropped from `proxy.ts` matcher. Private ones kept. **`proxy.ts` is not the security boundary** — per-page `requireSession()` on private routes stays.
-- [x] Public-viewer chrome: `PublicGuestNav` with Log in / Sign up (round-trips via `?next=`). No account menu / bottom tabs / Sign out for guests.
-- [x] No private field leaks: `listPublicCollectionItems` selects only public release fields (title, year, cover, genres, label, artists) — not `notes` / `purchasePrice` / `purchaseLocation`. Settings/email only when `showSettings && session` (self).
+- Roughly **12–15 are actually record shops.** The rest are musical-instrument retailers (Famusic, Muzik Instrumentos, Grey Music, BM Music, Dassel Music, Arpegio…), three Musimundo branches, and three private music teachers with their lesson syllabus in the `description` tag. In OSM `shop=music` means "recorded music", but Argentine mappers do not use it that way.
+- **11 of 47** have a full street address (`addr:street` + `addr:housenumber`). **3 of 47** have `opening_hours`. **5 of 47** have a phone. One has no `name` at all.
+- **No subtag can separate them.** Across the whole bbox, `second_hand` appears once, `music` zero times, `vinyl` zero times. There is no automatic filter.
+- A name regex (`disquer|vinil|vinyl|record|discos`) across _all_ shop types finds a few genuinely misfiled shops — Pappo Records is tagged `shop=electronics` — but also two bakeries called "El Record" and a car-repair shop called "Car Vinyl".
+- Well-known Buenos Aires record shops are **absent from OSM entirely.**
 
-## 3. Wishlist & collection visibility — **done** (fully public)
+**Conclusion:** OSM cannot be the source of truth. It yields a dozen leads with mostly missing addresses and almost no hours. Automating a path from Overpass into the live table would build merge-precedence, deactivation, and conflict logic to protect data that is wrong more often than right. The curated file is the product; the scraper's job is to tell us what we're missing.
 
-- [x] **Decision taken:** fully public for both collection and wishlist. Follow gate on profile wishlists removed (`Make public profile wishlists viewable without login`). Matches the share-link goal; no per-user visibility setting for now.
-- [x] Reads go through the service layer (`listPublicCollectionItems` / `listWishlistItems`) with public release fields only. No separate privacy policy to enforce while everything is fully public — revisit if a `private` / `followers` mode is added later.
+The raw responses are in the scratchpad if you want to look: `amba-music.json` (47 elements) and `amba-alt.json` (name/subtag probe).
 
-## 4. Share affordance — **partial**
+## 1. Data model
 
-- [x] Reusable `ShareLinkButton` (`app/(app)/ShareLinkButton.tsx`): `navigator.share` when available, clipboard-copy fallback, "Link copied!" label. `InviteFriendsButton` wraps it.
-- [x] Placed on: `/collection`, `/wishlist` (share URL = `/users/:id` and `/users/:id?view=wishlist`).
-- [ ] Also place on: own profile and another user's profile (collection + wishlist views). Confirm `view=wishlist` still survives the share round trip from those surfaces.
-- [ ] Richer per-page Open Graph / Twitter cards for share previews: e.g. title `"{name}'s wishlist on VinylOS"`, description with record count, image = a cover from the list or a static fallback. Base `generateMetadata` + basic `openGraph` title/description already exists on profile/album/artist; album includes cover image. Wishlist/collection profile views still need the share-card follow-through.
-- [x] Share URLs stay guessable-by-user-id (consistent with existing `/users/:id` links). Only revisit if a `private` visibility level is introduced.
+- [ ] Add a `stores` table to `lib/db/schema.ts`:
+  - `id` serial PK, `slug` text unique (drives `/stores/[slug]`)
+  - `name`, `addressLine`, `neighborhood`, `city`, `province`, `postalCode`
+  - `lat` / `lng` `doublePrecision` — required. (`numeric` returns strings in Drizzle; these are always used as numbers.)
+  - `phone`, `website`, `instagram`, `email` — nullable
+  - `openingHours` text, stored verbatim as written in the curated file; structured parsing is §8
+  - `tags` text array — `usados`, `nuevos`, `tocadiscos`, `cafe`
+  - `active` boolean default true, `createdAt`, `updatedAt`
+  - Indexes: unique `slug`, plus `city`
+- [ ] Apply with `pnpm db:push` in dev only. **Never `pnpm db:migrate`** (`AGENTS.md`) — prod is applied by the maintainer.
 
-## 5. Sign-in-then-apply-the-action — **open**
+No `source` enum, no `osmId` column, no `lastSeenAt`. The table is a projection of the curated file, so provenance lives in the file, not the database.
 
-Guest UI already avoids throwing: action forms are hidden for anonymous visitors; CTAs link to `/login?next=<current page>` (profile follow, album "Log in to add or wishlist"). After auth they land back on the page only — the action is not applied.
+## 2. The curated file — `data/stores-amba.json`
 
-- [ ] Every action form on a public page must, for an anonymous visitor, either redirect to login **and replay the action** after auth, or keep the current "Log in to …" link pattern but complete the intent on return. Today `requireSession()` in server actions still throws `Unauthorized` if hit without a session (`wishlist/actions.ts`, `collection/actions.ts`, `friends/actions.ts`, `album/[id]/actions.ts`).
-- [ ] Extend the `?next=` contract in `lib/authRedirects.js` to carry a **pending action**, then replay it after a successful login/signup. Two options:
-  - Encode the action in the `next` path as a dedicated route (e.g. `next=/collection/add?release=123`) — no new state, reuses the existing validated path allowlist, but only works for actions that have a URL equivalent.
-  - A short-lived signed `pendingAction` cookie (action name + target id) consumed once by the post-login redirect handler — works for every action, but needs signing and expiry, and must re-authorize the action against the _newly created_ session rather than trusting the cookie.
-  - Recommendation: start with the path-encoded form for add-to-collection / add-to-wishlist / follow (covers the realistic share-link flows) and only add the cookie if an action can't be expressed as a URL.
-- [ ] Keep `getSafeAuthCallbackPath`'s same-origin validation intact — it's the open-redirect guard. Any new param that feeds a redirect needs the same treatment, and `lib/authRedirects.test.mjs` should gain cases for the new shapes.
-- [ ] The signup path needs the same replay as login — a brand-new account arriving from a shared wishlist is the primary case this whole section exists for.
+**This is the actual deliverable.** Everything else is plumbing around it.
 
-## 6. Verification
+- [ ] Define the entry shape and a zod schema in `lib/stores/storeFile.ts`: `name`, `addressLine`, `neighborhood`, `city`, `lat`, `lng`, optional `phone` / `website` / `instagram` / `email` / `openingHours` / `tags`, optional `osmId` for provenance.
+- [ ] Seed it from two inputs: the ~12–15 plausible shops from §0, and the maintainer's own list of shops (§7). Every entry gets its address and coordinates confirmed by hand — OSM's are missing or wrong more often than not.
+- [ ] Validation runs in `pnpm test`, so a malformed entry fails CI rather than the sync script.
 
-- [ ] Signed-out, in a fresh browser profile: open a shared `/users/:id?view=wishlist` link → wishlist renders, no console errors, no auth redirect. _(Expected to pass after §2–3; reconfirm.)_
-- [ ] Signed-out: tap "Wishlist" / "Add to collection" / "Follow" on a public surface → lands on login → after signup the intended action actually completes (depends on §5).
-- [ ] Signed-out: `/collection`, `/wishlist`, `/settings`, `/recommendations`, `/friends` still redirect to login.
-- [ ] Extend `lib/authRedirects.test.mjs` for the pending-action encoding, including hostile inputs (`//evil.com`, absolute URLs, unknown action names).
-- [ ] `pnpm lint` + `pnpm build` clean; `curl -s` a public profile URL with no cookies and confirm the HTML contains the records (i.e. it's genuinely server-rendered for anonymous visitors, not client-gated).
+## 3. Scripts (`lib/stores/` + `scripts/`)
+
+Two scripts, deliberately separate: discovery never writes to the database.
+
+- [ ] `pnpm stores:discover` → `overpass.ts` + `scripts/discover-stores.mjs`
+  - Runs the Overpass query (`shop=music` over the AMBA bbox, POST to `https://overpass-api.de/api/interpreter`, identifying `User-Agent` from `SCRAPER_USER_AGENT`, back off on 429/504), zod-parses the response.
+  - Diffs against `data/stores-amba.json` and writes **only the unmatched** to `data/store-candidates.json` for the maintainer to accept or reject by hand.
+  - Also runs the name-regex probe from §0 across all shop types, flagged as low-confidence, since that is how misfiled shops like Pappo Records surface.
+  - Caches the raw response to disk so iterating on the diff doesn't re-hit the API.
+- [ ] `pnpm stores:sync` → `scripts/sync-stores.mjs`: validate `data/stores-amba.json`, upsert into `stores` by `slug`, set `active = false` on rows whose slug is gone from the file. Supports `--dry` to print the plan.
+- [ ] `normalize.ts` — **pure**, unit-tested: slug generation (name + neighbourhood, numeric suffix on collision), phone → E.164 (`+54 11 …`), Instagram handle from a URL or `@handle`, name trimming for accented text.
+- [ ] `match.ts` — **pure**, unit-tested: does an OSM element already exist in the curated file? Haversine < 150 m **and** normalized-name Dice coefficient ≥ 0.6, or an `osmId` already recorded. Advisory only — a miss means one redundant suggestion, never corrupt data, which is exactly why this logic is allowed to be fuzzy.
+
+No cron. The dataset moves on the order of months and every change is a human decision anyway; §6 revisits.
+
+## 4. Service + UI
+
+- [ ] `lib/services/storeService.ts`, following the existing service pattern: `listStores({ q, neighborhood, city })` (active only, ordered by neighbourhood then name) and `getStoreBySlug(slug)`. Public fields only. Search is Postgres `ILIKE` over name + neighbourhood + address — no full-text index at this size.
+- [ ] `app/(public)/stores/page.tsx` — server component under the existing session-optional `(public)` layout, so guests get it and `PublicGuestNav` comes for free.
+  - Search input + neighbourhood filter driven by `searchParams`, no client state.
+  - Cards: name, address, neighbourhood, hours when known, links to phone / website / Instagram. Design for the common case where **hours and phone are absent** — that is most rows, not an edge case.
+  - Each card links out to `https://www.google.com/maps/search/?api=1&query=<lat>,<lng>`. **No embedded map in v1** (§6).
+- [ ] `[slug]/page.tsx` — detail page with `generateMetadata` for share cards, matching `album/[id]`.
+- [ ] **ODbL attribution** — "Datos de © OpenStreetMap contributors", linked to `openstreetmap.org/copyright`, on `/stores`. A licence obligation for any entry sourced from OSM, not a nicety.
+- [ ] Add `/stores` to `PublicGuestNav` and `AppNav.tsx`. Confirm `proxy.ts` does not match `/stores`.
+
+## 5. Verification
+
+- [ ] `pnpm test` covers the pure modules: `normalize.test.mjs` (slug collisions, accented names, phone and handle edge cases), `match.test.mjs` (an OSM element already in the file is suppressed; two distinct shops 100 m apart both survive), and `storeFile.test.mjs` (the real `data/stores-amba.json` parses).
+- [ ] `overpass.test.mjs` parses a checked-in fixture — no network in tests, same approach as `lib/discogs/client.test.mjs`.
+- [ ] `pnpm stores:discover` against live Overpass produces a candidate file that is **short** — if it still lists a dozen instrument shops after the curated file is populated, the triage loop isn't converging.
+- [ ] `pnpm stores:sync --dry`, then for real against dev; re-run immediately and confirm zero changes.
+- [ ] `/stores` renders signed-out in a fresh browser profile, no console errors. Confirm a store with no hours and no phone still looks deliberate.
+- [ ] `pnpm lint` and `pnpm build` clean.
+
+---
+
+## 6. Deferred — embedded map
+
+The "open in Maps" link covers the real need (get me there) at zero cost. A real map needs a tile source: OSM's own tile servers prohibit app-level usage, so this means MapLibre GL plus a provider free tier (MapTiler, Protomaps) or self-hosted tiles. Worth doing once the directory is large enough that a list is genuinely worse than a map.
+
+## 7. Deferred — scheduled discovery
+
+A monthly Vercel cron running `stores:discover` and opening a PR with the candidate diff. Only worth it after the loop has been run by hand a few times and the candidate list is short.
+
+## 8. Deferred — user submissions and structured hours
+
+- User-submitted shops: needs a moderation queue and an auth'd form. An unmoderated public write path on a public page is a spam magnet, and with a git-tracked source file the reviewed submission is just a commit.
+- Parsing `openingHours` into "open now" state. Storing the raw string from day one makes this purely additive — though with 3 of 47 OSM entries carrying hours at all, the data has to come from the curated file first.
