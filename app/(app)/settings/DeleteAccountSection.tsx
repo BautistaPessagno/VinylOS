@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 
 const inputClass =
-  "rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-950";
+  "rounded border border-room-rule bg-room-surface px-3 py-2";
 
 export function DeleteAccountSection({ username }: { username: string }) {
   const router = useRouter();
@@ -52,16 +52,16 @@ export function DeleteAccountSection({ username }: { username: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-red-200 p-4 dark:border-red-900">
-      <h2 className="text-lg font-medium text-red-600 dark:text-red-500">Danger zone</h2>
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">
+    <div className="flex flex-col gap-3 rounded-lg border border-room-danger/40 p-4">
+      <h2 className="text-lg font-medium text-room-danger">Danger zone</h2>
+      <p className="text-sm text-room-dim">
         Deleting your account permanently removes your collection, follows, and
         profile. This cannot be undone.
       </p>
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="self-start rounded-lg border border-red-600 px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-600 hover:text-white dark:border-red-500 dark:text-red-500"
+        className="self-start rounded-lg border border-room-danger px-4 py-2 text-sm font-medium text-room-danger transition-colors hover:bg-room-danger hover:text-room-on-danger"
       >
         Delete account
       </button>
@@ -76,12 +76,12 @@ export function DeleteAccountSection({ username }: { username: string }) {
             aria-modal="true"
             aria-labelledby="delete-account-heading"
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-sm rounded-lg border border-zinc-200 bg-white p-6 shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
+            className="w-full max-w-sm rounded-lg border border-room-rule bg-room-surface p-6 shadow-lg"
           >
             <h3 id="delete-account-heading" className="text-lg font-medium">
               Delete your account?
             </h3>
-            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="mt-2 text-sm text-room-dim">
               This is permanent. Type{" "}
               <span className="font-mono font-semibold">{confirmValue}</span> to
               confirm.
@@ -96,20 +96,20 @@ export function DeleteAccountSection({ username }: { username: string }) {
                 className={inputClass}
               />
 
-              {error && <p className="text-sm text-red-600">{error}</p>}
+              {error && <p className="text-sm text-room-danger">{error}</p>}
 
               <div className="flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="rounded-lg px-4 py-2 text-sm font-medium text-zinc-600 hover:text-black dark:text-zinc-400 dark:hover:text-white"
+                  className="rounded-lg px-4 py-2 text-sm font-medium text-room-dim hover:text-room-fg"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={pending || confirmText !== confirmValue}
-                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+                  className="rounded-lg bg-room-danger px-4 py-2 text-sm font-medium text-room-on-danger transition-colors hover:opacity-90 disabled:opacity-50"
                 >
                   {pending ? "Deleting…" : "Delete account"}
                 </button>

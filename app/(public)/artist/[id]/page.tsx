@@ -66,18 +66,18 @@ export default async function ArtistPage({
     <div className="flex flex-col gap-8">
       <Link
         href={backHref}
-        className="self-start text-sm text-zinc-500 hover:text-red-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
+        className="self-start text-sm text-room-dim hover:text-room-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-room-accent"
       >
         {backLabel}
       </Link>
 
-      <section className="flex flex-col gap-6 rounded-2xl border border-zinc-200 bg-zinc-100 p-6 sm:flex-row sm:items-center dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="h-36 w-36 shrink-0 overflow-hidden rounded-full bg-zinc-200 shadow-sm dark:bg-zinc-800">
+      <section className="flex flex-col gap-6 rounded-2xl border border-room-rule bg-room-surface p-6 sm:flex-row sm:items-center">
+        <div className="h-36 w-36 shrink-0 overflow-hidden rounded-full bg-room-sunk shadow-sm">
           {imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={imageUrl} alt={artist.name} className="h-full w-full object-cover" />
           ) : (
-            <div className="flex h-full items-center justify-center text-5xl font-semibold text-zinc-500">
+            <div className="flex h-full items-center justify-center text-5xl font-semibold text-room-dim">
               {artist.name.charAt(0).toUpperCase()}
             </div>
           )}
@@ -85,7 +85,7 @@ export default async function ArtistPage({
         <div className="min-w-0">
           <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{artist.name}</h1>
           {artist.profile && (
-            <p className="mt-3 max-w-3xl whitespace-pre-line text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">
+            <p className="mt-3 max-w-3xl whitespace-pre-line text-sm leading-relaxed text-room-dim">
               {artist.profile}
             </p>
           )}
@@ -98,19 +98,19 @@ export default async function ArtistPage({
             <h2 id="artist-records-heading" className="text-2xl font-semibold">
               Records
             </h2>
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-room-dim">
               {catalog.totalItems.toLocaleString()} vinyl editions on Discogs
             </p>
           </div>
           {catalog.pages > 1 && (
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-room-dim">
               Page {catalog.page} of {catalog.pages}
             </p>
           )}
         </div>
 
         {catalog.albums.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-zinc-300 px-5 py-10 text-center text-zinc-500 dark:border-zinc-700">
+          <p className="rounded-xl border border-dashed border-room-rule px-5 py-10 text-center text-room-dim">
             Discogs has no vinyl records for this artist on this page.
           </p>
         ) : (
@@ -133,11 +133,11 @@ export default async function ArtistPage({
         )}
 
         {catalog.pages > 1 && (
-          <nav aria-label="Artist records pagination" className="flex items-center justify-between border-t border-zinc-200 pt-5 dark:border-zinc-800">
+          <nav aria-label="Artist records pagination" className="flex items-center justify-between border-t border-room-rule pt-5">
             {catalog.page > 1 ? (
               <Link
                 href={`/artist/${artist.id}?page=${catalog.page - 1}`}
-                className="rounded-full border border-zinc-300 px-4 py-2 text-sm hover:border-red-500 hover:text-red-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 dark:border-zinc-700"
+                className="rounded-full border border-room-rule px-4 py-2 text-sm hover:border-room-accent hover:text-room-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-room-accent"
               >
                 ← Previous
               </Link>
@@ -147,7 +147,7 @@ export default async function ArtistPage({
             {catalog.page < catalog.pages && (
               <Link
                 href={`/artist/${artist.id}?page=${catalog.page + 1}`}
-                className="rounded-full border border-zinc-300 px-4 py-2 text-sm hover:border-red-500 hover:text-red-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 dark:border-zinc-700"
+                className="rounded-full border border-room-rule px-4 py-2 text-sm hover:border-room-accent hover:text-room-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-room-accent"
               >
                 Next →
               </Link>

@@ -1,32 +1,122 @@
 @import "tailwindcss";
 
+/*
+ * "Listening Room" — the app palette. Ground carries a violet bias rather than
+ * neutral grey; emphasis is a warm/cool duotone (rust + teal). Every token flips
+ * with the colour scheme here, so components name a *role* and never a shade —
+ * that's why almost nothing downstream needs a `dark:` variant.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --room-bg: #e9e6ee;
+  --room-surface: #f7f5fa;
+  --room-sunk: #dfdbe7;
+  --room-rule: #cbc5d6;
+  --room-fg: #16141b;
+  --room-dim: #5c5669;
+
+  --room-accent: #be3a21;
+  --room-accent-2: #166f68;
+  /* Ink laid *on* a filled accent/danger. Flips with the scheme because the fills
+   * lighten in the dark: white clears 5.2:1 on the light rust but only 3.7:1 on
+   * the dark one, which would fail AA. */
+  --room-on-accent: #fbf8f4;
+  --room-danger: #b3261e;
+  --room-on-danger: #fbf8f4;
+
+  --background: var(--room-bg);
+  --foreground: var(--room-fg);
+
+  /* Skeleton fill + the sheen that sweeps it. */
+  --skeleton: var(--room-sunk);
+  --skeleton-sheen: color-mix(in oklab, var(--room-fg) 9%, transparent);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --room-bg: #0e0d11;
+    --room-surface: #17151c;
+    --room-sunk: #100e14;
+    --room-rule: #2a2632;
+    --room-fg: #ede6da;
+    --room-dim: #9a93a5;
+
+    --room-accent: #e4573d;
+    --room-accent-2: #86d9d0;
+    --room-on-accent: #1a1114;
+    --room-danger: #ef5a48;
+    --room-on-danger: #1a0f0d;
+  }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-mulish);
+  --font-mono: var(--font-plex-mono);
+  --font-display: var(--font-bodoni);
+
+  --color-room-bg: var(--room-bg);
+  --color-room-surface: var(--room-surface);
+  --color-room-sunk: var(--room-sunk);
+  --color-room-rule: var(--room-rule);
+  --color-room-fg: var(--room-fg);
+  --color-room-dim: var(--room-dim);
+  --color-room-accent: var(--room-accent);
+  --color-room-accent-2: var(--room-accent-2);
+  --color-room-on-accent: var(--room-on-accent);
+  --color-room-danger: var(--room-danger);
+  --color-room-on-danger: var(--room-on-danger);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-
-  a:focus-visible {
-    outline-color: #ef4444;
-  }
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--room-accent);
+  outline-offset: 2px;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/*
+ * Form controls don't inherit the page ground — the UA paints them from its own
+ * field colours, so a themed border alone leaves a white box on a dark page.
+ * `color-scheme` brings the native parts along too: caret, scrollbars, the date
+ * and select popups.
+ */
+:root {
+  color-scheme: light dark;
+}
+
+input:not([type="checkbox"], [type="radio"]),
+textarea,
+select {
+  background-color: var(--room-surface);
+  color: var(--room-fg);
+}
+
+input,
+textarea,
+select {
+  accent-color: var(--room-accent);
+}
+
+::placeholder {
+  color: var(--room-dim);
+}
+
+/* The ring of pitch markers around a real platter, flattened into a divider. */
+.strobe-rule {
+  height: 4px;
+  background-image: radial-gradient(
+    circle,
+    var(--room-rule) 1.5px,
+    transparent 1.7px
+  );
+  background-size: 9px 4px;
+  background-repeat: repeat-x;
 }
 
 /* Horizontal chip rows scroll without showing a scrollbar. */
@@ -46,16 +136,7 @@ button:disabled {
   cursor: not-allowed;
 }
 
-@keyframes marquee {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-@keyframes spin-slow {
+@keyframes revolve {
   from {
     transform: rotate(0deg);
   }
@@ -64,17 +145,90 @@ button:disabled {
   }
 }
 
-.animate-marquee {
-  animation: marquee 40s linear infinite;
+/*
+ * Loading, part one: a spinning record for waits whose shape we don't know yet.
+ * Sized by the caller; the label and spindle scale with it.
+ */
+.vinyl-spinner {
+  position: relative;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background:
+    repeating-radial-gradient(
+      circle at 50% 50%,
+      rgba(255, 255, 255, 0.12) 0 0.5px,
+      transparent 0.5px 2.5px
+    ),
+    radial-gradient(circle at 36% 30%, #3a3644, #14121a 70%);
+  animation: revolve 1.05s linear infinite;
+}
+.vinyl-spinner::before,
+.vinyl-spinner::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+}
+.vinyl-spinner::before {
+  width: 34%;
+  height: 34%;
+  background: var(--room-accent, #ef4444);
+}
+.vinyl-spinner::after {
+  width: 8%;
+  height: 8%;
+  background: var(--room-bg, var(--background));
 }
 
-.animate-spin-slow {
-  animation: spin-slow 6s linear infinite;
+/*
+ * Loading, part two: a sheen sweeping across a placeholder, like light across a
+ * sleeve. Replaces animate-pulse, which reads cheap because it blinks.
+ */
+.sheen {
+  position: relative;
+  overflow: hidden;
+  background: var(--skeleton);
+}
+.sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--skeleton-sheen),
+    transparent
+  );
+  animation: sheen 1.4s ease-in-out infinite;
+}
+@keyframes sheen {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* The search bar morphs between the landing and Explore. */
+::view-transition-group(.vinyl-search) {
+  animation-duration: 420ms;
+}
+::view-transition-old(.vinyl-search),
+::view-transition-new(.vinyl-search) {
+  height: 100%;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-marquee,
-  .animate-spin-slow {
+  .vinyl-spinner,
+  .sheen::after {
     animation: none;
+  }
+
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
   }
 }

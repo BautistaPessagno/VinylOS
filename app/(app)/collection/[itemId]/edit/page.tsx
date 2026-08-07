@@ -20,20 +20,20 @@ function Field({
 }) {
   return (
     <label className="flex flex-col gap-1 text-sm">
-      <span className="text-zinc-600 dark:text-zinc-400">{label}</span>
+      <span className="text-room-dim">{label}</span>
       {/* 16px on mobile so iOS Safari doesn't zoom the viewport on focus. */}
       {textarea ? (
         <textarea
           name={name}
           defaultValue={defaultValue ?? ""}
-          className="rounded border border-zinc-300 px-3 py-2 text-base sm:text-sm dark:border-zinc-700 dark:bg-zinc-950"
+          className="rounded border border-room-rule px-3 py-2 text-base sm:text-sm"
         />
       ) : (
         <input
           name={name}
           type={type}
           defaultValue={defaultValue ?? ""}
-          className="min-h-11 rounded border border-zinc-300 px-3 py-2 text-base sm:min-h-0 sm:text-sm dark:border-zinc-700 dark:bg-zinc-950"
+          className="min-h-11 rounded border border-room-rule px-3 py-2 text-base sm:min-h-0 sm:text-sm"
         />
       )}
     </label>
@@ -52,7 +52,7 @@ export default async function EditCollectionItemPage({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex max-w-2xl items-center gap-3">
-        <div className="h-16 w-16 shrink-0 overflow-hidden rounded bg-zinc-100 dark:bg-zinc-800">
+        <div className="h-16 w-16 shrink-0 overflow-hidden rounded bg-room-sunk">
           {item.coverUrl && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={item.coverUrl} alt="" className="h-full w-full object-cover" />
@@ -60,7 +60,7 @@ export default async function EditCollectionItemPage({
         </div>
         <div>
           <h1 className="text-2xl font-semibold">{item.title}</h1>
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-room-dim">
             {[item.year, item.labelName, item.catalogNumber, item.country]
               .filter(Boolean)
               .join(" · ")}
@@ -109,7 +109,7 @@ export default async function EditCollectionItemPage({
 
         <SubmitButton
           pendingText="Saving…"
-          className="mt-2 min-h-11 self-start rounded bg-black px-4 py-2 text-white active:bg-zinc-800 dark:bg-white dark:text-black dark:active:bg-zinc-200"
+          className="mt-2 min-h-11 self-start rounded bg-room-accent px-4 py-2 text-room-on-accent active:opacity-90"
         >
           Save changes
         </SubmitButton>

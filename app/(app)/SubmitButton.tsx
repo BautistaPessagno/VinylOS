@@ -2,20 +2,10 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
+import { VinylSpinner } from "./VinylSpinner";
 
 function Spinner() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      className="h-3.5 w-3.5 animate-spin motion-reduce:hidden"
-    >
-      <path d="M12 3a9 9 0 1 1-9 9" strokeLinecap="round" />
-    </svg>
-  );
+  return <VinylSpinner size="sm" decorative />;
 }
 
 /**

@@ -135,12 +135,12 @@ export default async function AlbumDetailPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <Link href={backHref} className="text-sm text-zinc-500 hover:text-red-500">
+      <Link href={backHref} className="text-sm text-room-dim hover:text-room-accent">
         ← {backText}
       </Link>
 
       <div className="flex flex-col gap-6 sm:flex-row">
-        <div className="aspect-square w-full max-w-xs shrink-0 overflow-hidden rounded bg-zinc-100 dark:bg-zinc-800">
+        <div className="aspect-square w-full max-w-xs shrink-0 overflow-hidden rounded bg-room-sunk">
           {coverUrl && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={coverUrl} alt={release.title} className="h-full w-full object-cover" />
@@ -150,9 +150,9 @@ export default async function AlbumDetailPage({
         <div className="flex flex-col gap-3">
           <div>
             <h1 className="text-2xl font-semibold">{release.title}</h1>
-            <p className="text-lg text-zinc-500">{release.artistNames.join(", ")}</p>
+            <p className="text-lg text-room-dim">{release.artistNames.join(", ")}</p>
           </div>
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-room-dim">
             {[release.year, release.labelName, release.country].filter(Boolean).join(" · ")}
           </p>
           {tags.length > 0 && (
@@ -160,7 +160,7 @@ export default async function AlbumDetailPage({
               {tags.map((tag) => (
                 <span
                   key={tag}
-                  className="rounded-full border border-zinc-200 px-3 py-1 text-xs text-zinc-600 dark:border-zinc-700"
+                  className="rounded-full border border-room-rule px-3 py-1 text-xs text-room-dim"
                 >
                   {tag}
                 </span>
@@ -176,7 +176,7 @@ export default async function AlbumDetailPage({
                   <input type="hidden" name="returnTo" value={returnTo} />
                   <SubmitButton
                     pendingText="Adding…"
-                    className="min-h-11 w-full rounded-lg bg-black px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 active:bg-zinc-800 sm:min-h-0 sm:w-auto dark:bg-white dark:text-black dark:hover:bg-zinc-200 dark:active:bg-zinc-200"
+                    className="min-h-11 w-full rounded-lg bg-room-accent px-4 py-2 text-sm font-medium text-room-on-accent shadow-sm transition-colors hover:opacity-90 active:opacity-90 sm:min-h-0 sm:w-auto"
                   >
                     Add to collection
                   </SubmitButton>
@@ -186,7 +186,7 @@ export default async function AlbumDetailPage({
                   <input type="hidden" name="returnTo" value={returnTo} />
                   <SubmitButton
                     pendingText="Adding…"
-                    className="min-h-11 w-full rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium transition-colors hover:border-zinc-500 active:border-zinc-500 sm:min-h-0 sm:w-auto dark:border-zinc-700"
+                    className="min-h-11 w-full rounded-lg border border-room-rule px-4 py-2 text-sm font-medium transition-colors hover:border-room-dim active:border-room-dim sm:min-h-0 sm:w-auto"
                   >
                     Wishlist
                   </SubmitButton>
@@ -197,7 +197,7 @@ export default async function AlbumDetailPage({
                   <input type="hidden" name="returnTo" value={origin ?? "/recommendations"} />
                   <SubmitButton
                     pendingText="Dismissing…"
-                    className="min-h-11 w-full px-2 py-2 text-sm text-red-600 hover:underline active:opacity-70 sm:min-h-0 sm:w-auto"
+                    className="min-h-11 w-full px-2 py-2 text-sm text-room-danger hover:underline active:opacity-70 sm:min-h-0 sm:w-auto"
                   >
                     Dismiss
                   </SubmitButton>
@@ -206,7 +206,7 @@ export default async function AlbumDetailPage({
             ) : (
               <Link
                 href={loginHref}
-                className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-black px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 active:bg-zinc-800 sm:min-h-0 sm:w-auto dark:bg-white dark:text-black dark:hover:bg-zinc-200 dark:active:bg-zinc-200"
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-room-accent px-4 py-2 text-sm font-medium text-room-on-accent shadow-sm transition-colors hover:opacity-90 active:opacity-90 sm:min-h-0 sm:w-auto"
               >
                 Log in to add or wishlist
               </Link>
@@ -217,7 +217,7 @@ export default async function AlbumDetailPage({
 
       <div className="max-w-2xl">
         <h2 className="mb-2 text-lg font-medium">About this album</h2>
-        <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">
+        <p className="text-sm leading-relaxed text-room-dim">
           {description}
         </p>
       </div>
@@ -227,20 +227,20 @@ export default async function AlbumDetailPage({
           <h2 id="tracklist-heading" className="mb-2 text-lg font-medium">
             Tracklist
           </h2>
-          <ol className="divide-y divide-zinc-100 dark:divide-zinc-800">
+          <ol className="divide-y divide-room-rule">
             {tracks.map((track, index) => (
               <li
                 key={index}
                 className="flex items-baseline gap-3 py-2 text-sm"
               >
-                <span className="w-8 shrink-0 text-zinc-400">
+                <span className="w-8 shrink-0 text-room-dim">
                   {track.position || index + 1}
                 </span>
-                <span className="flex-1 text-zinc-700 dark:text-zinc-200">
+                <span className="flex-1 text-room-fg">
                   {track.title}
                 </span>
                 {track.duration && (
-                  <span className="text-zinc-400">{track.duration}</span>
+                  <span className="text-room-dim">{track.duration}</span>
                 )}
               </li>
             ))}

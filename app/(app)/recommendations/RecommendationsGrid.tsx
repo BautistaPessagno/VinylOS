@@ -39,7 +39,7 @@ export async function RecommendationsGrid({
 
   if (items.length === 0) {
     return (
-      <p className="text-center text-zinc-500">
+      <p className="text-center text-room-dim">
         No recommendations yet — add a few records to your collection and we&apos;ll
         suggest more based on your taste.
       </p>
@@ -63,7 +63,7 @@ export async function RecommendationsGrid({
       />
 
       {visible.length === 0 ? (
-        <p className="text-center text-zinc-500">
+        <p className="text-center text-room-dim">
           No recommendations match those filters.{" "}
           <Link href="/recommendations" className="underline">
             Clear filters.
@@ -74,11 +74,11 @@ export async function RecommendationsGrid({
           {visible.map((item) => (
         <div
           key={item.recId}
-          className="flex flex-col gap-2 rounded border border-zinc-200 p-3 dark:border-zinc-800"
+          className="flex flex-col gap-2 rounded border border-room-rule p-3"
         >
           <Link
             href={`/album/${item.releaseId}?from=/recommendations`}
-            className="aspect-square w-full overflow-hidden rounded bg-zinc-100 active:opacity-80 dark:bg-zinc-800"
+            className="aspect-square w-full overflow-hidden rounded bg-room-sunk active:opacity-80"
           >
             {item.coverUrl && (
               // eslint-disable-next-line @next/next/no-img-element
@@ -95,10 +95,10 @@ export async function RecommendationsGrid({
             <Link href={`/album/${item.releaseId}?from=/recommendations`} className="truncate font-medium hover:underline">
               {item.title}
             </Link>
-            <span className="truncate text-sm text-zinc-500">
+            <span className="truncate text-sm text-room-dim">
               {item.artistNames.join(", ")}
             </span>
-            <span className="text-xs text-zinc-400">{item.reason}</span>
+            <span className="text-xs text-room-dim">{item.reason}</span>
           </div>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
             <form action={addRecommendationToCollectionAction}>
@@ -124,7 +124,7 @@ export async function RecommendationsGrid({
               <input type="hidden" name="recId" value={item.recId} />
               <SubmitButton
                 pendingText="Dismissing…"
-                className="-mx-1 min-h-11 px-1 text-red-600 underline active:opacity-70"
+                className="-mx-1 min-h-11 px-1 text-room-danger underline active:opacity-70"
               >
                 Dismiss
               </SubmitButton>

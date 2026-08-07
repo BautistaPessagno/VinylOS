@@ -6,7 +6,7 @@ import { authClient } from "@/lib/auth-client";
 import { useUsernameSuggestions } from "@/lib/useUsernameSuggestions";
 
 const inputClass =
-  "rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-950";
+  "rounded border border-room-rule px-3 py-2";
 
 export function SettingsForm({
   name: initialName,
@@ -74,7 +74,7 @@ export function SettingsForm({
       <h2 className="text-lg font-medium">Profile</h2>
 
       <label className="flex flex-col gap-1">
-        <span className="text-zinc-600 dark:text-zinc-400">Display name</span>
+        <span className="text-room-dim">Display name</span>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -85,7 +85,7 @@ export function SettingsForm({
       </label>
 
       <label className="flex flex-col gap-1">
-        <span className="text-zinc-600 dark:text-zinc-400">Username</span>
+        <span className="text-room-dim">Username</span>
         <input
           value={username}
           onChange={(e) => setUsername(e.target.value)}
@@ -104,7 +104,7 @@ export function SettingsForm({
       </datalist>
 
       <label className="flex flex-col gap-1">
-        <span className="text-zinc-600 dark:text-zinc-400">Email</span>
+        <span className="text-room-dim">Email</span>
         <input
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -115,15 +115,15 @@ export function SettingsForm({
         />
       </label>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-room-danger">{error}</p>}
       {success && !error && (
-        <p className="text-sm text-green-600 dark:text-green-500">Saved.</p>
+        <p className="text-sm text-room-accent-2">Saved.</p>
       )}
 
       <button
         type="submit"
         disabled={pending}
-        className="self-start rounded-lg bg-black px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
+        className="self-start rounded-lg bg-room-accent px-4 py-2 text-sm font-medium text-room-on-accent shadow-sm transition-colors hover:opacity-90 disabled:opacity-50"
       >
         {pending ? "Saving…" : "Save changes"}
       </button>

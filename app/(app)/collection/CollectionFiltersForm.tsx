@@ -17,7 +17,7 @@ type SelectedCollectionFilters = {
 };
 
 const inputClass =
-  "min-h-11 rounded border border-zinc-300 px-3 py-1.5 sm:min-h-0 dark:border-zinc-700 dark:bg-zinc-950";
+  "min-h-11 rounded border border-room-rule px-3 py-1.5 sm:min-h-0";
 
 export function CollectionFiltersForm({
   selected,
@@ -61,7 +61,7 @@ export function CollectionFiltersForm({
           onClick={() => setPanelOpen((open) => !open)}
           aria-expanded={panelOpen}
           aria-controls={panelId}
-          className="min-h-11 rounded border border-zinc-300 px-3 py-1.5 active:bg-zinc-100 sm:hidden dark:border-zinc-700 dark:active:bg-zinc-800"
+          className="min-h-11 rounded border border-room-rule px-3 py-1.5 active:bg-room-sunk sm:hidden"
         >
           Filters{panelFilterCount > 0 ? ` (${panelFilterCount})` : ""}
         </button>
@@ -142,14 +142,14 @@ export function CollectionFiltersForm({
 
         <button
           type="submit"
-          className="min-h-11 rounded border border-zinc-300 px-3 py-1.5 active:bg-zinc-100 sm:min-h-0 dark:border-zinc-700 dark:active:bg-zinc-800"
+          className="min-h-11 rounded border border-room-rule px-3 py-1.5 active:bg-room-sunk sm:min-h-0"
         >
           Apply
         </button>
         {hasActiveFilters && (
           <Link
             href="/collection"
-            className="flex min-h-11 items-center px-3 py-1.5 text-zinc-500 underline sm:min-h-0"
+            className="flex min-h-11 items-center px-3 py-1.5 text-room-dim underline sm:min-h-0"
           >
             Clear filters
           </Link>

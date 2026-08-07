@@ -66,8 +66,8 @@ function FollowForm({
         pendingText={isFollowing ? "Unfollowing…" : "Following…"}
         className={
           isFollowing
-            ? "min-h-11 rounded border border-zinc-300 px-4 py-2 text-sm active:bg-zinc-100 sm:min-h-0 dark:border-zinc-700 dark:active:bg-zinc-800"
-            : "min-h-11 rounded bg-black px-4 py-2 text-sm text-white active:bg-zinc-800 sm:min-h-0 dark:bg-white dark:text-black dark:active:bg-zinc-200"
+            ? "min-h-11 rounded border border-room-rule px-4 py-2 text-sm active:bg-room-sunk sm:min-h-0"
+            : "min-h-11 rounded bg-room-accent px-4 py-2 text-sm text-room-on-accent active:opacity-90 sm:min-h-0"
         }
       >
         {isFollowing ? "Unfollow" : "Follow"}
@@ -81,7 +81,7 @@ function SignInCta({ returnTo, label }: { returnTo: string; label: string }) {
   return (
     <Link
       href={href}
-      className="min-h-11 rounded bg-black px-4 py-2 text-sm text-white active:bg-zinc-800 sm:min-h-0 dark:bg-white dark:text-black dark:active:bg-zinc-200"
+      className="min-h-11 rounded bg-room-accent px-4 py-2 text-sm text-room-on-accent active:opacity-90 sm:min-h-0"
     >
       {label}
     </Link>
@@ -92,7 +92,7 @@ type ProfileTab = { key: string; label: string; href: string };
 
 function ProfileTabs({ tabs, active }: { tabs: ProfileTab[]; active: string }) {
   return (
-    <nav className="flex gap-6 border-b border-zinc-200 dark:border-zinc-800">
+    <nav className="flex gap-6 border-b border-room-rule">
       {tabs.map(({ key, label, href }) => {
         const isActive = key === active;
         return (
@@ -102,8 +102,8 @@ function ProfileTabs({ tabs, active }: { tabs: ProfileTab[]; active: string }) {
             aria-current={isActive ? "page" : undefined}
             className={
               isActive
-                ? "-mb-px border-b-2 border-red-500 px-1 pb-2 pt-2 text-sm font-medium text-red-500"
-                : "-mb-px border-b-2 border-transparent px-1 pb-2 pt-2 text-sm text-zinc-600 hover:text-red-500 active:text-red-500 dark:text-zinc-300"
+                ? "-mb-px border-b-2 border-room-accent px-1 pb-2 pt-2 text-sm font-medium text-room-accent"
+                : "-mb-px border-b-2 border-transparent px-1 pb-2 pt-2 text-sm text-room-dim hover:text-room-accent active:text-room-accent"
             }
           >
             {label}
@@ -134,11 +134,11 @@ function ReleaseGrid({
       {items.map((item) => (
         <div
           key={item.itemId}
-          className="flex flex-col gap-2 rounded border border-zinc-200 p-3 dark:border-zinc-800"
+          className="flex flex-col gap-2 rounded border border-room-rule p-3"
         >
           <Link
             href={albumHref(item.releaseId)}
-            className="aspect-square w-full overflow-hidden rounded bg-zinc-100 active:opacity-80 dark:bg-zinc-800"
+            className="aspect-square w-full overflow-hidden rounded bg-room-sunk active:opacity-80"
           >
             {item.coverUrl && (
               // eslint-disable-next-line @next/next/no-img-element
@@ -158,10 +158,10 @@ function ReleaseGrid({
             >
               {item.title}
             </Link>
-            <span className="truncate text-sm text-zinc-500">
+            <span className="truncate text-sm text-room-dim">
               {item.artistNames.join(", ")}
             </span>
-            <span className="text-xs text-zinc-400">
+            <span className="text-xs text-room-dim">
               {item.year} {item.labelName ? `· ${item.labelName}` : ""}
             </span>
           </div>
@@ -170,7 +170,7 @@ function ReleaseGrid({
               {item.genres.slice(0, 2).map((genre) => (
                 <span
                   key={genre}
-                  className="rounded bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
+                  className="rounded bg-room-surface px-2 py-0.5 text-xs text-room-dim"
                 >
                   {genre}
                 </span>
@@ -235,23 +235,23 @@ export default async function UserProfilePage({
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-zinc-200 pb-6 dark:border-zinc-800">
+      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-room-rule pb-6">
         <div className="flex flex-col gap-1">
           {session ? (
-            <Link href="/friends" className="text-sm text-zinc-500 underline">
+            <Link href="/friends" className="text-sm text-room-dim underline">
               Friends
             </Link>
           ) : null}
           <h1 className="text-2xl font-semibold">{profile.name}</h1>
           {profile.handle && (
-            <p className="text-sm text-zinc-500">@{profile.handle}</p>
+            <p className="text-sm text-room-dim">@{profile.handle}</p>
           )}
-          <div className="mt-2 flex gap-2 text-xs text-zinc-500 dark:text-zinc-400">
-            <span className="rounded bg-zinc-100 px-2 py-1 dark:bg-zinc-800">
+          <div className="mt-2 flex gap-2 text-xs text-room-dim">
+            <span className="rounded bg-room-surface px-2 py-1">
               {items.length} {items.length === 1 ? "record" : "records"}
             </span>
             {followStatus.followsYou && (
-              <span className="rounded bg-zinc-100 px-2 py-1 dark:bg-zinc-800">Follows you</span>
+              <span className="rounded bg-room-surface px-2 py-1">Follows you</span>
             )}
           </div>
         </div>
@@ -305,7 +305,7 @@ export default async function UserProfilePage({
         </div>
       ) : showWishlist ? (
         wishlistItems.length === 0 ? (
-          <p className="text-zinc-500">Nothing on this wishlist yet.</p>
+          <p className="text-room-dim">Nothing on this wishlist yet.</p>
         ) : (
           <ReleaseGrid
             items={wishlistItems}
@@ -318,7 +318,7 @@ export default async function UserProfilePage({
           {wrapped && <WrappedSection stats={wrapped} />}
 
           {items.length === 0 ? (
-            <p className="text-zinc-500">No public records yet.</p>
+            <p className="text-room-dim">No public records yet.</p>
           ) : (
             <ReleaseGrid
               items={items}

@@ -44,15 +44,15 @@ export function EditionPicker({
 
   return (
     <div className="text-sm">
-      <button type="button" onClick={toggle} className="text-zinc-600 underline">
+      <button type="button" onClick={toggle} className="text-room-dim underline">
         {open ? "Hide editions ▴" : `${label} ▾`}
       </button>
       {open && (
         <div className="mt-2 flex max-h-64 flex-col gap-1 overflow-y-auto">
-          {isLoading && <p className="text-zinc-400">Loading editions…</p>}
-          {error && <p className="text-red-600">{error}</p>}
+          {isLoading && <p className="text-room-dim">Loading editions…</p>}
+          {error && <p className="text-room-danger">{error}</p>}
           {versions?.length === 0 && (
-            <p className="text-zinc-400">No other vinyl editions found.</p>
+            <p className="text-room-dim">No other vinyl editions found.</p>
           )}
           {versions?.map((v) => (
             <button
@@ -60,7 +60,7 @@ export function EditionPicker({
               type="button"
               onClick={() => onPick(v.id)}
               disabled={isPicking}
-              className="flex items-center justify-between rounded border border-zinc-200 px-3 py-2 text-left hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
+              className="flex items-center justify-between rounded border border-room-rule px-3 py-2 text-left hover:bg-room-sunk disabled:opacity-50"
             >
               <span>
                 {v.released || "Year unknown"}
@@ -68,7 +68,7 @@ export function EditionPicker({
                 {v.catno ? ` (${v.catno})` : ""}
                 {v.country ? ` · ${v.country}` : ""}
               </span>
-              {pendingId === v.id && <span className="text-zinc-400">Adding…</span>}
+              {pendingId === v.id && <span className="text-room-dim">Adding…</span>}
             </button>
           ))}
         </div>

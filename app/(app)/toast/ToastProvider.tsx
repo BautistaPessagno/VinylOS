@@ -65,9 +65,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             key={toast.id}
             role="status"
             className={`pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-xl border px-4 py-3 text-sm shadow-lg transition-opacity motion-reduce:transition-none ${
+              /* Opaque surface with a coloured edge, rather than a tinted fill: a
+                 toast floats over arbitrary content, so a translucent wash would
+                 take whatever is underneath with it. */
               toast.variant === "success"
-                ? "border-green-200 bg-green-50 text-green-900 dark:border-green-900 dark:bg-green-950 dark:text-green-100"
-                : "border-red-200 bg-red-50 text-red-900 dark:border-red-900 dark:bg-red-950 dark:text-red-100"
+                ? "border-room-accent-2 bg-room-surface text-room-fg"
+                : "border-room-danger bg-room-surface text-room-fg"
             }`}
           >
             <span className="flex-1">{toast.message}</span>

@@ -42,7 +42,7 @@ export function SetUsernamePrompt() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="text-xs text-zinc-600 underline hover:text-black dark:text-zinc-400"
+        className="text-xs text-room-dim underline hover:text-room-fg"
       >
         Set a username
       </button>
@@ -59,13 +59,13 @@ export function SetUsernamePrompt() {
         required
         minLength={3}
         maxLength={30}
-        className="rounded border border-zinc-300 px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+        className="rounded border border-room-rule px-2 py-1 text-sm"
       />
-      {error && <p className="text-xs text-red-600">{error}</p>}
+      {error && <p className="text-xs text-room-danger">{error}</p>}
       <button
         type="submit"
         disabled={pending}
-        className="rounded bg-black px-2 py-1 text-xs text-white disabled:opacity-50 dark:bg-white dark:text-black"
+        className="rounded bg-room-accent px-2 py-1 text-xs text-room-on-accent disabled:opacity-50"
       >
         {pending ? "Saving…" : "Save"}
       </button>

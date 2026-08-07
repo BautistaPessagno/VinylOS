@@ -8,7 +8,7 @@ export function InviteFriendsButton({ profileUrl }: { profileUrl: string }) {
       url={profileUrl}
       label="Invite friends"
       title="Join me on VinylOS"
-      className="w-fit rounded bg-black px-4 py-2 text-sm text-white"
+      className="w-fit rounded bg-room-accent px-4 py-2 text-sm text-room-on-accent"
     />
   );
 }

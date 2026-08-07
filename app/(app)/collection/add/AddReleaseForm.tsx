@@ -34,19 +34,19 @@ function Field({
 }) {
   return (
     <label className="flex flex-col gap-1 text-sm">
-      <span className="text-zinc-600 dark:text-zinc-400">{label}</span>
+      <span className="text-room-dim">{label}</span>
       {/* 16px on mobile so iOS Safari doesn't zoom the viewport on focus. */}
       {textarea ? (
         <textarea
           name={name}
-          className="rounded border border-zinc-300 px-3 py-2 text-base sm:text-sm dark:border-zinc-700 dark:bg-zinc-950"
+          className="rounded border border-room-rule px-3 py-2 text-base sm:text-sm"
         />
       ) : (
         <input
           name={name}
           type={type}
           required={required}
-          className="min-h-11 rounded border border-zinc-300 px-3 py-2 text-base sm:min-h-0 sm:text-sm dark:border-zinc-700 dark:bg-zinc-950"
+          className="min-h-11 rounded border border-room-rule px-3 py-2 text-base sm:min-h-0 sm:text-sm"
         />
       )}
     </label>
@@ -78,7 +78,7 @@ function AlbumCard({
   return (
     <li
       className={`flex flex-col gap-2 rounded border p-3 text-left ${
-        selected ? "border-black dark:border-white" : "border-zinc-200 dark:border-zinc-700"
+        selected ? "border-room-accent" : "border-room-rule"
       }`}
     >
       <div className="flex items-center gap-3">
@@ -92,7 +92,7 @@ function AlbumCard({
             className="h-5 w-5 shrink-0"
           />
         </label>
-        <div className="h-14 w-14 shrink-0 overflow-hidden rounded bg-zinc-100 dark:bg-zinc-800">
+        <div className="h-14 w-14 shrink-0 overflow-hidden rounded bg-room-sunk">
           {album.coverImage && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -106,10 +106,10 @@ function AlbumCard({
         </div>
         <div className="flex-1">
           <span className="block font-medium">{album.title}</span>
-          <span className="block text-sm text-zinc-600 dark:text-zinc-400">
+          <span className="block text-sm text-room-dim">
             {album.artist}
           </span>
-          <span className="block text-sm text-zinc-500">
+          <span className="block text-sm text-room-dim">
             {album.year}
             {album.editionCount > 1 ? ` · ${album.editionCount} editions` : ""}
           </span>
@@ -119,7 +119,7 @@ function AlbumCard({
             type="button"
             onClick={() => onAdd(album.releaseId)}
             disabled={busy}
-            className="min-h-11 rounded bg-black px-3 py-1.5 text-sm text-white active:bg-zinc-800 disabled:opacity-50 sm:min-h-0 dark:bg-white dark:text-black dark:active:bg-zinc-200"
+            className="min-h-11 rounded bg-room-accent px-3 py-1.5 text-sm text-room-on-accent active:opacity-90 disabled:opacity-50 sm:min-h-0"
           >
             {isThisPending ? "Adding…" : "Add"}
           </button>
@@ -127,7 +127,7 @@ function AlbumCard({
             type="button"
             onClick={() => onWishlist(album.releaseId)}
             disabled={busy}
-            className="min-h-11 rounded border border-zinc-300 px-3 py-1.5 text-sm active:bg-zinc-100 disabled:opacity-50 sm:min-h-0 dark:border-zinc-600 dark:active:bg-zinc-800"
+            className="min-h-11 rounded border border-room-rule px-3 py-1.5 text-sm active:bg-room-sunk disabled:opacity-50 sm:min-h-0"
           >
             {isThisWishlistPending ? "Adding…" : "Wishlist"}
           </button>
@@ -261,7 +261,7 @@ export function AddReleaseForm() {
         <button
           type="button"
           onClick={() => setShowManualForm(false)}
-          className="min-h-11 self-start text-sm text-zinc-600 underline active:opacity-70 dark:text-zinc-300"
+          className="min-h-11 self-start text-sm text-room-dim underline active:opacity-70"
         >
           ← Back to search
         </button>
@@ -275,7 +275,7 @@ export function AddReleaseForm() {
         <Field label="Genres, comma separated" name="genres" />
         <Field label="Styles, comma separated" name="styles" />
 
-        <hr className="my-2 border-zinc-200 dark:border-zinc-800" />
+        <hr className="my-2 border-room-rule" />
 
         <Field label="Folder" name="folder" />
         <Field label="Rating (1-5)" name="rating" type="number" />
@@ -288,7 +288,7 @@ export function AddReleaseForm() {
 
         <SubmitButton
           pendingText="Adding…"
-          className="mt-2 min-h-11 self-start rounded bg-black px-4 py-2 text-white active:bg-zinc-800 dark:bg-white dark:text-black dark:active:bg-zinc-200"
+          className="mt-2 min-h-11 self-start rounded bg-room-accent px-4 py-2 text-room-on-accent active:opacity-90"
         >
           Add to collection
         </SubmitButton>
@@ -305,29 +305,29 @@ export function AddReleaseForm() {
             value={query}
             onChange={(e) => handleQueryChange(e.target.value)}
             placeholder="Search for an album (vinyl only)..."
-            className="min-h-11 w-full rounded border border-zinc-300 px-3 py-2 text-base sm:text-sm dark:border-zinc-700 dark:bg-zinc-950"
+            className="min-h-11 w-full rounded border border-room-rule px-3 py-2 text-base sm:text-sm"
           />
           {isSearching && queryIsReady && (
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-zinc-400">
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-room-dim">
               Searching…
             </span>
           )}
         </div>
         {normalizedQuery.length > 0 && !queryIsReady && (
-          <p className="text-center text-sm text-zinc-500">
+          <p className="text-center text-sm text-room-dim">
             Enter at least 2 characters
           </p>
         )}
-        {searchError && <p className="text-center text-sm text-red-600">{searchError}</p>}
+        {searchError && <p className="text-center text-sm text-room-danger">{searchError}</p>}
         {results.length > 0 && (
-          <p className="text-center text-sm text-zinc-500">
+          <p className="text-center text-sm text-room-dim">
             New to VinylOS? Select multiple albums below and add them all at once.
           </p>
         )}
         <button
           type="button"
           onClick={() => setShowManualForm(true)}
-          className="min-h-11 self-center px-2 text-sm text-zinc-600 underline active:opacity-70 dark:text-zinc-300"
+          className="min-h-11 self-center px-2 text-sm text-room-dim underline active:opacity-70"
         >
           Can&apos;t find it? Enter manually
         </button>
@@ -349,13 +349,13 @@ export function AddReleaseForm() {
 
       {selected.size > 0 && (
         // Sticky offset clears the mobile bottom tab bar and the iOS home indicator.
-        <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] flex w-full max-w-2xl items-center justify-between rounded-lg border border-zinc-200 bg-white px-4 py-3 shadow-lg sm:bottom-4 dark:border-zinc-700 dark:bg-zinc-900">
+        <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] flex w-full max-w-2xl items-center justify-between rounded-lg border border-room-rule bg-room-surface px-4 py-3 shadow-lg sm:bottom-4">
           <span className="text-sm font-medium">{selected.size} selected</span>
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setSelected(new Map())}
-              className="min-h-11 px-2 text-sm text-zinc-600 underline active:opacity-70 sm:min-h-0 dark:text-zinc-300"
+              className="min-h-11 px-2 text-sm text-room-dim underline active:opacity-70 sm:min-h-0"
             >
               Clear
             </button>
@@ -363,7 +363,7 @@ export function AddReleaseForm() {
               type="button"
               onClick={handleAddSelected}
               disabled={isBatchAdding}
-              className="min-h-11 rounded bg-black px-4 py-2 text-sm text-white active:bg-zinc-800 disabled:opacity-50 sm:min-h-0 dark:bg-white dark:text-black dark:active:bg-zinc-200"
+              className="min-h-11 rounded bg-room-accent px-4 py-2 text-sm text-room-on-accent active:opacity-90 disabled:opacity-50 sm:min-h-0"
             >
               {isBatchAdding ? "Adding…" : `Add ${selected.size} record${selected.size === 1 ? "" : "s"}`}
             </button>
