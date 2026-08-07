@@ -4,7 +4,7 @@
 
 **Implementation plan:** [`docs/superpowers/plans/2026-08-06-amba-store-directory.md`](docs/superpowers/plans/2026-08-06-amba-store-directory.md) — eight task-by-task steps with the actual code, tests, and commits. This file is the spec (what and why); the plan is the how.
 
-**Progress:** Foundation (§1–§2, pure §3) + discover/sync scripts in [PR #22](https://github.com/BautistaPessagno/VinylOS/pull/22) — open, CI green; awaiting human merge (self-approve blocked). Service + `/stores` UI (§4) still unchecked.
+**Progress:** Full v1 path (§1–§4) in [PR #22](https://github.com/BautistaPessagno/VinylOS/pull/22) — open, awaiting human merge (self-approve blocked). Deferred: embedded map (§6), cron discover (§7), submissions/hours parsing (§8).
 
 **Scope decisions (taken):**
 
@@ -78,14 +78,15 @@ No cron. The dataset moves on the order of months and every change is a human de
 
 ## 4. Service + UI
 
-- [ ] `lib/services/storeService.ts`, following the existing service pattern: `listStores({ q, neighborhood, city })` (active only, ordered by neighbourhood then name) and `getStoreBySlug(slug)`. Public fields only. Search is Postgres `ILIKE` over name + neighbourhood + address — no full-text index at this size.
-- [ ] `app/(public)/stores/page.tsx` — server component under the existing session-optional `(public)` layout, so guests get it and `PublicGuestNav` comes for free.
+- [x] `lib/services/storeService.ts`, following the existing service pattern: `listStores({ q, neighborhood })` (active only, ordered by neighbourhood then name) and `getStoreBySlug(slug)`. Public fields only. Search is Postgres `ILIKE` over name + neighbourhood + address — no full-text index at this size. **Done:** also `listNeighborhoods()`.
+- [x] `app/(public)/stores/page.tsx` — server component under the existing session-optional `(public)` layout, so guests get it and `PublicGuestNav` comes for free.
   - Search input + neighbourhood filter driven by `searchParams`, no client state.
-  - Cards: name, address, neighbourhood, hours when known, links to phone / website / Instagram. Design for the common case where **hours and phone are absent** — that is most rows, not an edge case.
+  - Cards: name, address, neighbourhood, hours when known. Design for the common case where **hours and phone are absent** — that is most rows, not an edge case.
   - Each card links out to `https://www.google.com/maps/search/?api=1&query=<lat>,<lng>`. **No embedded map in v1** (§6).
-- [ ] `[slug]/page.tsx` — detail page with `generateMetadata` for share cards, matching `album/[id]`.
-- [ ] **ODbL attribution** — "Datos de © OpenStreetMap contributors", linked to `openstreetmap.org/copyright`, on `/stores`. A licence obligation for any entry sourced from OSM, not a nicety.
-- [ ] Add `/stores` to `PublicGuestNav` and `AppNav.tsx`. Confirm `proxy.ts` does not match `/stores`.
+  - **Done:** `StoreCard.tsx` + page tests (list, empty state, no empty hours row).
+- [x] `[slug]/page.tsx` — detail page with `generateMetadata` for share cards, matching `album/[id]`. **Done:** phone / website / Instagram when present; notFound on unknown slug.
+- [x] **ODbL attribution** — "Datos parciales de © OpenStreetMap contributors", linked to `openstreetmap.org/copyright`, on `/stores` and detail. A licence obligation for any entry sourced from OSM, not a nicety.
+- [x] Add `/stores` to `PublicGuestNav` and `AppNav.tsx`. Confirm `proxy.ts` does not match `/stores`. **Done:** proxy test asserts matcher omits `/stores`.
 
 ## 5. Verification
 
@@ -93,8 +94,8 @@ No cron. The dataset moves on the order of months and every change is a human de
 - [x] `overpass.test.mjs` parses a checked-in fixture — no network in tests, same approach as `lib/discogs/client.test.mjs`.
 - [x] `pnpm stores:discover` against live Overpass produces a candidate file. **Verified** with 5 curated shops: 95 candidates (mostly instrument shops + name-probe noise). Short list requires expanding the curated file via triage — expected at this stage, not a script bug.
 - [x] `pnpm stores:sync --dry`, then for real against dev; re-run immediately and confirm zero changes. **Verified** (5 inserts → 0/0/0).
-- [ ] `/stores` renders signed-out in a fresh browser profile, no console errors. Confirm a store with no hours and no phone still looks deliberate.
-- [x] `pnpm lint` and `pnpm build` clean. **Verified** on foundation + scripts (no UI yet).
+- [x] `/stores` list + detail covered by render tests (guest list, OSM attribution, empty filter state, detail maps/phone, notFound). Manual signed-out browser smoke still recommended on preview.
+- [x] `pnpm lint` and `pnpm build` clean. **Verified** with `/stores` and `/stores/[slug]` routes in the build output.
 
 ---
 

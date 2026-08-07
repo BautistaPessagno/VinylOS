@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { href: "/wishlist", label: "Wishlist" },
   { href: "/friends", label: "Friends" },
   { href: "/recommendations", label: "Discover" },
+  { href: "/stores", label: "Disquerías" },
 ];
 
 const SEARCH_HREF = "/explore?focus=search";
@@ -62,6 +63,13 @@ const TAB_ICONS: Record<string, React.ReactNode> = {
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6">
       <circle cx="12" cy="12" r="9" />
       <path d="m15.5 8.5-2 5-5 2 2-5 5-2Z" />
+    </svg>
+  ),
+  "/stores": (
+    // Map pin
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6">
+      <path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11Z" />
+      <circle cx="12" cy="10" r="2.5" />
     </svg>
   ),
 };
