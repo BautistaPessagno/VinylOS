@@ -92,7 +92,7 @@ test("guests see the store list with OSM attribution", async () => {
   assert.match(html, /OpenStreetMap/);
   assert.match(html, /openstreetmap\.org\/copyright/);
   assert.match(html, /data-stores-map="1"/);
-  assert.match(html, /OpenFreeMap/);
+  assert.match(html, /CARTO/);
 });
 
 test("a store with no hours renders without an empty hours row", async () => {

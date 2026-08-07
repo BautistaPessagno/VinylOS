@@ -102,7 +102,7 @@ No cron. The dataset moves on the order of months and every change is a human de
 ## 6. Embedded map
 
 - [x] MapLibre GL on `/stores` and `/stores/[slug]` with pins from our lat/lng.
-- [x] Tile source: **OpenFreeMap** (free vector styles, no API key) — not `tile.openstreetmap.org` (app usage prohibited) and not Google Maps JS.
+- [x] Tile source: **CARTO free raster** (light/dark, OSM-derived, no API key) — OpenFreeMap vector styles left pins but a blank basemap in practice; not `tile.openstreetmap.org` and not Google Maps JS.
 - [x] “Cómo llegar” still opens Google Maps directions (deep link, no Maps API billing).
 - [x] ODbL / OpenFreeMap attribution on list and detail.
 

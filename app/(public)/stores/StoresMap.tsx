@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import type { StyleSpecification } from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 
 /** Minimal fields the map needs — keeps the client payload small. */
 export type MapStorePin = {
@@ -12,8 +14,44 @@ export type MapStorePin = {
   lng: number;
 };
 
-const LIGHT_STYLE = "https://tiles.openfreemap.org/styles/liberty";
-const DARK_STYLE = "https://tiles.openfreemap.org/styles/dark";
+/**
+ * Raster basemap via CARTO CDN (OSM data). Free for reasonable traffic with
+ * attribution — more reliable than remote vector style URLs that can fail to
+ * paint tiles while still leaving the MapLibre chrome and HTML markers working.
+ */
+function basemapStyle(dark: boolean): StyleSpecification {
+  const tiles = dark
+    ? [
+        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
+        "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
+        "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
+      ]
+    : [
+        "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png",
+        "https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png",
+        "https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png",
+      ];
+
+  return {
+    version: 8,
+    sources: {
+      carto: {
+        type: "raster",
+        tiles,
+        tileSize: 256,
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      },
+    },
+    layers: [
+      {
+        id: "carto",
+        type: "raster",
+        source: "carto",
+      },
+    ],
+  };
+}
 
 function prefersDark(): boolean {
   return (
@@ -59,8 +97,8 @@ function escapeHtml(value: string): string {
 }
 
 /**
- * MapLibre map of store pins. Tiles from OpenFreeMap (OSM data, free, no API key) —
- * not tile.openstreetmap.org (app usage prohibited) and not Google Maps JS.
+ * MapLibre map of store pins. Basemap: CARTO free raster tiles (OSM-derived).
+ * Not tile.openstreetmap.org (app usage prohibited) and not Google Maps JS.
  */
 export function StoresMap({
   stores,
@@ -84,12 +122,11 @@ export function StoresMap({
 
     (async () => {
       const maplibregl = await import("maplibre-gl");
-      await import("maplibre-gl/dist/maplibre-gl.css");
       if (cancelled || !containerRef.current) return;
 
       const nextMap = new maplibregl.Map({
         container,
-        style: prefersDark() ? DARK_STYLE : LIGHT_STYLE,
+        style: basemapStyle(prefersDark()),
         center: [stores[0].lng, stores[0].lat],
         zoom: stores.length === 1 ? 14 : 11,
         attributionControl: { compact: true },
@@ -104,27 +141,32 @@ export function StoresMap({
         "top-right",
       );
 
-      const bounds = new maplibregl.LngLatBounds();
-      for (const store of stores) {
-        bounds.extend([store.lng, store.lat]);
-        const marker = new maplibregl.Marker({
-          element: createMarkerElement(store.name),
-        })
-          .setLngLat([store.lng, store.lat])
-          .setPopup(
-            new maplibregl.Popup({ offset: 18, maxWidth: "240px" }).setHTML(
-              popupHtml(store),
-            ),
-          )
-          .addTo(map);
-        markers.push(marker);
-      }
+      const placeMarkers = () => {
+        if (!map || cancelled) return;
+        const bounds = new maplibregl.LngLatBounds();
+        for (const store of stores) {
+          bounds.extend([store.lng, store.lat]);
+          const marker = new maplibregl.Marker({
+            element: createMarkerElement(store.name),
+          })
+            .setLngLat([store.lng, store.lat])
+            .setPopup(
+              new maplibregl.Popup({ offset: 18, maxWidth: "240px" }).setHTML(
+                popupHtml(store),
+              ),
+            )
+            .addTo(map);
+          markers.push(marker);
+        }
+        if (stores.length > 1) {
+          map.fitBounds(bounds, { padding: 56, maxZoom: 14, duration: 0 });
+        }
+        map.resize();
+      };
 
-      if (stores.length > 1) {
-        map.fitBounds(bounds, { padding: 56, maxZoom: 14, duration: 0 });
-      }
-
-      map.resize();
+      // Wait for style/tiles so the canvas has a real size before fitting bounds.
+      if (map.loaded()) placeMarkers();
+      else map.once("load", placeMarkers);
     })();
 
     return () => {

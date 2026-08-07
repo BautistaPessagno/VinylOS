@@ -86,14 +86,23 @@ export default async function StoresPage({
       )}
 
       <p className="text-xs text-room-dim">
-        Mapa: OpenFreeMap · datos parciales de{" "}
+        Mapa: ©{" "}
         <a
           href="https://www.openstreetmap.org/copyright"
           target="_blank"
           rel="noreferrer"
           className="underline hover:text-room-accent"
         >
-          © OpenStreetMap contributors
+          OpenStreetMap
+        </a>{" "}
+        · ©{" "}
+        <a
+          href="https://carto.com/attributions"
+          target="_blank"
+          rel="noreferrer"
+          className="underline hover:text-room-accent"
+        >
+          CARTO
         </a>
         .
       </p>
