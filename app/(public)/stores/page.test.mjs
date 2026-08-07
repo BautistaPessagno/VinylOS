@@ -68,6 +68,16 @@ function loadPage({ stores, neighborhoods }) {
     "next/link": MockLink,
     "@/lib/services/storeService": storeService,
     "./StoreCard": storeCardMod,
+    // Client map is a no-op in SSR tests; assert via data attribute.
+    "./StoresMap": {
+      StoresMap({ stores }) {
+        return React.createElement(
+          "div",
+          { "data-stores-map": String(stores.length), role: "region" },
+          "Mapa",
+        );
+      },
+    },
   }).default;
 }
 
@@ -81,6 +91,8 @@ test("guests see the store list with OSM attribution", async () => {
   assert.match(html, /Soler 6090/);
   assert.match(html, /OpenStreetMap/);
   assert.match(html, /openstreetmap\.org\/copyright/);
+  assert.match(html, /data-stores-map="1"/);
+  assert.match(html, /OpenFreeMap/);
 });
 
 test("a store with no hours renders without an empty hours row", async () => {

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getStoreBySlug } from "@/lib/services/storeService";
+import { StoresMap } from "../StoresMap";
 
 // Deduped across generateMetadata and the page render within one request.
 const getStoreCached = cache(getStoreBySlug);
@@ -44,6 +45,20 @@ export default async function StorePage({
           {store.addressLine} · {store.neighborhood}, {store.city}
         </p>
       </div>
+
+      <StoresMap
+        stores={[
+          {
+            slug: store.slug,
+            name: store.name,
+            addressLine: store.addressLine,
+            neighborhood: store.neighborhood,
+            lat: store.lat,
+            lng: store.lng,
+          },
+        ]}
+        className="h-56 w-full overflow-hidden rounded-xl border border-room-rule sm:h-72"
+      />
 
       {store.openingHours && (
         <section>
@@ -105,7 +120,7 @@ export default async function StorePage({
       </div>
 
       <p className="text-xs text-room-dim">
-        Datos parciales de{" "}
+        Mapa: OpenFreeMap · datos parciales de{" "}
         <a
           href="https://www.openstreetmap.org/copyright"
           target="_blank"

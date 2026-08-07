@@ -65,6 +65,17 @@ function loadDetail(store) {
         getStoreBySlug: async () => store,
       };
     }
+    if (id === "../StoresMap") {
+      return {
+        StoresMap({ stores }) {
+          return React.createElement(
+            "div",
+            { "data-stores-map": String(stores.length) },
+            "Mapa",
+          );
+        },
+      };
+    }
     return require(id);
   };
 

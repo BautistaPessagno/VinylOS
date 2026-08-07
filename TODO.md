@@ -4,7 +4,7 @@
 
 **Implementation plan:** [`docs/superpowers/plans/2026-08-06-amba-store-directory.md`](docs/superpowers/plans/2026-08-06-amba-store-directory.md) — eight task-by-task steps with the actual code, tests, and commits. This file is the spec (what and why); the plan is the how.
 
-**Progress:** Full v1 path (§1–§4) in [PR #22](https://github.com/BautistaPessagno/VinylOS/pull/22) — open, awaiting human merge (self-approve blocked). Deferred: embedded map (§6), cron discover (§7), submissions/hours parsing (§8).
+**Progress:** Full v1 path (§1–§4) + embedded MapLibre map (§6) in [PR #22](https://github.com/BautistaPessagno/VinylOS/pull/22) — open, awaiting human merge. Deferred: cron discover (§7), submissions/hours parsing (§8).
 
 **Scope decisions (taken):**
 
@@ -99,9 +99,12 @@ No cron. The dataset moves on the order of months and every change is a human de
 
 ---
 
-## 6. Deferred — embedded map
+## 6. Embedded map
 
-The "open in Maps" link covers the real need (get me there) at zero cost. A real map needs a tile source: OSM's own tile servers prohibit app-level usage, so this means MapLibre GL plus a provider free tier (MapTiler, Protomaps) or self-hosted tiles. Worth doing once the directory is large enough that a list is genuinely worse than a map.
+- [x] MapLibre GL on `/stores` and `/stores/[slug]` with pins from our lat/lng.
+- [x] Tile source: **OpenFreeMap** (free vector styles, no API key) — not `tile.openstreetmap.org` (app usage prohibited) and not Google Maps JS.
+- [x] “Cómo llegar” still opens Google Maps directions (deep link, no Maps API billing).
+- [x] ODbL / OpenFreeMap attribution on list and detail.
 
 ## 7. Deferred — scheduled discovery
 

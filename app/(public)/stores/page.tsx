@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { listNeighborhoods, listStores } from "@/lib/services/storeService";
 import { StoreCard } from "./StoreCard";
+import { StoresMap } from "./StoresMap";
 
 export const metadata = {
   title: "Disquerías en AMBA",
@@ -18,6 +19,15 @@ export default async function StoresPage({
     listStores({ q, neighborhood }),
     listNeighborhoods(),
   ]);
+
+  const mapPins = stores.map((store) => ({
+    slug: store.slug,
+    name: store.name,
+    addressLine: store.addressLine,
+    neighborhood: store.neighborhood,
+    lat: store.lat,
+    lng: store.lng,
+  }));
 
   return (
     <div className="flex flex-col gap-6">
@@ -65,15 +75,18 @@ export default async function StoresPage({
           .
         </p>
       ) : (
-        <ul className="flex flex-col gap-3">
-          {stores.map((store) => (
-            <StoreCard key={store.slug} store={store} />
-          ))}
-        </ul>
+        <>
+          <StoresMap stores={mapPins} />
+          <ul className="flex flex-col gap-3">
+            {stores.map((store) => (
+              <StoreCard key={store.slug} store={store} />
+            ))}
+          </ul>
+        </>
       )}
 
       <p className="text-xs text-room-dim">
-        Datos parciales de{" "}
+        Mapa: OpenFreeMap · datos parciales de{" "}
         <a
           href="https://www.openstreetmap.org/copyright"
           target="_blank"
