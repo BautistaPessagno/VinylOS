@@ -4,6 +4,8 @@
 
 **Implementation plan:** [`docs/superpowers/plans/2026-08-06-amba-store-directory.md`](docs/superpowers/plans/2026-08-06-amba-store-directory.md) — eight task-by-task steps with the actual code, tests, and commits. This file is the spec (what and why); the plan is the how.
 
+**Progress:** Foundation (§1 data model, §2 curated file, §3 normalize/match) in [PR #22](https://github.com/BautistaPessagno/VinylOS/pull/22) — open, awaiting review/merge. Scripts + UI still unchecked.
+
 **Scope decisions (taken):**
 
 - **Physical shops only.** No per-release price or stock scraping. "Where can I buy _this record_" is a different feature, explicitly out of scope.
