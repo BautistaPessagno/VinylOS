@@ -8,6 +8,7 @@ import {
   numeric,
   date,
   boolean,
+  doublePrecision,
   index,
   uniqueIndex,
   pgEnum,
@@ -215,5 +216,41 @@ export const userFollows = pgTable(
     ),
     index("user_follows_follower_idx").on(table.followerUserId),
     index("user_follows_following_idx").on(table.followingUserId),
+  ],
+);
+
+// --- Public store directory (curated AMBA shops; see data/stores-amba.json) ---
+
+export const stores = pgTable(
+  "stores",
+  {
+    id: serial("id").primaryKey(),
+    slug: text("slug").notNull(),
+    name: text("name").notNull(),
+    addressLine: text("address_line").notNull(),
+    neighborhood: text("neighborhood").notNull(),
+    city: text("city").notNull(),
+    province: text("province").notNull(),
+    postalCode: text("postal_code"),
+    lat: doublePrecision("lat").notNull(),
+    lng: doublePrecision("lng").notNull(),
+    phone: text("phone"),
+    website: text("website"),
+    instagram: text("instagram"),
+    email: text("email"),
+    // Stored verbatim from the curated file; structured "open now" parsing is deferred.
+    openingHours: text("opening_hours"),
+    tags: text("tags").array(),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("stores_slug_idx").on(table.slug),
+    index("stores_city_idx").on(table.city),
   ],
 );

@@ -1,0 +1,61 @@
+[
+  {
+    "name": "Oui Oui Records",
+    "addressLine": "Soler 6090",
+    "neighborhood": "Palermo",
+    "city": "Ciudad Autónoma de Buenos Aires",
+    "province": "CABA",
+    "postalCode": "1425",
+    "lat": -34.5769646,
+    "lng": -58.4376601,
+    "phone": "+54 11 4773-5875",
+    "website": "http://www.ouioui-records.com/",
+    "tags": ["usados", "nuevos"],
+    "osmId": "node/4944505488"
+  },
+  {
+    "name": "Exile Records",
+    "addressLine": "Honduras 5270",
+    "neighborhood": "Palermo",
+    "city": "Ciudad Autónoma de Buenos Aires",
+    "province": "CABA",
+    "lat": -34.5870069,
+    "lng": -58.432826,
+    "tags": ["usados"],
+    "osmId": "node/6393709423"
+  },
+  {
+    "name": "Smile",
+    "addressLine": "Jerónimo Salguero 1837",
+    "neighborhood": "Palermo",
+    "city": "Ciudad Autónoma de Buenos Aires",
+    "province": "CABA",
+    "lat": -34.5887533,
+    "lng": -58.415145,
+    "tags": ["usados"],
+    "osmId": "node/11310316671"
+  },
+  {
+    "name": "Magical Mystery Records",
+    "addressLine": "Blanco Encalada 2370",
+    "neighborhood": "Belgrano",
+    "city": "Ciudad Autónoma de Buenos Aires",
+    "province": "CABA",
+    "lat": -34.5590483,
+    "lng": -58.4586381,
+    "tags": ["usados"],
+    "osmId": "node/5307657985"
+  },
+  {
+    "name": "Zivals",
+    "addressLine": "Avenida Callao 395",
+    "neighborhood": "Balvanera",
+    "city": "Ciudad Autónoma de Buenos Aires",
+    "province": "CABA",
+    "lat": -34.6046054,
+    "lng": -58.3920697,
+    "website": "http://www.zivals.com/",
+    "tags": ["nuevos"],
+    "osmId": "way/473162796"
+  }
+]

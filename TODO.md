@@ -34,7 +34,7 @@ The raw responses are in the scratchpad if you want to look: `amba-music.json` (
 
 ## 1. Data model
 
-- [ ] Add a `stores` table to `lib/db/schema.ts`:
+- [x] Add a `stores` table to `lib/db/schema.ts`:
   - `id` serial PK, `slug` text unique (drives `/stores/[slug]`)
   - `name`, `addressLine`, `neighborhood`, `city`, `province`, `postalCode`
   - `lat` / `lng` `doublePrecision` — required. (`numeric` returns strings in Drizzle; these are always used as numbers.)
@@ -43,7 +43,8 @@ The raw responses are in the scratchpad if you want to look: `amba-music.json` (
   - `tags` text array — `usados`, `nuevos`, `tocadiscos`, `cafe`
   - `active` boolean default true, `createdAt`, `updatedAt`
   - Indexes: unique `slug`, plus `city`
-- [ ] Apply with `pnpm db:push` in dev only. **Never `pnpm db:migrate`** (`AGENTS.md`) — prod is applied by the maintainer.
+  - **Done:** table in `lib/db/schema.ts`; pushed to dev with `pnpm db:push` (prod migration left to maintainer).
+- [x] Apply with `pnpm db:push` in dev only. **Never `pnpm db:migrate`** (`AGENTS.md`) — prod is applied by the maintainer.
 
 No `source` enum, no `osmId` column, no `lastSeenAt`. The table is a projection of the curated file, so provenance lives in the file, not the database.
 
@@ -51,9 +52,10 @@ No `source` enum, no `osmId` column, no `lastSeenAt`. The table is a projection 
 
 **This is the actual deliverable.** Everything else is plumbing around it.
 
-- [ ] Define the entry shape and a zod schema in `lib/stores/storeFile.ts`: `name`, `addressLine`, `neighborhood`, `city`, `lat`, `lng`, optional `phone` / `website` / `instagram` / `email` / `openingHours` / `tags`, optional `osmId` for provenance.
-- [ ] Seed it from two inputs: the ~12–15 plausible shops from §0, and the maintainer's own list of shops (§7). Every entry gets its address and coordinates confirmed by hand — OSM's are missing or wrong more often than not.
-- [ ] Validation runs in `pnpm test`, so a malformed entry fails CI rather than the sync script.
+- [x] Define the entry shape and a zod schema in `lib/stores/storeFile.ts`: `name`, `addressLine`, `neighborhood`, `city`, `lat`, `lng`, optional `phone` / `website` / `instagram` / `email` / `openingHours` / `tags`, optional `osmId` for provenance. **Done:** `storeEntrySchema` + `AMBA_BBOX` guard.
+- [x] Seed it from two inputs: the ~12–15 plausible shops from §0, and the maintainer's own list of shops (§7). Every entry gets its address and coordinates confirmed by hand — OSM's are missing or wrong more often than not.
+  - **Done (v1 seed):** five shops with confirmed street addresses from the plan Reference Data (Oui Oui, Exile, Smile, Magical Mystery, Zivals). Address-less OSM leads (BVM, Liverpool, …) intentionally left for `stores:discover` triage.
+- [x] Validation runs in `pnpm test`, so a malformed entry fails CI rather than the sync script. **Done:** `lib/stores/storeFile.test.mjs` parses the real file and rejects out-of-bbox coords.
 
 ## 3. Scripts (`lib/stores/` + `scripts/`)
 
@@ -65,8 +67,8 @@ Two scripts, deliberately separate: discovery never writes to the database.
   - Also runs the name-regex probe from §0 across all shop types, flagged as low-confidence, since that is how misfiled shops like Pappo Records surface.
   - Caches the raw response to disk so iterating on the diff doesn't re-hit the API.
 - [ ] `pnpm stores:sync` → `scripts/sync-stores.mjs`: validate `data/stores-amba.json`, upsert into `stores` by `slug`, set `active = false` on rows whose slug is gone from the file. Supports `--dry` to print the plan.
-- [ ] `normalize.ts` — **pure**, unit-tested: slug generation (name + neighbourhood, numeric suffix on collision), phone → E.164 (`+54 11 …`), Instagram handle from a URL or `@handle`, name trimming for accented text.
-- [ ] `match.ts` — **pure**, unit-tested: does an OSM element already exist in the curated file? Haversine < 150 m **and** normalized-name Dice coefficient ≥ 0.6, or an `osmId` already recorded. Advisory only — a miss means one redundant suggestion, never corrupt data, which is exactly why this logic is allowed to be fuzzy.
+- [x] `normalize.ts` — **pure**, unit-tested: slug generation (name + neighbourhood, numeric suffix on collision), phone → E.164 (`+54 11 …`), Instagram handle from a URL or `@handle`, name trimming for accented text. **Done:** `lib/stores/normalize.ts` + tests.
+- [x] `match.ts` — **pure**, unit-tested: does an OSM element already exist in the curated file? Haversine < 150 m **and** normalized-name Dice coefficient ≥ 0.6, or an `osmId` already recorded. Advisory only — a miss means one redundant suggestion, never corrupt data, which is exactly why this logic is allowed to be fuzzy. **Done:** `lib/stores/match.ts` + tests (BVM/Liverpool 18 m case).
 
 No cron. The dataset moves on the order of months and every change is a human decision anyway; §6 revisits.
 
@@ -83,12 +85,12 @@ No cron. The dataset moves on the order of months and every change is a human de
 
 ## 5. Verification
 
-- [ ] `pnpm test` covers the pure modules: `normalize.test.mjs` (slug collisions, accented names, phone and handle edge cases), `match.test.mjs` (an OSM element already in the file is suppressed; two distinct shops 100 m apart both survive), and `storeFile.test.mjs` (the real `data/stores-amba.json` parses).
+- [x] `pnpm test` covers the pure modules: `normalize.test.mjs` (slug collisions, accented names, phone and handle edge cases), `match.test.mjs` (an OSM element already in the file is suppressed; two distinct shops 100 m apart both survive), and `storeFile.test.mjs` (the real `data/stores-amba.json` parses). **Done for pure modules** (15 tests); full suite 109 pass.
 - [ ] `overpass.test.mjs` parses a checked-in fixture — no network in tests, same approach as `lib/discogs/client.test.mjs`.
 - [ ] `pnpm stores:discover` against live Overpass produces a candidate file that is **short** — if it still lists a dozen instrument shops after the curated file is populated, the triage loop isn't converging.
 - [ ] `pnpm stores:sync --dry`, then for real against dev; re-run immediately and confirm zero changes.
 - [ ] `/stores` renders signed-out in a fresh browser profile, no console errors. Confirm a store with no hours and no phone still looks deliberate.
-- [ ] `pnpm lint` and `pnpm build` clean.
+- [x] `pnpm lint` and `pnpm build` clean. **Verified** on foundation PR (schema + pure modules; no UI yet).
 
 ---
 
