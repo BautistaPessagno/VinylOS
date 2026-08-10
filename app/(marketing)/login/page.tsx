@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -5,6 +6,12 @@ import { AuthForm } from "../AuthForm";
 import authRedirects from "@/lib/authRedirects";
 
 const { getSafeAuthCallbackPath } = authRedirects;
+
+export const metadata: Metadata = {
+  title: "Iniciar sesión",
+  // Crawlable so this is actually seen, but never a search result itself.
+  robots: { index: false, follow: true },
+};
 
 export default async function LoginPage({
   searchParams,
@@ -26,8 +33,8 @@ export default async function LoginPage({
       <div className="flex w-full max-w-sm flex-col gap-6">
         {isInviteLink && (
           <p className="rounded-lg border border-room-rule bg-room-surface p-4 text-center text-sm text-room-dim">
-            You&apos;ve been invited to a vinyl collection on VinylOS. Log in or create
-            a free account to follow, wishlist, and collect.
+            Te han invitado a una colección de vinilos en VinylOS. Inicia sesión o
+            crea una cuenta gratis para seguir, guardar y coleccionar.
           </p>
         )}
         <AuthForm callbackURL={callbackURL} initialMode={initialMode} />

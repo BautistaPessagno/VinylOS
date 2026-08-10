@@ -14,7 +14,7 @@ export function SignOutButton({ className }: { className?: string }) {
       }
       className={`text-left ${className ?? "text-sm text-room-dim hover:text-room-fg"}`}
     >
-      Sign out
+      Cerrar sesión
     </button>
   );
 }

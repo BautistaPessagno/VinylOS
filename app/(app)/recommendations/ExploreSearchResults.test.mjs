@@ -107,9 +107,9 @@ test("mixed search renders top result, artists, and records", () => {
     }),
   );
 
-  assert.match(html, />Top result</);
-  assert.match(html, />Artists</);
-  assert.match(html, />Records</);
+  assert.match(html, />Mejor resultado</);
+  assert.match(html, />Artistas</);
+  assert.match(html, />Discos</);
   assert.match(html, /href="\/artist\/908651"/);
   assert.match(html, /Charly Garcia Tribute/);
   assert.match(html, /Clics Modernos/);
@@ -177,7 +177,7 @@ test("an exact song match leads as a 'contains' record and lists remaining recor
   // Top result reframes the song hit as the record that contains it.
   assert.match(html, /Contains “Stairway To Heaven”/);
   assert.match(html, /Record · Led Zeppelin/);
-  assert.match(html, /Records with this song/);
+  assert.match(html, /Discos con esta canción/);
   // The hero record is excluded from the section; the second one appears with its badge.
   assert.match(html, /Contains Stairway To Heaven \(Live\): The Song Remains The Same/);
 });

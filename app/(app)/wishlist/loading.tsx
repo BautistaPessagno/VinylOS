@@ -1,6 +1,6 @@
 export default function WishlistLoading() {
   return (
-    <div className="flex flex-col gap-6" aria-label="Loading wishlist">
+    <div className="flex flex-col gap-6" aria-label="Cargando lista de deseos">
       <div className="flex items-center justify-between">
         <div className="h-8 w-40 rounded sheen" />
         <div className="h-11 w-36 rounded-lg sheen" />

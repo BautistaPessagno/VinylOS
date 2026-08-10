@@ -23,9 +23,9 @@ export default function GlobalError({
           fontFamily: "system-ui, sans-serif",
         }}
       >
-        <h1 style={{ fontSize: "1.5rem", fontWeight: 600 }}>Something went wrong</h1>
+        <h1 style={{ fontSize: "1.5rem", fontWeight: 600 }}>Algo salió mal</h1>
         <p style={{ maxWidth: "28rem", color: "#71717a" }}>
-          VinylOS hit an unexpected error. Trying again usually fixes it.
+          VinylOS tuvo un error inesperado. Reintentar suele solucionarlo.
         </p>
         <button
           type="button"
@@ -39,7 +39,7 @@ export default function GlobalError({
             fontWeight: 500,
           }}
         >
-          Try again
+          Reintentar
         </button>
         {error.digest && (
           <p style={{ fontSize: "0.75rem", color: "#a1a1aa" }}>

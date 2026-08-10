@@ -41,7 +41,7 @@ export function SignInButton({ callbackURL }: { callbackURL: string }) {
       className="inline-flex items-center justify-center gap-3 rounded-full border border-room-rule bg-white px-5 py-2.5 text-sm font-medium text-[#1f1f1f] shadow-sm transition hover:bg-[#f8f8f8] hover:shadow focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-room-accent"
     >
       <GoogleLogo className="h-5 w-5 shrink-0" />
-      Sign in with Google
+      Continuar con Google
     </button>
   );
 }

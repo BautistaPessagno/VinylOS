@@ -23,7 +23,7 @@ export function EditEditionSection({
       try {
         await changeItemEditionAction(itemId, discogsReleaseId);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to change edition");
+        setError(err instanceof Error ? err.message : "No se pudo cambiar la edición");
       } finally {
         setPendingId(null);
       }
@@ -36,7 +36,7 @@ export function EditEditionSection({
         masterId={masterId}
         onPick={handlePick}
         pendingId={pendingId}
-        label="Advanced: change edition"
+        label="Avanzado: cambiar edición"
       />
       {error && <p className="text-sm text-room-danger">{error}</p>}
     </div>

@@ -112,7 +112,7 @@ export function ExploreSearch({
     <div className="flex flex-col gap-6">
       <div className="mx-auto w-full max-w-3xl">
         <label htmlFor="explore-search" className="sr-only">
-          Search records, artists, and songs
+          Busca discos, artistas y canciones
         </label>
         {/* Shares a name with the landing page's field so the two morph. */}
         <ViewTransition name="vinyl-search" share="vinyl-search">
@@ -135,13 +135,13 @@ export function ExploreSearch({
               value={query}
               onChange={(event) => handleQueryChange(event.target.value)}
               maxLength={MAX_SEARCH_QUERY_LENGTH}
-              placeholder="Search artists, records, and songs"
+              placeholder="Busca artistas, discos y canciones"
               autoComplete="off"
               className="w-full rounded-2xl border border-room-rule bg-room-surface py-3.5 pl-12 pr-28 text-base shadow-sm outline-none transition focus:border-room-accent focus:ring-2 focus:ring-room-accent/20"
             />
             {isSearching && queryIsReady && (
               <span className="absolute right-4 top-1/2 -translate-y-1/2">
-                <VinylSpinner size="sm" label="Searching" />
+                <VinylSpinner size="sm" label="Buscando" />
               </span>
             )}
           </div>
@@ -150,13 +150,13 @@ export function ExploreSearch({
 
       <div aria-live="polite" aria-atomic="true">
         {normalizedQuery.length > 0 && !queryIsReady && (
-          <p className="text-center text-sm text-room-dim">Enter at least 2 characters</p>
+          <p className="text-center text-sm text-room-dim">Escribe al menos 2 caracteres</p>
         )}
         {error && <p className="text-center text-sm text-room-danger">{error}</p>}
         {result && result.query === normalizedQuery && !isSearching && !error && (
           <p className="sr-only">
-            Found {result.artists.length} artists, {result.albums.length} records, and{" "}
-            {result.songs.length} songs
+            Se encontraron {result.artists.length} artistas, {result.albums.length} discos y{" "}
+            {result.songs.length} canciones
           </p>
         )}
       </div>
@@ -168,7 +168,7 @@ export function ExploreSearch({
           {result.albums.length > 1 && (
             <div className="flex items-center justify-end gap-2 text-sm">
               <label htmlFor="explore-sort" className="text-room-dim">
-                Sort records
+                Ordenar discos
               </label>
               <select
                 id="explore-sort"

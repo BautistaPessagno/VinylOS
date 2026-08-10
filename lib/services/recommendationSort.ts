@@ -9,11 +9,11 @@ export const RECOMMENDATION_SORT_OPTIONS: {
   value: RecommendationSort;
   label: string;
 }[] = [
-  { value: "relevance", label: "Best match" },
-  { value: "year-desc", label: "Year (newest)" },
-  { value: "year-asc", label: "Year (oldest)" },
-  { value: "artist", label: "Artist (A–Z)" },
-  { value: "title", label: "Title (A–Z)" },
+  { value: "relevance", label: "Mejor coincidencia" },
+  { value: "year-desc", label: "Año (más nuevo)" },
+  { value: "year-asc", label: "Año (más antiguo)" },
+  { value: "artist", label: "Artista (A–Z)" },
+  { value: "title", label: "Título (A–Z)" },
 ];
 
 export function parseRecommendationSort(

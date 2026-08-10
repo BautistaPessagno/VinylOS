@@ -12,31 +12,37 @@ export type ToastMessage = {
  * `FlashToaster` maps the code to a message and shows it, then strips the param.
  */
 export const TOAST_MESSAGES = {
-  "collection-added": { message: "Added to your collection", variant: "success" },
+  "collection-added": { message: "Añadido a tu colección", variant: "success" },
   "collection-add-failed": {
-    message: "Couldn't add to your collection. Try again.",
+    message: "No se pudo añadir a tu colección. Inténtalo de nuevo.",
     variant: "error",
   },
-  "wishlist-added": { message: "Added to your wishlist", variant: "success" },
+  "wishlist-added": { message: "Añadido a tu lista de deseos", variant: "success" },
   "wishlist-add-failed": {
-    message: "Couldn't add to your wishlist. Try again.",
+    message: "No se pudo añadir a tu lista de deseos. Inténtalo de nuevo.",
     variant: "error",
   },
-  "wishlist-removed": { message: "Removed from your wishlist", variant: "success" },
-  "moved-to-collection": { message: "Moved to your collection", variant: "success" },
-  "item-removed": { message: "Removed from your collection", variant: "success" },
-  dismissed: { message: "We won't recommend that again", variant: "success" },
-  followed: { message: "Following", variant: "success" },
-  unfollowed: { message: "Unfollowed", variant: "success" },
+  "wishlist-removed": {
+    message: "Eliminado de tu lista de deseos",
+    variant: "success",
+  },
+  "moved-to-collection": { message: "Movido a tu colección", variant: "success" },
+  "item-removed": { message: "Eliminado de tu colección", variant: "success" },
+  dismissed: { message: "No volveremos a recomendarlo", variant: "success" },
+  followed: { message: "Siguiendo", variant: "success" },
+  unfollowed: { message: "Dejaste de seguir", variant: "success" },
   "not-found": {
-    message: "We couldn't find that record on Discogs.",
+    message: "No encontramos ese disco en Discogs.",
     variant: "error",
   },
   "pending-action-expired": {
-    message: "That action expired. Please try again.",
+    message: "Esa acción caducó. Inténtalo de nuevo.",
     variant: "error",
   },
-  "action-failed": { message: "Something went wrong. Try again.", variant: "error" },
+  "action-failed": {
+    message: "Algo salió mal. Inténtalo de nuevo.",
+    variant: "error",
+  },
 } as const satisfies Record<string, ToastMessage>;
 
 export type ToastCode = keyof typeof TOAST_MESSAGES;

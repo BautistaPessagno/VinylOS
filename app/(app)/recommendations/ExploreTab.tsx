@@ -1,6 +1,11 @@
 import Link from "next/link";
-import { listExploreGenres, listExploreAlbums } from "@/lib/services/exploreService";
+import {
+  genreLabel,
+  listExploreGenres,
+  listExploreAlbums,
+} from "@/lib/services/exploreService";
 import { getLibraryAlbumKeys, albumMatchKey } from "@/lib/services/collectionService";
+import { getReleaseIdsByAlbumKey } from "@/lib/services/catalogService";
 import {
   EXPLORE_SORT_OPTIONS,
   parseExploreSort,
@@ -30,9 +35,10 @@ export async function ExploreTab({
   const genres = listExploreGenres();
   const selected = genre && genres.includes(genre) ? genre : genres[0];
   const selectedSort = parseExploreSort(sort);
-  const [allAlbums, libraryKeys] = await Promise.all([
+  const [allAlbums, libraryKeys, releaseIdsByKey] = await Promise.all([
     listExploreAlbums(selected),
     userId ? getLibraryAlbumKeys(userId) : Promise.resolve(new Set<string>()),
+    getReleaseIdsByAlbumKey(),
   ]);
   // Hide albums the user already owns or has wishlisted (matched by normalized artist+title).
   const albums = sortExploreAlbums(
@@ -67,7 +73,7 @@ export async function ExploreTab({
                       : "shrink-0 snap-start rounded-full border border-room-rule px-4 py-2 text-sm capitalize text-room-dim hover:border-room-accent hover:text-room-accent active:border-room-accent active:text-room-accent sm:px-3 sm:py-1"
                   }
                 >
-                  {g}
+                  {genreLabel(g)}
                 </Link>
               );
             })}
@@ -80,7 +86,7 @@ export async function ExploreTab({
             >
               <input type="hidden" name="genre" value={selected} />
               <label htmlFor="explore-browse-sort" className="text-room-dim">
-                Sort
+                Ordenar
               </label>
               <select
                 id="explore-browse-sort"
@@ -98,7 +104,7 @@ export async function ExploreTab({
                 type="submit"
                 className="min-h-11 rounded border border-room-rule px-3 py-1.5 active:bg-room-sunk sm:min-h-0"
               >
-                Apply
+                Aplicar
               </button>
             </form>
           )}
@@ -106,7 +112,7 @@ export async function ExploreTab({
 
         {albums.length === 0 ? (
           <p className="text-center text-room-dim">
-            Couldn&apos;t load albums for this genre right now. Try another.
+            No pudimos cargar álbumes de este género ahora mismo. Prueba con otro.
           </p>
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
@@ -117,6 +123,9 @@ export async function ExploreTab({
                   artist: album.artist,
                   title: album.album,
                   imageUrl: album.imageUrl,
+                  releaseId: releaseIdsByKey.get(
+                    albumMatchKey(album.artist, album.album),
+                  ),
                 }}
                 returnTo={returnTo}
                 signedIn={Boolean(userId)}

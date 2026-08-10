@@ -70,16 +70,16 @@ test("public Explore cards preserve separate Add and Wishlist intents", () => {
   assert.match(html, /action="\/begin-auth"/);
   assert.match(html, /name="kind" value="collection"/);
   assert.match(html, /name="kind" value="wishlist"/);
-  assert.match(html, />Add</);
-  assert.match(html, />Wishlist</);
-  assert.doesNotMatch(html, /Log in to add/);
+  assert.match(html, />Añadir</);
+  assert.match(html, />Lista de deseos</);
+  assert.doesNotMatch(html, /Inicia sesión para añadir/);
 });
 
 test("other public record cards retain their combined login link", () => {
   const html = render({ signedIn: false });
 
   assert.match(html, /href="\/login\?next=%2Fexplore%3Fgenre%3Drock"/);
-  assert.match(html, /Log in to add/);
+  assert.match(html, /Inicia sesión para añadir/);
   assert.doesNotMatch(html, /action="\/begin-auth"/);
 });
 

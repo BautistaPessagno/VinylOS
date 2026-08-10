@@ -1,6 +1,6 @@
 export default function FriendsLoading() {
   return (
-    <div className="flex flex-col gap-8" aria-label="Loading friends">
+    <div className="flex flex-col gap-8" aria-label="Cargando amigos">
       <div className="h-8 w-32 rounded sheen" />
       <div className="flex max-w-2xl gap-2">
         <div className="h-11 flex-1 rounded sheen" />

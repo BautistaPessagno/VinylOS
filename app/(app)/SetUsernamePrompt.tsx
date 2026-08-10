@@ -26,12 +26,12 @@ export function SetUsernamePrompt() {
         displayUsername: username.trim(),
       });
       if (updateError) {
-        setError(updateError.message ?? "Could not set username.");
+        setError(updateError.message ?? "No se pudo establecer el nombre de usuario.");
         return;
       }
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(err instanceof Error ? err.message : "Algo salió mal.");
     } finally {
       setPending(false);
     }
@@ -44,7 +44,7 @@ export function SetUsernamePrompt() {
         onClick={() => setOpen(true)}
         className="text-xs text-room-dim underline hover:text-room-fg"
       >
-        Set a username
+        Elegir un nombre de usuario
       </button>
     );
   }
@@ -54,7 +54,7 @@ export function SetUsernamePrompt() {
       <input
         value={username}
         onChange={(e) => setUsername(e.target.value)}
-        placeholder="username"
+        placeholder="nombre de usuario"
         autoComplete="username"
         required
         minLength={3}
@@ -67,7 +67,7 @@ export function SetUsernamePrompt() {
         disabled={pending}
         className="rounded bg-room-accent px-2 py-1 text-xs text-room-on-accent disabled:opacity-50"
       >
-        {pending ? "Saving…" : "Save"}
+        {pending ? "Guardando…" : "Guardar"}
       </button>
     </form>
   );

@@ -44,5 +44,5 @@ test("member Discover tabs cross-link For You and public Explore", () => {
   );
   assert.match(html, /href="\/recommendations"/);
   assert.match(html, /href="\/explore"/);
-  assert.match(html, /aria-current="page"[^>]*>Explore/);
+  assert.match(html, /aria-current="page"[^>]*>Explorar/);
 });

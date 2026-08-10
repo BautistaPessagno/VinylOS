@@ -46,6 +46,17 @@ function loadLandingPage() {
     if (id === "@/lib/services/exploreService") {
       return { listExploreGenres: () => ["rock", "jazz"] };
     }
+    if (id === "@/app/JsonLd") {
+      return { JsonLd: () => null };
+    }
+    if (id === "@/lib/site") {
+      return {
+        SITE_NAME: "VinylOS",
+        SITE_URL: "https://www.misvinilos.com",
+        SITE_DESCRIPTION: "desc",
+        absoluteUrl: (path) => `https://www.misvinilos.com${path}`,
+      };
+    }
     if (id === "@/lib/authRedirects") {
       return { getSafeAuthCallbackPath: () => "/collection" };
     }

@@ -11,10 +11,10 @@ function csvToList(value?: string) {
 
 export const releaseFormSchema = z.object({
   discogsReleaseId: z.coerce.number().int().positive().optional(),
-  title: z.string().min(1, "Title is required"),
+  title: z.string().min(1, "El título es obligatorio"),
   artistNames: z
     .string()
-    .min(1, "At least one artist is required")
+    .min(1, "Se requiere al menos un artista")
     .transform(csvToList),
   year: z.coerce.number().int().optional(),
   country: z.string().optional(),

@@ -3,7 +3,7 @@ import { getEditItemData, updateItemAction } from "../../actions";
 import { EditEditionSection } from "./EditEditionSection";
 import { SubmitButton } from "../../../SubmitButton";
 
-export const metadata = { title: "Edit record" };
+export const metadata = { title: "Editar disco" };
 
 function Field({
   label,
@@ -105,13 +105,13 @@ export default async function EditCollectionItemPage({
           name="purchaseLocation"
           defaultValue={item.purchaseLocation}
         />
-        <Field label="Notes" name="notes" defaultValue={item.notes} textarea />
+        <Field label="Notas" name="notes" defaultValue={item.notes} textarea />
 
         <SubmitButton
-          pendingText="Saving…"
+          pendingText="Guardando…"
           className="mt-2 min-h-11 self-start rounded bg-room-accent px-4 py-2 text-room-on-accent active:opacity-90"
         >
-          Save changes
+          Guardar cambios
         </SubmitButton>
       </form>
     </div>

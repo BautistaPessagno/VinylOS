@@ -39,7 +39,7 @@ async function discogsFetch(url: URL, revalidate?: number) {
   });
 
   if (res.status === 429) {
-    throw new Error("Discogs rate limit exceeded, try again shortly.");
+    throw new Error("Se superó el límite de peticiones de Discogs. Inténtalo en un momento.");
   }
   if (!res.ok) {
     throw new Error(`Discogs API error ${res.status}: ${await res.text()}`);
