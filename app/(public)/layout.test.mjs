@@ -18,9 +18,9 @@ test("public layout is session-optional with guest chrome", () => {
 test("guest nav exposes Explore, login, and signup without member controls", () => {
   const source = readFileSync(guestNavPath, "utf8");
   assert.match(source, /href="\/explore"/);
-  assert.match(source, />\s*Explore\s*</);
-  assert.match(source, /Log in/);
-  assert.match(source, /Sign up/);
+  assert.match(source, />\s*Explorar\s*</);
+  assert.match(source, /Iniciar sesión/);
+  assert.match(source, /Crear cuenta/);
   assert.doesNotMatch(source, /SignOutButton/);
   assert.doesNotMatch(source, /BottomTabBar/);
 });

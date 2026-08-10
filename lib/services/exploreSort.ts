@@ -2,8 +2,8 @@ export type ExploreSort = "relevance" | "artist" | "title";
 
 export const EXPLORE_SORT_OPTIONS: { value: ExploreSort; label: string }[] = [
   { value: "relevance", label: "Popular" },
-  { value: "artist", label: "Artist (A–Z)" },
-  { value: "title", label: "Title (A–Z)" },
+  { value: "artist", label: "Artista (A–Z)" },
+  { value: "title", label: "Título (A–Z)" },
 ];
 
 export function parseExploreSort(value: string | undefined): ExploreSort {

@@ -102,8 +102,8 @@ test("Explore search uses normalized cached latest-only requests", () => {
   assert.match(source, /focusOnMount/);
   assert.match(source, /aria-live="polite"/);
   assert.match(source, /searchErrorMessage\(caught\)/);
-  assert.match(source, /Found \{result\.artists\.length\} artists, \{result\.albums\.length\} records/);
-  assert.match(source, /\{result\.songs\.length\} songs/);
+  assert.match(source, /Se encontraron \{result\.artists\.length\} artistas, \{result\.albums\.length\} discos/);
+  assert.match(source, /\{result\.songs\.length\} canciones/);
 });
 
 test("Explore server action searches Discogs artists, vinyl, and tracks concurrently", () => {

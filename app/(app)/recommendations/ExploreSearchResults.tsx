@@ -35,7 +35,7 @@ function TopArtistCard({ artist }: { artist: DiscogsArtistSearchResult }) {
       </div>
       <div className="min-w-0">
         <p className="truncate text-2xl font-semibold sm:text-3xl">{artist.name}</p>
-        <p className="mt-2 text-sm text-room-dim">Artist</p>
+        <p className="mt-2 text-sm text-room-dim">Artista</p>
       </div>
     </Link>
   );
@@ -174,7 +174,7 @@ export function ExploreSearchResults({
         artists.length > 0 && (
           <section key="artists" aria-labelledby="artists-heading">
             <h2 id="artists-heading" className="mb-3 text-lg font-semibold">
-              Artists
+              Artistas
             </h2>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
               {artists.map((artist) => (
@@ -185,7 +185,7 @@ export function ExploreSearchResults({
                 >
                   <ArtistImage name={artist.name} imageUrl={artist.imageUrl || artist.thumbUrl} />
                   <p className="mt-3 truncate font-medium">{artist.name}</p>
-                  <p className="text-xs text-room-dim">Artist</p>
+                  <p className="text-xs text-room-dim">Artista</p>
                 </Link>
               ))}
             </div>
@@ -198,7 +198,7 @@ export function ExploreSearchResults({
         albums.length > 0 && (
           <section key="albums" aria-labelledby="records-heading">
             <h2 id="records-heading" className="mb-3 text-lg font-semibold">
-              Records
+              Discos
             </h2>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               {albums.map((album) => (
@@ -225,7 +225,7 @@ export function ExploreSearchResults({
       songs.length > 0 && (
         <section key="songs" aria-labelledby="songs-heading">
           <h2 id="songs-heading" className="mb-3 text-lg font-semibold">
-            Records with this song
+            Discos con esta canción
           </h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             {songs.map((song) => (
@@ -254,7 +254,7 @@ export function ExploreSearchResults({
       {heroSection && (
         <section aria-labelledby="top-result-heading">
           <h2 id="top-result-heading" className="mb-3 text-lg font-semibold">
-            Top result
+            Mejor resultado
           </h2>
           {heroSection === "artists" && <TopArtistCard artist={result.artists[0]} />}
           {heroSection === "albums" && (

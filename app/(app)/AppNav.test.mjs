@@ -13,7 +13,7 @@ test("navigation uses an accessible Explore search magnifier instead of Add", ()
     /const SEARCH_HREF = "\/explore\?focus=search"/,
   );
   assert.ok((source.match(/href=\{SEARCH_HREF\}/g) ?? []).length >= 1);
-  assert.match(source, /aria-label="Search records and artists"/);
+  assert.match(source, /aria-label="Buscar discos y artistas"/);
   assert.match(source, /<svg/);
   assert.doesNotMatch(source, />\s*\+ Add\s*</);
   assert.match(source, /pathname === "\/explore"/);

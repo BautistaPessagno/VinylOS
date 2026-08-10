@@ -28,8 +28,8 @@ export function WrappedSection({ stats }: { stats: WrappedStats }) {
   if (stats.totalRecords === 0) {
     return (
       <div className="flex flex-col gap-4">
-        <h2 className="text-xl font-semibold">Your Wrapped</h2>
-        <p className="text-room-dim">Add some records to your collection to see your stats.</p>
+        <h2 className="text-xl font-semibold">Tu Resumen</h2>
+        <p className="text-room-dim">Añade discos a tu colección para ver tus estadísticas.</p>
       </div>
     );
   }
@@ -39,21 +39,21 @@ export function WrappedSection({ stats }: { stats: WrappedStats }) {
 
   return (
     <div className="flex flex-col gap-8">
-      <h2 className="text-xl font-semibold">Your Wrapped</h2>
+      <h2 className="text-xl font-semibold">Tu Resumen</h2>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatCard label="Total records" value={stats.totalRecords.toString()} />
+        <StatCard label="Discos en total" value={stats.totalRecords.toString()} />
         <StatCard
-          label="Favorite decade"
+          label="Década favorita"
           value={stats.topDecade ? `${stats.topDecade.decade}s` : "—"}
         />
-        <StatCard label="Top label" value={stats.topLabel?.label ?? "—"} />
-        <StatCard label="Top artist" value={stats.topArtist?.artist ?? "—"} />
+        <StatCard label="Sello más frecuente" value={stats.topLabel?.label ?? "—"} />
+        <StatCard label="Artista más frecuente" value={stats.topArtist?.artist ?? "—"} />
       </div>
 
       {stats.genreDistribution.length > 0 && (
         <div className="flex flex-col gap-2">
-          <h3 className="font-medium">Genres</h3>
+          <h3 className="font-medium">Géneros</h3>
           {stats.genreDistribution.map((g) => (
             <Bar key={g.genre} label={g.genre} count={g.count} max={maxGenreCount} />
           ))}
@@ -62,7 +62,7 @@ export function WrappedSection({ stats }: { stats: WrappedStats }) {
 
       {stats.countryDistribution.length > 0 && (
         <div className="flex flex-col gap-2">
-          <h3 className="font-medium">Countries</h3>
+          <h3 className="font-medium">Países</h3>
           {stats.countryDistribution.map((c) => (
             <Bar key={c.country} label={c.country} count={c.count} max={maxCountryCount} />
           ))}

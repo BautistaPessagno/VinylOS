@@ -15,17 +15,17 @@ export default function Error({
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-16 text-center">
-      <h1 className="text-2xl font-semibold">Something went wrong</h1>
+      <h1 className="text-2xl font-semibold">Algo salió mal</h1>
       <p className="max-w-md text-room-dim">
-        We couldn&apos;t load this page. It might be a hiccup with an external music
-        service — trying again usually fixes it.
+        No pudimos cargar esta página. Puede ser un fallo puntual de un servicio
+        de música externo; reintentar suele solucionarlo.
       </p>
       <button
         type="button"
         onClick={() => unstable_retry()}
         className="min-h-11 rounded-lg bg-room-accent px-5 py-2.5 font-medium text-room-on-accent hover:opacity-90 active:opacity-90"
       >
-        Try again
+        Reintentar
       </button>
       {error.digest && (
         <p className="text-xs text-room-dim">Error reference: {error.digest}</p>

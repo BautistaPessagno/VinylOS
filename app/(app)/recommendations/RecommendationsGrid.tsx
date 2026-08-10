@@ -64,9 +64,9 @@ export async function RecommendationsGrid({
 
       {visible.length === 0 ? (
         <p className="text-center text-room-dim">
-          No recommendations match those filters.{" "}
+          Ninguna recomendación coincide con esos filtros.{" "}
           <Link href="/recommendations" className="underline">
-            Clear filters.
+            Borra los filtros.
           </Link>
         </p>
       ) : (
@@ -104,29 +104,29 @@ export async function RecommendationsGrid({
             <form action={addRecommendationToCollectionAction}>
               <input type="hidden" name="releaseId" value={item.releaseId} />
               <SubmitButton
-                pendingText="Adding…"
+                pendingText="Añadiendo…"
                 className="-mx-1 min-h-11 px-1 underline active:opacity-70"
               >
-                Add
+                Añadir
               </SubmitButton>
             </form>
             <form action={addReleaseToWishlistAction}>
               <input type="hidden" name="releaseId" value={item.releaseId} />
               <input type="hidden" name="returnTo" value="/recommendations" />
               <SubmitButton
-                pendingText="Adding…"
+                pendingText="Añadiendo…"
                 className="-mx-1 min-h-11 px-1 underline active:opacity-70"
               >
-                Wishlist
+                Lista de deseos
               </SubmitButton>
             </form>
             <form action={dismissRecommendationAction} className="ml-auto">
               <input type="hidden" name="recId" value={item.recId} />
               <SubmitButton
-                pendingText="Dismissing…"
+                pendingText="Descartando…"
                 className="-mx-1 min-h-11 px-1 text-room-danger underline active:opacity-70"
               >
-                Dismiss
+                Descartar
               </SubmitButton>
             </form>
           </div>

@@ -9,8 +9,8 @@ test("album detail page is publicly readable with optional session", () => {
   const source = readFileSync(pagePath, "utf8");
   assert.match(source, /getOptionalSession/);
   assert.doesNotMatch(source, /requireSession/);
-  assert.match(source, /Log in to add or wishlist/);
+  assert.match(source, /Inicia sesión para añadir o guardar/);
   assert.match(source, /addAlbumToCollectionAction/);
   assert.match(source, /from\.startsWith\("\/explore"\)/);
-  assert.match(source, /Back to Explore/);
+  assert.match(source, /Volver a Explorar/);
 });

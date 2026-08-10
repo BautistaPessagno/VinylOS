@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Bodoni_Moda, IBM_Plex_Mono, Mulish } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 
 // Display face for headings — a Bodoni revival, the register of a record sleeve.
 const bodoni = Bodoni_Moda({
@@ -24,31 +25,33 @@ const plexMono = IBM_Plex_Mono({
   display: "swap",
 });
 
-const DESCRIPTION =
-  "Track your vinyl collection, see your stats, and find what to buy next.";
-
 export const metadata: Metadata = {
+  // Resolves relative OG/Twitter image paths and the per-page canonicals below.
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "VinylOS",
-    template: "%s · VinylOS",
+    default: `${SITE_NAME} — Tu colección de vinilos`,
+    template: `%s · ${SITE_NAME}`,
   },
-  description: DESCRIPTION,
-  applicationName: "VinylOS",
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  alternates: { canonical: "/" },
   appleWebApp: {
     capable: true,
-    title: "VinylOS",
+    title: SITE_NAME,
     statusBarStyle: "default",
   },
   openGraph: {
-    siteName: "VinylOS",
-    title: "VinylOS",
-    description: DESCRIPTION,
+    siteName: SITE_NAME,
+    title: `${SITE_NAME} — Tu colección de vinilos`,
+    description: SITE_DESCRIPTION,
     type: "website",
+    locale: "es_ES",
+    url: "/",
   },
   twitter: {
-    card: "summary",
-    title: "VinylOS",
-    description: DESCRIPTION,
+    card: "summary_large_image",
+    title: `${SITE_NAME} — Tu colección de vinilos`,
+    description: SITE_DESCRIPTION,
   },
 };
 
@@ -70,7 +73,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="es"
       className={`${mulish.variable} ${bodoni.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">

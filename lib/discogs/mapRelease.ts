@@ -7,6 +7,9 @@ export function releaseInputFromDiscogs(detail: DiscogsRelease) {
     masterId: detail.master_id,
     title: detail.title,
     artistNames: detail.artists?.map((a) => a.name) ?? [],
+    // Carried through so artists get a Discogs id, which is what /artist/[id]
+    // is keyed on — without it their pages are unreachable and unmappable.
+    artistRefs: detail.artists?.map((a) => ({ name: a.name, discogsArtistId: a.id })) ?? [],
     year: detail.year,
     country: detail.country,
     labelName: detail.labels?.[0]?.name,

@@ -18,14 +18,14 @@ export function RecommendationsFilters({
   return (
     <form className="flex flex-wrap gap-2 text-base sm:text-sm" action="/recommendations">
       <label className="sr-only" htmlFor="rec-filter-genre">
-        Genre
+        Género
       </label>
       <input
         id="rec-filter-genre"
         name="genre"
         defaultValue={selectedGenre}
         list="rec-genre-options"
-        placeholder="Genre"
+        placeholder="Género"
         className="min-h-11 min-w-32 rounded border border-room-rule px-3 py-1.5 sm:min-h-0"
       />
       <datalist id="rec-genre-options">
@@ -35,7 +35,7 @@ export function RecommendationsFilters({
       </datalist>
 
       <label className="sr-only" htmlFor="rec-sort">
-        Sort by
+        Ordenar por
       </label>
       <select
         id="rec-sort"
@@ -45,7 +45,7 @@ export function RecommendationsFilters({
       >
         {RECOMMENDATION_SORT_OPTIONS.map((option) => (
           <option key={option.value} value={option.value}>
-            Sort: {option.label}
+            Orden: {option.label}
           </option>
         ))}
       </select>

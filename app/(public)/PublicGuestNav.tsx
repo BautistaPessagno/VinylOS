@@ -32,19 +32,19 @@ export function PublicGuestNav() {
             href="/explore"
             className="rounded-lg px-2 py-2 text-sm text-room-fg hover:text-room-accent active:text-room-accent sm:px-3"
           >
-            Explore
+            Explorar
           </Link>
           <Link
             href={loginHref}
             className="rounded-lg px-3 py-2 text-sm text-room-fg hover:text-room-accent active:text-room-accent"
           >
-            Log in
+            Iniciar sesión
           </Link>
           <Link
             href={signupHref}
             className="rounded-lg bg-room-accent px-3 py-2 text-sm font-medium text-room-on-accent hover:opacity-90 active:opacity-90"
           >
-            Sign up
+            Crear cuenta
           </Link>
         </div>
       </div>

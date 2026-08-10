@@ -7,7 +7,7 @@ const DEFAULT_CLASS_NAME =
 
 /**
  * Share a URL via the Web Share API when available, otherwise copy it to the
- * clipboard and briefly show "Link copied!" on the button.
+ * clipboard and briefly show "¡Enlace copiado!" on the button.
  */
 export function ShareLinkButton({
   url,
@@ -38,7 +38,7 @@ export function ShareLinkButton({
 
   return (
     <button type="button" onClick={handleClick} className={className}>
-      {copied ? "Link copied!" : label}
+      {copied ? "¡Enlace copiado!" : label}
     </button>
   );
 }

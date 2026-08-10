@@ -6,7 +6,7 @@ import { moveToCollectionAction, removeFromWishlistAction } from "./actions";
 import { ConfirmSubmitButton, SubmitButton } from "../SubmitButton";
 import { ShareLinkButton } from "../ShareLinkButton";
 
-export const metadata = { title: "Wishlist" };
+export const metadata = { title: "Lista de deseos" };
 
 export default async function WishlistPage() {
   const session = await requireSession();
@@ -20,9 +20,9 @@ export default async function WishlistPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Your wishlist</h1>
+        <h1 className="text-2xl font-semibold">Tu lista de deseos</h1>
         <div className="flex flex-wrap items-center gap-2">
-          <ShareLinkButton url={shareUrl} label="Share wishlist" title="My wishlist on VinylOS" />
+          <ShareLinkButton url={shareUrl} label="Compartir lista" title="Mi lista de deseos en VinylOS" />
           <Link
             href="/collection/add"
             className="rounded-lg bg-room-accent px-5 py-2.5 text-base font-medium text-room-on-accent shadow-sm transition-colors hover:opacity-90"
@@ -34,9 +34,9 @@ export default async function WishlistPage() {
 
       {items.length === 0 ? (
         <p className="text-room-dim">
-          Nothing on your wishlist yet.{" "}
+          Todavía no hay nada en tu lista de deseos.{" "}
           <Link href="/collection/add" className="underline">
-            Search for a record to add.
+            Busca un disco para añadirlo.
           </Link>
         </p>
       ) : (
@@ -80,20 +80,20 @@ export default async function WishlistPage() {
                   <input type="hidden" name="itemId" value={item.itemId} />
                   <input type="hidden" name="releaseId" value={item.releaseId} />
                   <SubmitButton
-                    pendingText="Moving…"
+                    pendingText="Moviendo…"
                     className="-mx-2 min-h-11 px-2 text-left underline active:opacity-70"
                   >
-                    Move to collection
+                    Mover a la colección
                   </SubmitButton>
                 </form>
                 <form action={removeFromWishlistAction}>
                   <input type="hidden" name="itemId" value={item.itemId} />
                   <ConfirmSubmitButton
-                    confirmLabel="Really remove?"
-                    pendingText="Removing…"
+                    confirmLabel="¿Seguro que quieres eliminarlo?"
+                    pendingText="Eliminando…"
                     className="-mx-2 min-h-11 px-2 text-room-danger underline active:opacity-70"
                   >
-                    Remove
+                    Eliminar
                   </ConfirmSubmitButton>
                 </form>
               </div>

@@ -44,7 +44,7 @@ export function SettingsForm({
           displayUsername: trimmedUsername,
         });
         if (profileError) {
-          setError(profileError.message ?? "Could not update your profile.");
+          setError(profileError.message ?? "No se pudo actualizar tu perfil.");
           return;
         }
       }
@@ -55,7 +55,7 @@ export function SettingsForm({
           newEmail: trimmedEmail,
         });
         if (emailError) {
-          setError(emailError.message ?? "Could not update your email.");
+          setError(emailError.message ?? "No se pudo actualizar tu email.");
           return;
         }
       }
@@ -63,7 +63,7 @@ export function SettingsForm({
       setSuccess(true);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(err instanceof Error ? err.message : "Algo salió mal.");
     } finally {
       setPending(false);
     }
@@ -71,10 +71,10 @@ export function SettingsForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-sm">
-      <h2 className="text-lg font-medium">Profile</h2>
+      <h2 className="text-lg font-medium">Perfil</h2>
 
       <label className="flex flex-col gap-1">
-        <span className="text-room-dim">Display name</span>
+        <span className="text-room-dim">Nombre visible</span>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -85,7 +85,7 @@ export function SettingsForm({
       </label>
 
       <label className="flex flex-col gap-1">
-        <span className="text-room-dim">Username</span>
+        <span className="text-room-dim">Nombre de usuario</span>
         <input
           value={username}
           onChange={(e) => setUsername(e.target.value)}
@@ -117,7 +117,7 @@ export function SettingsForm({
 
       {error && <p className="text-sm text-room-danger">{error}</p>}
       {success && !error && (
-        <p className="text-sm text-room-accent-2">Saved.</p>
+        <p className="text-sm text-room-accent-2">Guardado.</p>
       )}
 
       <button
@@ -125,7 +125,7 @@ export function SettingsForm({
         disabled={pending}
         className="self-start rounded-lg bg-room-accent px-4 py-2 text-sm font-medium text-room-on-accent shadow-sm transition-colors hover:opacity-90 disabled:opacity-50"
       >
-        {pending ? "Saving…" : "Save changes"}
+        {pending ? "Guardando…" : "Guardar cambios"}
       </button>
     </form>
   );

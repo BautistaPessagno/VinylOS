@@ -96,18 +96,18 @@ export function Turntable({ covers }: { covers: Cover[] }) {
       >
         {cued ? (
           <>
-            {armDown ? "Now playing" : "Cueing"} ·{" "}
+            {armDown ? "Sonando ahora" : "Preparando"} ·{" "}
             <span className="text-room-fg">{cued.title}</span>
           </>
         ) : (
-          "No records on the shelves yet"
+          "Todavía no hay discos en las estanterías"
         )}
       </p>
 
       {covers.length > 1 && (
         <div className="w-full">
           <p className="mb-3 text-center font-mono text-[0.7rem] uppercase tracking-[0.16em] text-room-dim">
-            On the shelves right now
+            En las estanterías ahora mismo
           </p>
           <div className="no-scrollbar -mx-6 flex snap-x gap-3 overflow-x-auto px-6">
             {covers.map((cover, index) => (

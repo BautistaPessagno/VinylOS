@@ -28,6 +28,12 @@ function loadPage(session) {
     if (id === "@/lib/search/searchQuery") {
       return { MAX_SEARCH_QUERY_LENGTH: 100 };
     }
+    if (id === "@/lib/services/exploreService") {
+      return {
+        listExploreGenres: () => ["rock", "pop"],
+        genreLabel: (genre) => genre,
+      };
+    }
     if (id === "@/app/(app)/recommendations/ExploreTab") {
       return {
         ExploreTab({ userId, initialQuery }) {
@@ -67,10 +73,20 @@ test("guests can render Explore without a For You tab", async () => {
   });
   const html = ReactDOMServer.renderToStaticMarkup(element);
 
-  assert.match(html, />Explore</);
+  // The heading names the genre so each facet is a distinct page rather than
+  // fourteen URLs all titled "Explorar".
+  assert.match(html, />Vinilos de rock</);
   assert.match(html, /Explore catalog/);
   assert.match(html, /data-user-id="guest"/);
   assert.doesNotMatch(html, /For You/);
+});
+
+test("Explore falls back to a generic heading without a genre", async () => {
+  const Page = loadPage(null);
+  const element = await Page({ searchParams: Promise.resolve({}) });
+  const html = ReactDOMServer.renderToStaticMarkup(element);
+
+  assert.match(html, />Explorar</);
 });
 
 test("a query handed over from the landing page seeds the search", async () => {

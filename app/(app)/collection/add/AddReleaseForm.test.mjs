@@ -15,7 +15,7 @@ test("Add Record search normalizes, caches, and rejects stale responses", () => 
   assert.match(source, /resultCache\s*=\s*useRef/);
   assert.match(source, /pendingSearches\s*=\s*useRef/);
   assert.match(source, /latestSearchRequestId\s*=\s*useRef/);
-  assert.match(source, /Enter at least 2 characters/);
+  assert.match(source, /Escribe al menos 2 caracteres/);
 
   const queryHandler = source.slice(
     source.indexOf("function handleQueryChange"),

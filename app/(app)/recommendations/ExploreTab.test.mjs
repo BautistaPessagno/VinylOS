@@ -48,10 +48,14 @@ function loadExploreTab({ libraryKeys, throwOnLibraryLookup = false }) {
     if (id === "@/lib/services/exploreService") {
       return {
         listExploreGenres: () => ["rock"],
+        genreLabel: (genre) => genre,
         listExploreAlbums: async () => [
           { artist: "Charly Garcia", album: "Clics Modernos", imageUrl: "" },
         ],
       };
+    }
+    if (id === "@/lib/services/catalogService") {
+      return { getReleaseIdsByAlbumKey: async () => new Map() };
     }
     if (id === "@/lib/services/collectionService") {
       return {

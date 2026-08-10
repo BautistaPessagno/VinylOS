@@ -9,7 +9,7 @@ import type {
 export function splitDiscogsTitle(value: string): { artist: string; title: string } {
   const separatorIndex = value.indexOf(" - ");
   if (separatorIndex === -1) {
-    return { artist: "Unknown artist", title: value };
+    return { artist: "Artista desconocido", title: value };
   }
 
   return {

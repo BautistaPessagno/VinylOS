@@ -13,7 +13,7 @@ export function EditionPicker({
   masterId,
   onPick,
   pendingId,
-  label = "Choose specific edition",
+  label = "Elegir una edición concreta",
 }: {
   masterId: number;
   onPick: (discogsReleaseId: number) => void;
@@ -34,7 +34,7 @@ export function EditionPicker({
         try {
           setVersions(await getAlbumEditionsAction(masterId));
         } catch (err) {
-          setError(err instanceof Error ? err.message : "Failed to load editions");
+          setError(err instanceof Error ? err.message : "No se pudieron cargar las ediciones");
         }
       });
     }
@@ -45,14 +45,14 @@ export function EditionPicker({
   return (
     <div className="text-sm">
       <button type="button" onClick={toggle} className="text-room-dim underline">
-        {open ? "Hide editions ▴" : `${label} ▾`}
+        {open ? "Ocultar ediciones ▴" : `${label} ▾`}
       </button>
       {open && (
         <div className="mt-2 flex max-h-64 flex-col gap-1 overflow-y-auto">
-          {isLoading && <p className="text-room-dim">Loading editions…</p>}
+          {isLoading && <p className="text-room-dim">Cargando ediciones…</p>}
           {error && <p className="text-room-danger">{error}</p>}
           {versions?.length === 0 && (
-            <p className="text-room-dim">No other vinyl editions found.</p>
+            <p className="text-room-dim">No se encontraron otras ediciones en vinilo.</p>
           )}
           {versions?.map((v) => (
             <button
@@ -63,12 +63,12 @@ export function EditionPicker({
               className="flex items-center justify-between rounded border border-room-rule px-3 py-2 text-left hover:bg-room-sunk disabled:opacity-50"
             >
               <span>
-                {v.released || "Year unknown"}
+                {v.released || "Año desconocido"}
                 {v.label ? ` · ${v.label}` : ""}
                 {v.catno ? ` (${v.catno})` : ""}
                 {v.country ? ` · ${v.country}` : ""}
               </span>
-              {pendingId === v.id && <span className="text-room-dim">Adding…</span>}
+              {pendingId === v.id && <span className="text-room-dim">Añadiendo…</span>}
             </button>
           ))}
         </div>
