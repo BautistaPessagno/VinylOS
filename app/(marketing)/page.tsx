@@ -43,12 +43,32 @@ export default async function LandingPage({
   const covers = await listRecentReleaseCovers(12);
 
   return (
-    <div className="flex flex-1 flex-col items-center gap-12 px-6 py-12">
+    <div className="flex flex-1 flex-col items-center gap-12 px-6 py-6 sm:py-8">
       <JsonLd data={websiteJsonLd} />
-      <div className="flex w-full max-w-2xl flex-col items-center gap-6 text-center">
-        <p className="font-mono text-[0.72rem] uppercase tracking-[0.16em] text-room-dim">
+      <header className="flex w-full max-w-6xl flex-wrap items-center justify-between gap-3">
+        <Link
+          href="/"
+          className="font-mono text-[0.72rem] uppercase tracking-[0.16em] text-room-fg"
+        >
           VinylOS
-        </p>
+        </Link>
+        <nav aria-label="Acciones de cuenta" className="ml-auto flex items-center gap-1 sm:gap-2">
+          <Link
+            href={loginHref}
+            className="rounded-full px-3 py-2 text-sm text-room-dim transition hover:text-room-fg"
+          >
+            Iniciar sesión
+          </Link>
+          <Link
+            href={signupHref}
+            className="rounded-full border border-room-rule px-3 py-2 text-sm text-room-fg transition hover:border-room-accent hover:text-room-accent"
+          >
+            Crear cuenta
+          </Link>
+        </nav>
+      </header>
+
+      <div className="flex w-full max-w-2xl flex-col items-center gap-6 text-center">
         <h1 className="font-display text-4xl leading-[1.05] tracking-tight text-balance sm:text-6xl">
           Cada disco que tienes,{" "}
           <em className="text-room-accent">hasta la edición exacta.</em>
@@ -58,26 +78,17 @@ export default async function LandingPage({
           año en vinilo.
         </p>
         <LandingSearch genres={listExploreGenres()} />
+        <Link
+          href="/explore"
+          className="rounded-full bg-room-accent px-7 py-3 font-medium text-room-on-accent transition hover:opacity-90"
+        >
+          Explorar discos
+        </Link>
       </div>
 
       <Turntable covers={covers} />
 
       <hr className="strobe-rule w-full max-w-2xl border-0" />
-
-      <div className="flex flex-wrap items-center justify-center gap-3">
-        <Link
-          href={signupHref}
-          className="rounded-full bg-room-accent px-6 py-3 text-room-on-accent transition hover:opacity-90"
-        >
-          Crear cuenta
-        </Link>
-        <Link
-          href={loginHref}
-          className="rounded-full px-4 py-3 text-room-dim transition hover:text-room-fg"
-        >
-          Iniciar sesión
-        </Link>
-      </div>
     </div>
   );
 }
