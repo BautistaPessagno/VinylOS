@@ -16,7 +16,7 @@ export function DeleteAccountSection({ username }: { username: string }) {
 
   // Accounts without a username (rare — e.g. legacy Google sign-ins that never
   // set one) confirm with a fixed phrase instead of an empty string.
-  const confirmValue = username || "delete my account";
+  const confirmValue = username || "eliminar mi cuenta";
 
   useEffect(() => {
     if (!open) return;
@@ -40,12 +40,12 @@ export function DeleteAccountSection({ username }: { username: string }) {
     try {
       const { error: deleteError } = await authClient.deleteUser({});
       if (deleteError) {
-        setError(deleteError.message ?? "Could not delete your account.");
+        setError(deleteError.message ?? "No se pudo eliminar tu cuenta.");
         return;
       }
       router.push("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(err instanceof Error ? err.message : "Algo salió mal.");
     } finally {
       setPending(false);
     }
@@ -53,17 +53,17 @@ export function DeleteAccountSection({ username }: { username: string }) {
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-room-danger/40 p-4">
-      <h2 className="text-lg font-medium text-room-danger">Danger zone</h2>
+      <h2 className="text-lg font-medium text-room-danger">Zona de riesgo</h2>
       <p className="text-sm text-room-dim">
-        Deleting your account permanently removes your collection, follows, and
-        profile. This cannot be undone.
+        Eliminar tu cuenta borra de forma permanente tu colección, tus seguidos y
+        tu perfil. Esta acción no se puede deshacer.
       </p>
       <button
         type="button"
         onClick={() => setOpen(true)}
         className="self-start rounded-lg border border-room-danger px-4 py-2 text-sm font-medium text-room-danger transition-colors hover:bg-room-danger hover:text-room-on-danger"
       >
-        Delete account
+        Eliminar cuenta
       </button>
 
       {open && (
@@ -79,12 +79,12 @@ export function DeleteAccountSection({ username }: { username: string }) {
             className="w-full max-w-sm rounded-lg border border-room-rule bg-room-surface p-6 shadow-lg"
           >
             <h3 id="delete-account-heading" className="text-lg font-medium">
-              Delete your account?
+              ¿Eliminar tu cuenta?
             </h3>
             <p className="mt-2 text-sm text-room-dim">
-              This is permanent. Type{" "}
-              <span className="font-mono font-semibold">{confirmValue}</span> to
-              confirm.
+              Esto es permanente. Escribe{" "}
+              <span className="font-mono font-semibold">{confirmValue}</span>{" "}
+              para confirmar.
             </p>
 
             <form onSubmit={handleDelete} className="mt-4 flex flex-col gap-3 text-sm">
@@ -104,14 +104,14 @@ export function DeleteAccountSection({ username }: { username: string }) {
                   onClick={closeModal}
                   className="rounded-lg px-4 py-2 text-sm font-medium text-room-dim hover:text-room-fg"
                 >
-                  Cancel
+                  Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={pending || confirmText !== confirmValue}
                   className="rounded-lg bg-room-danger px-4 py-2 text-sm font-medium text-room-on-danger transition-colors hover:opacity-90 disabled:opacity-50"
                 >
-                  {pending ? "Deleting…" : "Delete account"}
+                  {pending ? "Eliminando…" : "Eliminar cuenta"}
                 </button>
               </div>
             </form>

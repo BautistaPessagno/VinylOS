@@ -35,7 +35,7 @@ export function LandingSearch({ genres }: { genres: string[] }) {
           className="flex w-full max-w-lg items-center gap-3 rounded-full border border-room-rule bg-room-surface px-5 py-3.5 focus-within:border-room-accent"
         >
           <label htmlFor="landing-search" className="sr-only">
-            Search artists, records, and songs
+            Busca artistas, discos y canciones
           </label>
           <svg
             aria-hidden="true"

@@ -9,12 +9,12 @@ export type AlbumSortKey =
   | "country";
 
 export const ALBUM_SORT_OPTIONS: { value: AlbumSortKey; label: string }[] = [
-  { value: "relevance", label: "Relevance" },
-  { value: "year-desc", label: "Year (newest)" },
-  { value: "year-asc", label: "Year (oldest)" },
-  { value: "artist", label: "Artist (A–Z)" },
-  { value: "title", label: "Title (A–Z)" },
-  { value: "country", label: "Country (A–Z)" },
+  { value: "relevance", label: "Relevancia" },
+  { value: "year-desc", label: "Año (más nuevo)" },
+  { value: "year-asc", label: "Año (más antiguo)" },
+  { value: "artist", label: "Artista (A–Z)" },
+  { value: "title", label: "Título (A–Z)" },
+  { value: "country", label: "País (A–Z)" },
 ];
 
 function parseYear(value?: string): number | null {

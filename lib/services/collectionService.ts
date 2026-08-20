@@ -23,15 +23,31 @@ export {
   type CollectionSort,
 } from "./collectionSort";
 
-async function findOrCreateArtistByName(name: string): Promise<number> {
+async function findOrCreateArtistByName(
+  name: string,
+  discogsArtistId?: number,
+): Promise<number> {
   const [existing] = await db
-    .select({ id: artists.id })
+    .select({ id: artists.id, discogsArtistId: artists.discogsArtistId })
     .from(artists)
     .where(ilike(artists.name, name))
     .limit(1);
-  if (existing) return existing.id;
+  if (existing) {
+    // Backfill on the way past: rows created before we carried the id through
+    // have no /artist/[id] page until this lands.
+    if (discogsArtistId && existing.discogsArtistId === null) {
+      await db
+        .update(artists)
+        .set({ discogsArtistId })
+        .where(eq(artists.id, existing.id));
+    }
+    return existing.id;
+  }
 
-  const [created] = await db.insert(artists).values({ name }).returning({ id: artists.id });
+  const [created] = await db
+    .insert(artists)
+    .values({ name, discogsArtistId })
+    .returning({ id: artists.id });
   return created.id;
 }
 
@@ -57,7 +73,11 @@ async function linkReleaseArtists(releaseId: number, artistIds: number[]) {
  * search-add prefills the form but doesn't force the original Discogs values.
  */
 export async function upsertRelease(
-  input: ReleaseFormOutput & { masterId?: number },
+  input: ReleaseFormOutput & {
+    masterId?: number;
+    /** Discogs-sourced adds carry artist ids; the manual form only has names. */
+    artistRefs?: { name: string; discogsArtistId?: number }[];
+  },
 ): Promise<number> {
   const values = {
     discogsReleaseId: input.discogsReleaseId,
@@ -82,8 +102,15 @@ export async function upsertRelease(
     })
     .returning({ id: releases.id });
 
+  const discogsIdByName = new Map(
+    (input.artistRefs ?? [])
+      .filter((ref) => ref.discogsArtistId !== undefined)
+      .map((ref) => [ref.name.toLowerCase(), ref.discogsArtistId] as const),
+  );
   const artistIds = await Promise.all(
-    input.artistNames.map((name) => findOrCreateArtistByName(name)),
+    input.artistNames.map((name) =>
+      findOrCreateArtistByName(name, discogsIdByName.get(name.toLowerCase())),
+    ),
   );
   await linkReleaseArtists(release.id, artistIds);
 
@@ -189,7 +216,7 @@ export async function updateCollectionItemRelease(
     )
     .limit(1);
   if (existing) {
-    throw new Error("You already have this edition in your collection.");
+    throw new Error("Ya tienes esta edición en tu colección.");
   }
 
   await db
@@ -353,13 +380,24 @@ export async function getReleaseById(releaseId: number) {
   if (!release) return null;
 
   const artistRows = await db
-    .select({ artistName: artists.name })
+    .select({
+      artistName: artists.name,
+      discogsArtistId: artists.discogsArtistId,
+    })
     .from(releaseArtists)
     .innerJoin(artists, eq(releaseArtists.artistId, artists.id))
     .where(eq(releaseArtists.releaseId, releaseId))
     .orderBy(releaseArtists.joinOrder);
 
-  return { ...release, artistNames: artistRows.map((r) => r.artistName) };
+  return {
+    ...release,
+    artistNames: artistRows.map((r) => r.artistName),
+    // Only artists we resolved on Discogs have a /artist/[id] page to link to.
+    credits: artistRows.map((r) => ({
+      name: r.artistName,
+      discogsArtistId: r.discogsArtistId,
+    })),
+  };
 }
 
 /** Recent, real album covers for the marketing landing page's vinyl carousel. */

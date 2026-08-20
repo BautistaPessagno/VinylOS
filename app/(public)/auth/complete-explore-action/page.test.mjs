@@ -82,7 +82,7 @@ test("the completion page presents the authenticated action fallback", async () 
   const Page = loadPage({ user: { id: "user-1" } });
   const html = ReactDOMServer.renderToStaticMarkup(await Page());
 
-  assert.match(html, /Finishing your action/);
+  assert.match(html, /Completando tu acción/);
   assert.match(html, /Finish action/);
 });
 

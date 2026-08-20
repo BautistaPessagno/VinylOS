@@ -32,6 +32,7 @@ export async function getArtistInfo(artistName: string) {
   const url = new URL(LASTFM_API_BASE);
   url.searchParams.set("method", "artist.getinfo");
   url.searchParams.set("artist", artistName);
+  url.searchParams.set("lang", "es");
   url.searchParams.set("api_key", process.env.LASTFM_API_KEY ?? "");
   url.searchParams.set("format", "json");
 
@@ -69,7 +70,9 @@ export async function getSimilarArtists(
 
 /** Album write-up + tags for the album detail page. Returns null if not found. */
 export async function getAlbumInfo(artist: string, album: string) {
-  const url = lastfmUrl("album.getinfo", { artist, album });
+  // Last.fm serves a Spanish wiki when it has one and silently falls back to
+  // English when it doesn't, so this is safe to always ask for.
+  const url = lastfmUrl("album.getinfo", { artist, album, lang: "es" });
   const res = await fetch(url, { next: { revalidate: 86400 } });
   if (!res.ok) return null;
 

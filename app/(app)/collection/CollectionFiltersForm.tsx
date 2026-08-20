@@ -45,7 +45,7 @@ export function CollectionFiltersForm({
     >
       <div className="flex flex-wrap gap-2">
         <label className="sr-only" htmlFor="collection-search">
-          Search your collection
+          Busca en tu colección
         </label>
         <input
           id="collection-search"
@@ -53,7 +53,7 @@ export function CollectionFiltersForm({
           type="search"
           enterKeyHint="search"
           defaultValue={selected.q}
-          placeholder="Search title or artist"
+          placeholder="Buscar título o artista"
           className={`${inputClass} min-w-0 flex-1 sm:max-w-64`}
         />
         <button
@@ -63,7 +63,7 @@ export function CollectionFiltersForm({
           aria-controls={panelId}
           className="min-h-11 rounded border border-room-rule px-3 py-1.5 active:bg-room-sunk sm:hidden"
         >
-          Filters{panelFilterCount > 0 ? ` (${panelFilterCount})` : ""}
+          Filtros{panelFilterCount > 0 ? ` (${panelFilterCount})` : ""}
         </button>
       </div>
 
@@ -72,14 +72,14 @@ export function CollectionFiltersForm({
         className={`${panelOpen ? "flex" : "hidden"} flex-wrap gap-2 sm:flex`}
       >
         <label className="sr-only" htmlFor="collection-filter-genre">
-          Genre
+          Género
         </label>
         <input
           id="collection-filter-genre"
           name="genre"
           defaultValue={selected.genre}
           list="collection-genre-options"
-          placeholder="Genre"
+          placeholder="Género"
           className={`${inputClass} min-w-32`}
         />
         <datalist id="collection-genre-options">
@@ -89,14 +89,14 @@ export function CollectionFiltersForm({
         </datalist>
 
         <label className="sr-only" htmlFor="collection-filter-year">
-          Year
+          Año
         </label>
         <input
           id="collection-filter-year"
           name="year"
           defaultValue={selected.year}
           list="collection-year-options"
-          placeholder="Year"
+          placeholder="Año"
           type="number"
           className={`${inputClass} min-w-28`}
         />
@@ -107,14 +107,14 @@ export function CollectionFiltersForm({
         </datalist>
 
         <label className="sr-only" htmlFor="collection-filter-label">
-          Label
+          Sello
         </label>
         <input
           id="collection-filter-label"
           name="label"
           defaultValue={selected.label}
           list="collection-label-options"
-          placeholder="Label"
+          placeholder="Sello"
           className={`${inputClass} min-w-32`}
         />
         <datalist id="collection-label-options">
@@ -124,7 +124,7 @@ export function CollectionFiltersForm({
         </datalist>
 
         <label className="sr-only" htmlFor="collection-sort">
-          Sort by
+          Ordenar por
         </label>
         <select
           id="collection-sort"
@@ -135,7 +135,7 @@ export function CollectionFiltersForm({
         >
           {COLLECTION_SORT_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
-              Sort: {option.label}
+              Orden: {option.label}
             </option>
           ))}
         </select>
@@ -144,14 +144,14 @@ export function CollectionFiltersForm({
           type="submit"
           className="min-h-11 rounded border border-room-rule px-3 py-1.5 active:bg-room-sunk sm:min-h-0"
         >
-          Apply
+          Aplicar
         </button>
         {hasActiveFilters && (
           <Link
             href="/collection"
             className="flex min-h-11 items-center px-3 py-1.5 text-room-dim underline sm:min-h-0"
           >
-            Clear filters
+            Borrar filtros
           </Link>
         )}
       </div>

@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "VinylOS",
     short_name: "VinylOS",
     description:
-      "Track your vinyl collection, see your stats, and find what to buy next.",
+      "Registra tu colección de vinilos, mira tus estadísticas y descubre qué comprar después.",
     start_url: "/collection",
     display: "standalone",
     background_color: "#ffffff",

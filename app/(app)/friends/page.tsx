@@ -15,7 +15,7 @@ import { FriendSearchInput } from "./FriendSearchInput";
 import { Avatar } from "../Avatar";
 import { SubmitButton } from "../SubmitButton";
 
-export const metadata = { title: "Friends" };
+export const metadata = { title: "Amigos" };
 
 function formatDate(value: Date) {
   return new Intl.DateTimeFormat("en", {
@@ -62,7 +62,7 @@ function FollowForm({
       <input type="hidden" name="userId" value={userId} />
       <input type="hidden" name="returnTo" value={returnTo} />
       <SubmitButton
-        pendingText="Following…"
+        pendingText="Siguiendo…"
         className="min-h-11 rounded bg-room-accent px-3 py-1.5 text-sm text-room-on-accent active:opacity-90 sm:min-h-0"
       >
         {label}
@@ -77,7 +77,7 @@ function UnfollowForm({ userId, returnTo }: { userId: string; returnTo: string }
       <input type="hidden" name="userId" value={userId} />
       <input type="hidden" name="returnTo" value={returnTo} />
       <SubmitButton
-        pendingText="Unfollowing…"
+        pendingText="Dejando de seguir…"
         className="min-h-11 rounded border border-room-rule px-3 py-1.5 text-sm active:bg-room-sunk sm:min-h-0"
       >
         Unfollow
@@ -101,7 +101,7 @@ function SearchResultRow({
           href={`/users/${user.id}`}
           className="flex min-h-11 items-center px-1 text-sm underline active:opacity-70 sm:min-h-0"
         >
-          View collection
+          Ver colección
         </Link>
         {user.isFollowing ? (
           <UnfollowForm userId={user.id} returnTo={returnTo} />
@@ -133,7 +133,7 @@ function FollowingRow({
           href={`/users/${user.id}`}
           className="flex min-h-11 items-center px-1 text-sm underline active:opacity-70 sm:min-h-0"
         >
-          View collection
+          Ver colección
         </Link>
         <UnfollowForm userId={user.id} returnTo={returnTo} />
       </div>
@@ -161,14 +161,14 @@ function FollowerRow({
           href={`/users/${user.id}`}
           className="flex min-h-11 items-center px-1 text-sm underline active:opacity-70 sm:min-h-0"
         >
-          View collection
+          Ver colección
         </Link>
         {user.isFollowingBack ? (
           <span className="rounded bg-room-surface px-3 py-1.5 text-sm text-room-dim">
-            Following
+            Siguiendo
           </span>
         ) : (
-          <FollowForm userId={user.id} returnTo={returnTo} label="Follow back" />
+          <FollowForm userId={user.id} returnTo={returnTo} label="Seguir también" />
         )}
       </div>
     </li>
@@ -199,32 +199,32 @@ export default async function FriendsPage({
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold">Friends</h1>
+        <h1 className="text-2xl font-semibold">Amigos</h1>
       </div>
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-medium">Find collectors</h2>
+        <h2 className="font-medium">Encontrar coleccionistas</h2>
         <form className="flex max-w-2xl gap-2" action="/friends">
           <FriendSearchInput defaultValue={query} />
           <button
             type="submit"
             className="min-h-11 rounded bg-room-accent px-4 py-2 text-room-on-accent active:opacity-90"
           >
-            Search
+            Buscar
           </button>
           {query && (
             <Link
               href="/friends"
               className="flex min-h-11 items-center px-3 py-2 text-sm text-room-dim underline active:opacity-70"
             >
-              Clear
+              Borrar
             </Link>
           )}
         </form>
         {query && (
           <ul className="flex max-w-3xl flex-col gap-2">
             {searchResults.length === 0 ? (
-              <li className="text-sm text-room-dim">No users found.</li>
+              <li className="text-sm text-room-dim">No se encontraron usuarios.</li>
             ) : (
               searchResults.map((user) => (
                 <SearchResultRow key={user.id} user={user} returnTo={returnTo} />
@@ -240,14 +240,14 @@ export default async function FriendsPage({
 
       <section className="flex max-w-3xl flex-col gap-3">
         <div className="flex items-center gap-2">
-          <h2 className="font-medium">Following</h2>
+          <h2 className="font-medium">Siguiendo</h2>
           <span className="rounded-full bg-room-surface px-2 py-0.5 text-xs text-room-dim">
             {following.length}
           </span>
         </div>
         {following.length === 0 ? (
           <p className="rounded-lg border border-dashed border-room-rule p-4 text-sm text-room-dim">
-            You&apos;re not following anyone yet. Search for collectors above to follow them.
+            Todavía no sigues a nadie. Busca coleccionistas arriba para seguirlos.
           </p>
         ) : (
           <ul className="flex flex-col gap-2">
@@ -260,14 +260,14 @@ export default async function FriendsPage({
 
       <section className="flex max-w-3xl flex-col gap-3">
         <div className="flex items-center gap-2">
-          <h2 className="font-medium">Followers</h2>
+          <h2 className="font-medium">Seguidores</h2>
           <span className="rounded-full bg-room-surface px-2 py-0.5 text-xs text-room-dim">
             {followers.length}
           </span>
         </div>
         {followers.length === 0 ? (
           <p className="rounded-lg border border-dashed border-room-rule p-4 text-sm text-room-dim">
-            No followers yet. Share your profile to let others follow you.
+            Todavía no tienes seguidores. Comparte tu perfil para que otros te sigan.
           </p>
         ) : (
           <ul className="flex flex-col gap-2">

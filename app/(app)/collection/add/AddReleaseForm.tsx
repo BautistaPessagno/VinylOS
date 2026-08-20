@@ -88,7 +88,7 @@ function AlbumCard({
             type="checkbox"
             checked={selected}
             onChange={() => onToggleSelect(album)}
-            aria-label={`Select ${album.title}`}
+            aria-label={`Seleccionar ${album.title}`}
             className="h-5 w-5 shrink-0"
           />
         </label>
@@ -111,7 +111,7 @@ function AlbumCard({
           </span>
           <span className="block text-sm text-room-dim">
             {album.year}
-            {album.editionCount > 1 ? ` · ${album.editionCount} editions` : ""}
+            {album.editionCount > 1 ? ` · ${album.editionCount} ediciones` : ""}
           </span>
         </div>
         <div className="flex shrink-0 flex-col gap-1">
@@ -121,7 +121,7 @@ function AlbumCard({
             disabled={busy}
             className="min-h-11 rounded bg-room-accent px-3 py-1.5 text-sm text-room-on-accent active:opacity-90 disabled:opacity-50 sm:min-h-0"
           >
-            {isThisPending ? "Adding…" : "Add"}
+            {isThisPending ? "Añadiendo…" : "Añadir"}
           </button>
           <button
             type="button"
@@ -129,7 +129,7 @@ function AlbumCard({
             disabled={busy}
             className="min-h-11 rounded border border-room-rule px-3 py-1.5 text-sm active:bg-room-sunk disabled:opacity-50 sm:min-h-0"
           >
-            {isThisWishlistPending ? "Adding…" : "Wishlist"}
+            {isThisWishlistPending ? "Añadiendo…" : "Lista de deseos"}
           </button>
         </div>
       </div>
@@ -218,7 +218,7 @@ export function AddReleaseForm() {
           }
         } catch (err) {
           if (isLatestSearchRequest(requestId, latestSearchRequestId.current)) {
-            setSearchError(err instanceof Error ? err.message : "Search failed");
+            setSearchError(err instanceof Error ? err.message : "La búsqueda falló");
           }
         } finally {
           if (pendingSearches.current.get(normalizedQuery) === pending) {
@@ -263,34 +263,34 @@ export function AddReleaseForm() {
           onClick={() => setShowManualForm(false)}
           className="min-h-11 self-start text-sm text-room-dim underline active:opacity-70"
         >
-          ← Back to search
+          ← Volver a la búsqueda
         </button>
 
-        <Field label="Title" name="title" required />
-        <Field label="Artist(s), comma separated" name="artistNames" required />
-        <Field label="Year" name="year" type="number" />
-        <Field label="Country" name="country" />
-        <Field label="Label" name="labelName" />
-        <Field label="Catalog #" name="catalogNumber" />
-        <Field label="Genres, comma separated" name="genres" />
-        <Field label="Styles, comma separated" name="styles" />
+        <Field label="Título" name="title" required />
+        <Field label="Artista(s), separados por comas" name="artistNames" required />
+        <Field label="Año" name="year" type="number" />
+        <Field label="País" name="country" />
+        <Field label="Sello" name="labelName" />
+        <Field label="Nº de catálogo" name="catalogNumber" />
+        <Field label="Géneros, separados por comas" name="genres" />
+        <Field label="Estilos, separados por comas" name="styles" />
 
         <hr className="my-2 border-room-rule" />
 
-        <Field label="Folder" name="folder" />
-        <Field label="Rating (1-5)" name="rating" type="number" />
-        <Field label="Media condition" name="mediaCondition" />
-        <Field label="Sleeve condition" name="sleeveCondition" />
-        <Field label="Purchase price" name="purchasePrice" type="number" />
-        <Field label="Purchase date" name="purchaseDate" type="date" />
-        <Field label="Purchase location" name="purchaseLocation" />
-        <Field label="Notes" name="notes" textarea />
+        <Field label="Carpeta" name="folder" />
+        <Field label="Valoración (1-5)" name="rating" type="number" />
+        <Field label="Estado del disco" name="mediaCondition" />
+        <Field label="Estado de la funda" name="sleeveCondition" />
+        <Field label="Precio de compra" name="purchasePrice" type="number" />
+        <Field label="Fecha de compra" name="purchaseDate" type="date" />
+        <Field label="Lugar de compra" name="purchaseLocation" />
+        <Field label="Notas" name="notes" textarea />
 
         <SubmitButton
-          pendingText="Adding…"
+          pendingText="Añadiendo…"
           className="mt-2 min-h-11 self-start rounded bg-room-accent px-4 py-2 text-room-on-accent active:opacity-90"
         >
-          Add to collection
+          Añadir a la colección
         </SubmitButton>
       </form>
     );
@@ -304,24 +304,24 @@ export function AddReleaseForm() {
             ref={searchInputRef}
             value={query}
             onChange={(e) => handleQueryChange(e.target.value)}
-            placeholder="Search for an album (vinyl only)..."
+            placeholder="Busca un álbum (solo vinilo)..."
             className="min-h-11 w-full rounded border border-room-rule px-3 py-2 text-base sm:text-sm"
           />
           {isSearching && queryIsReady && (
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-room-dim">
-              Searching…
+              Buscando…
             </span>
           )}
         </div>
         {normalizedQuery.length > 0 && !queryIsReady && (
           <p className="text-center text-sm text-room-dim">
-            Enter at least 2 characters
+            Escribe al menos 2 caracteres
           </p>
         )}
         {searchError && <p className="text-center text-sm text-room-danger">{searchError}</p>}
         {results.length > 0 && (
           <p className="text-center text-sm text-room-dim">
-            New to VinylOS? Select multiple albums below and add them all at once.
+            ¿Nuevo en VinylOS? Selecciona varios álbumes abajo y añádelos todos de una vez.
           </p>
         )}
         <button
@@ -329,7 +329,7 @@ export function AddReleaseForm() {
           onClick={() => setShowManualForm(true)}
           className="min-h-11 self-center px-2 text-sm text-room-dim underline active:opacity-70"
         >
-          Can&apos;t find it? Enter manually
+          ¿No lo encuentras? Introdúcelo manualmente
         </button>
         <ul className="flex flex-col gap-2 pb-4">
           {results.map((album) => (
@@ -350,14 +350,14 @@ export function AddReleaseForm() {
       {selected.size > 0 && (
         // Sticky offset clears the mobile bottom tab bar and the iOS home indicator.
         <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] flex w-full max-w-2xl items-center justify-between rounded-lg border border-room-rule bg-room-surface px-4 py-3 shadow-lg sm:bottom-4">
-          <span className="text-sm font-medium">{selected.size} selected</span>
+          <span className="text-sm font-medium">{selected.size} seleccionados</span>
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setSelected(new Map())}
               className="min-h-11 px-2 text-sm text-room-dim underline active:opacity-70 sm:min-h-0"
             >
-              Clear
+              Borrar
             </button>
             <button
               type="button"
@@ -365,7 +365,7 @@ export function AddReleaseForm() {
               disabled={isBatchAdding}
               className="min-h-11 rounded bg-room-accent px-4 py-2 text-sm text-room-on-accent active:opacity-90 disabled:opacity-50 sm:min-h-0"
             >
-              {isBatchAdding ? "Adding…" : `Add ${selected.size} record${selected.size === 1 ? "" : "s"}`}
+              {isBatchAdding ? "Añadiendo…" : `Añadir ${selected.size} disco${selected.size === 1 ? "" : "s"}`}
             </button>
           </div>
         </div>

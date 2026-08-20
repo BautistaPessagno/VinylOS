@@ -25,14 +25,14 @@ export function PasswordForm() {
         revokeOtherSessions: true,
       });
       if (passwordError) {
-        setError(passwordError.message ?? "Could not change your password.");
+        setError(passwordError.message ?? "No se pudo cambiar tu contraseña.");
         return;
       }
       setCurrentPassword("");
       setNewPassword("");
       setSuccess(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(err instanceof Error ? err.message : "Algo salió mal.");
     } finally {
       setPending(false);
     }
@@ -40,10 +40,10 @@ export function PasswordForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-sm">
-      <h2 className="text-lg font-medium">Password</h2>
+      <h2 className="text-lg font-medium">Contraseña</h2>
 
       <label className="flex flex-col gap-1">
-        <span className="text-room-dim">Current password</span>
+        <span className="text-room-dim">Contraseña actual</span>
         <input
           value={currentPassword}
           onChange={(e) => setCurrentPassword(e.target.value)}
@@ -55,7 +55,7 @@ export function PasswordForm() {
       </label>
 
       <label className="flex flex-col gap-1">
-        <span className="text-room-dim">New password</span>
+        <span className="text-room-dim">Nueva contraseña</span>
         <input
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
@@ -69,7 +69,7 @@ export function PasswordForm() {
 
       {error && <p className="text-sm text-room-danger">{error}</p>}
       {success && !error && (
-        <p className="text-sm text-room-accent-2">Password changed.</p>
+        <p className="text-sm text-room-accent-2">Contraseña cambiada.</p>
       )}
 
       <button
@@ -77,7 +77,7 @@ export function PasswordForm() {
         disabled={pending}
         className="self-start rounded-lg bg-room-accent px-4 py-2 text-sm font-medium text-room-on-accent shadow-sm transition-colors hover:opacity-90 disabled:opacity-50"
       >
-        {pending ? "Saving…" : "Change password"}
+        {pending ? "Guardando…" : "Cambiar contraseña"}
       </button>
     </form>
   );

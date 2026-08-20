@@ -47,7 +47,7 @@ export function AuthForm({
           password,
         });
         if (signUpError) {
-          setError(signUpError.message ?? "Could not create your account.");
+          setError(signUpError.message ?? "No se pudo crear tu cuenta.");
           return;
         }
       } else {
@@ -56,14 +56,14 @@ export function AuthForm({
           ? await authClient.signIn.email({ email: value, password })
           : await authClient.signIn.username({ username: value, password });
         if (signInError) {
-          setError(signInError.message ?? "Invalid credentials.");
+          setError(signInError.message ?? "Credenciales incorrectas.");
           return;
         }
       }
       // Full navigation so the server picks up the freshly-set session cookie.
       window.location.href = callbackURL;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(err instanceof Error ? err.message : "Algo salió mal.");
     } finally {
       setPending(false);
     }
@@ -73,17 +73,17 @@ export function AuthForm({
     <div className="flex w-full flex-col gap-6">
       <div className="flex flex-col gap-1 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">
-          {mode === "signin" ? "Sign in to VinylOS" : "Create your VinylOS account"}
+          {mode === "signin" ? "Inicia sesión en VinylOS" : "Crea tu cuenta de VinylOS"}
         </h1>
         <p className="text-sm text-room-dim">
-          Track your collection and follow other collectors.
+          Registra tu colección y sigue a otros coleccionistas.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-sm">
         {mode === "signin" ? (
           <label className="flex flex-col gap-1">
-            <span className="text-room-dim">Email or username</span>
+            <span className="text-room-dim">Email o nombre de usuario</span>
             <input
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
@@ -107,7 +107,7 @@ export function AuthForm({
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-room-dim">Username</span>
+              <span className="text-room-dim">Nombre de usuario</span>
               <input
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -121,7 +121,7 @@ export function AuthForm({
             </label>
             <label className="flex flex-col gap-1">
               <span className="text-room-dim">
-                Display name <span className="text-room-dim">(optional)</span>
+                Nombre visible <span className="text-room-dim">(opcional)</span>
               </span>
               <input
                 value={name}
@@ -140,7 +140,7 @@ export function AuthForm({
         </datalist>
 
         <label className="flex flex-col gap-1">
-          <span className="text-room-dim">Password</span>
+          <span className="text-room-dim">Contraseña</span>
           <input
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -161,16 +161,16 @@ export function AuthForm({
         >
           {pending
             ? mode === "signin"
-              ? "Signing in…"
-              : "Creating account…"
+              ? "Iniciando sesión…"
+              : "Creando cuenta…"
             : mode === "signin"
-              ? "Sign in"
-              : "Create account"}
+              ? "Iniciar sesión"
+              : "Crear cuenta"}
         </button>
       </form>
 
       <p className="text-center text-sm text-room-dim">
-        {mode === "signin" ? "New to VinylOS? " : "Already have an account? "}
+        {mode === "signin" ? "¿Nuevo en VinylOS? " : "¿Ya tienes cuenta? "}
         <button
           type="button"
           onClick={() => {
@@ -179,13 +179,13 @@ export function AuthForm({
           }}
           className="font-medium underline"
         >
-          {mode === "signin" ? "Create an account" : "Sign in"}
+          {mode === "signin" ? "Crear una cuenta" : "Iniciar sesión"}
         </button>
       </p>
 
       <div className="flex items-center gap-3 text-xs text-room-dim">
         <span className="h-px flex-1 bg-room-sunk" />
-        or
+        o
         <span className="h-px flex-1 bg-room-sunk" />
       </div>
 

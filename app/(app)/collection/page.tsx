@@ -13,7 +13,7 @@ import { ShareLinkButton } from "../ShareLinkButton";
 
 const PAGE_SIZE = 48;
 
-export const metadata = { title: "Collection" };
+export const metadata = { title: "Colección" };
 
 function RatingStars({ rating }: { rating: number }) {
   return (
@@ -99,18 +99,18 @@ export default async function CollectionPage({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Your collection</h1>
+        <h1 className="text-2xl font-semibold">Tu colección</h1>
         <div className="flex flex-wrap items-center gap-2">
           <ShareLinkButton
             url={shareUrl}
-            label="Share collection"
-            title="My collection on VinylOS"
+            label="Compartir colección"
+            title="Mi colección en VinylOS"
           />
           <Link
             href="/collection/add"
             className="rounded-lg bg-room-accent px-5 py-2.5 text-base font-medium text-room-on-accent shadow-sm transition-colors hover:opacity-90 active:opacity-90"
           >
-            + Add a record
+            + Añadir un disco
           </Link>
         </div>
       </div>
@@ -120,23 +120,23 @@ export default async function CollectionPage({
       {items.length === 0 ? (
         total > 0 && currentPage > 1 ? (
           <p className="text-room-dim">
-            Nothing on this page.{" "}
+            No hay nada en esta página.{" "}
             <Link href={pageHref(currentParams, 1)} className="underline">
-              Back to the first page.
+              Volver a la primera página.
             </Link>
           </p>
         ) : hasActiveFilters ? (
           <p className="text-room-dim">
-            No records match.{" "}
+            Ningún disco coincide.{" "}
             <Link href="/collection" className="underline">
-              Clear the search and filters.
+              Borra la búsqueda y los filtros.
             </Link>
           </p>
         ) : (
           <p className="text-room-dim">
-            No records yet.{" "}
+            Todavía no hay discos.{" "}
             <Link href="/collection/add" className="underline">
-              Add your first one.
+              Añade el primero.
             </Link>
           </p>
         )
@@ -182,16 +182,16 @@ export default async function CollectionPage({
                   href={`/collection/${item.itemId}/edit`}
                   className="-mx-2 flex min-h-11 items-center px-2 underline active:opacity-70"
                 >
-                  Edit
+                  Editar
                 </Link>
                 <form action={removeItemAction}>
                   <input type="hidden" name="itemId" value={item.itemId} />
                   <ConfirmSubmitButton
-                    confirmLabel="Really remove?"
-                    pendingText="Removing…"
+                    confirmLabel="¿Seguro que quieres eliminarlo?"
+                    pendingText="Eliminando…"
                     className="-mx-2 min-h-11 px-2 text-room-danger underline active:opacity-70"
                   >
-                    Remove
+                    Eliminar
                   </ConfirmSubmitButton>
                 </form>
               </div>
@@ -201,16 +201,16 @@ export default async function CollectionPage({
       )}
 
       {pageCount > 1 && (
-        <nav aria-label="Collection pages" className="flex items-center justify-center gap-4 text-sm">
+        <nav aria-label="Páginas de la colección" className="flex items-center justify-center gap-4 text-sm">
           {currentPage > 1 ? (
             <Link
               href={pageHref(currentParams, currentPage - 1)}
               className="flex min-h-11 items-center px-2 underline active:opacity-70"
             >
-              ← Previous
+              ← Anterior
             </Link>
           ) : (
-            <span className="px-2 text-room-dim">← Previous</span>
+            <span className="px-2 text-room-dim">← Anterior</span>
           )}
           <span className="text-room-dim">
             Page {Math.min(currentPage, pageCount)} of {pageCount}
@@ -223,7 +223,7 @@ export default async function CollectionPage({
               Next →
             </Link>
           ) : (
-            <span className="px-2 text-room-dim">Next →</span>
+            <span className="px-2 text-room-dim">Siguiente →</span>
           )}
         </nav>
       )}

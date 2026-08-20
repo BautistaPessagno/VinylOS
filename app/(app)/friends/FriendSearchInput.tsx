@@ -21,7 +21,7 @@ export function FriendSearchInput({ defaultValue }: { defaultValue: string }) {
         onChange={(e) => setValue(e.target.value)}
         list={listId}
         autoComplete="off"
-        placeholder="Search by name or username"
+        placeholder="Buscar por nombre o usuario"
         className="min-h-11 min-w-0 flex-1 rounded border border-room-rule px-3 py-2 text-base sm:text-sm"
       />
       <datalist id={listId}>

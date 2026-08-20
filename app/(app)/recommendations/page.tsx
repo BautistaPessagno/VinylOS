@@ -7,7 +7,7 @@ import { RecommendationsGrid } from "./RecommendationsGrid";
 import { RecommendationsSkeleton } from "./RecommendationsSkeleton";
 import { ExploreTab } from "./ExploreTab";
 
-export const metadata = { title: "Discover" };
+export const metadata = { title: "Descubrir" };
 
 export default async function RecommendationsPage({
   searchParams,
@@ -26,14 +26,14 @@ export default async function RecommendationsPage({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Discover</h1>
+        <h1 className="text-2xl font-semibold">Descubrir</h1>
         {activeTab === "recommendations" && (
           <form action={refreshRecommendationsAction}>
             <SubmitButton
-              pendingText="Refreshing…"
+              pendingText="Actualizando…"
               className="rounded-lg bg-room-accent px-5 py-2.5 text-base font-medium text-room-on-accent shadow-sm transition-colors hover:opacity-90 active:opacity-90"
             >
-              Refresh recommendations
+              Actualizar recomendaciones
             </SubmitButton>
           </form>
         )}

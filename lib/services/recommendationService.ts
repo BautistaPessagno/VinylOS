@@ -12,7 +12,7 @@ import { eq, and, inArray, desc, sql, notExists } from "drizzle-orm";
 import * as discogs from "@/lib/discogs/client";
 import { getSimilarArtists } from "@/lib/lastfm/client";
 import { upsertRelease } from "@/lib/services/collectionService";
-import type { DiscogsRelease } from "@/lib/discogs/types";
+import { releaseInputFromDiscogs } from "@/lib/discogs/mapRelease";
 
 // Rate-limit caps: the Discogs client has no backoff, only a 429 throw, so we
 // bound how many detail lookups a single generation run can make.
@@ -20,23 +20,6 @@ const MAX_COOCCURRENCE_CANDIDATES = 20;
 const MAX_SIMILAR_ARTIST_SEEDS = 8;
 const MAX_SIMILAR_ARTIST_LOOKUPS = 15;
 const MAX_PERSISTED_RECOMMENDATIONS = 40;
-
-function releaseInputFromDiscogs(detail: DiscogsRelease) {
-  return {
-    discogsReleaseId: detail.id,
-    masterId: detail.master_id,
-    title: detail.title,
-    artistNames: detail.artists?.map((a) => a.name) ?? [],
-    year: detail.year,
-    country: detail.country,
-    labelName: detail.labels?.[0]?.name,
-    catalogNumber: detail.labels?.[0]?.catno,
-    genres: detail.genres ?? [],
-    styles: detail.styles ?? [],
-    coverUrl: detail.images?.[0]?.uri ?? "",
-    thumbUrl: detail.images?.[0]?.uri ?? "",
-  };
-}
 
 type Candidate = {
   releaseId: number;

@@ -86,7 +86,7 @@ test("collection filters render typeable selectors with owned options", () => {
 
   // Genre/year/label stay typeable datalist inputs; only sort is a fixed <select>.
   assert.match(html, /<select(?=[^>]+id="collection-sort")(?=[^>]+name="sort")[^>]*>/);
-  assert.match(html, /<option value="year-desc">Sort: Year \(newest\)<\/option>/);
+  assert.match(html, /<option value="year-desc">Orden: Año \(más nuevo\)<\/option>/);
   assert.match(
     html,
     /<input(?=[^>]+name="genre")(?=[^>]+list="collection-genre-options")[^>]+>/,
@@ -104,5 +104,5 @@ test("collection filters render typeable selectors with owned options", () => {
   assert.match(html, /<option value="Blue Note">/);
   assert.match(html, /<option value="1971">/);
   assert.match(html, /value="Jazz"/);
-  assert.match(html, /href="\/collection"[^>]*>Clear filters<\/a>/);
+  assert.match(html, /href="\/collection"[^>]*>Borrar filtros<\/a>/);
 });

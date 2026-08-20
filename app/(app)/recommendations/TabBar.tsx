@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 const TABS = [
-  { key: "recommendations", label: "For You", href: "/recommendations" },
-  { key: "explore", label: "Explore", href: "/explore" },
+  { key: "recommendations", label: "Para ti", href: "/recommendations" },
+  { key: "explore", label: "Explorar", href: "/explore" },
 ] as const;
 
 export function TabBar({ active }: { active: "recommendations" | "explore" }) {

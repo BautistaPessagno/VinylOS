@@ -22,8 +22,10 @@ export function searchErrorMessage(error: unknown): string {
     typeof error === "object" && error !== null && "message" in error
       ? String(error.message)
       : "";
-  if (message.startsWith("Discogs rate limit exceeded")) {
+  // Must track the message thrown by lib/discogs/client.ts — rate-limit guidance
+  // is the one upstream error worth showing verbatim.
+  if (message.startsWith("Se superó el límite de peticiones de Discogs")) {
     return message;
   }
-  return "Search is unavailable right now. Try again.";
+  return "La búsqueda no está disponible ahora mismo. Inténtalo de nuevo.";
 }

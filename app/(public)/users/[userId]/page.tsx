@@ -37,14 +37,22 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { userId } = await params;
   const profile = await getProfileCached(userId);
-  if (!profile) return { title: "Profile not found" };
+  if (!profile) {
+    return { title: "Perfil no encontrado", robots: { index: false, follow: false } };
+  }
 
   const title = profile.handle ? `${profile.name} (@${profile.handle})` : profile.name;
-  const description = `${profile.name}'s vinyl collection on VinylOS.`;
+  const description = `La colección de vinilos de ${profile.name} en VinylOS.`;
   return {
     title,
     description,
-    openGraph: { title, description },
+    // Profiles are shareable by link, but a personal collection is not something
+    // to publish into search results on the owner's behalf. `follow` still lets
+    // crawlers walk through to the album pages, which are meant to be indexed.
+    robots: { index: false, follow: true },
+    alternates: { canonical: `/users/${userId}` },
+    openGraph: { title, description, url: `/users/${userId}` },
+    twitter: { card: "summary_large_image", title, description },
   };
 }
 
@@ -63,14 +71,14 @@ function FollowForm({
       <input type="hidden" name="userId" value={userId} />
       <input type="hidden" name="returnTo" value={returnTo} />
       <SubmitButton
-        pendingText={isFollowing ? "Unfollowing…" : "Following…"}
+        pendingText={isFollowing ? "Dejando de seguir…" : "Siguiendo…"}
         className={
           isFollowing
             ? "min-h-11 rounded border border-room-rule px-4 py-2 text-sm active:bg-room-sunk sm:min-h-0"
             : "min-h-11 rounded bg-room-accent px-4 py-2 text-sm text-room-on-accent active:opacity-90 sm:min-h-0"
         }
       >
-        {isFollowing ? "Unfollow" : "Follow"}
+        {isFollowing ? "Dejar de seguir" : "Seguir"}
       </SubmitButton>
     </form>
   );
@@ -182,10 +190,10 @@ function ReleaseGrid({
               <input type="hidden" name="releaseId" value={item.releaseId} />
               <input type="hidden" name="returnTo" value={returnTo} />
               <SubmitButton
-                pendingText="Adding…"
+                pendingText="Añadiendo…"
                 className="-mx-2 min-h-11 px-2 underline active:opacity-70"
               >
-                Wishlist
+                Lista de deseos
               </SubmitButton>
             </form>
           )}
@@ -239,7 +247,7 @@ export default async function UserProfilePage({
         <div className="flex flex-col gap-1">
           {session ? (
             <Link href="/friends" className="text-sm text-room-dim underline">
-              Friends
+              Amigos
             </Link>
           ) : null}
           <h1 className="text-2xl font-semibold">{profile.name}</h1>
@@ -251,7 +259,7 @@ export default async function UserProfilePage({
               {items.length} {items.length === 1 ? "record" : "records"}
             </span>
             {followStatus.followsYou && (
-              <span className="rounded bg-room-surface px-2 py-1">Follows you</span>
+              <span className="rounded bg-room-surface px-2 py-1">Te sigue</span>
             )}
           </div>
         </div>
@@ -263,17 +271,17 @@ export default async function UserProfilePage({
               isFollowing={followStatus.isFollowing}
             />
           ) : (
-            <SignInCta returnTo={returnTo} label="Log in to follow" />
+            <SignInCta returnTo={returnTo} label="Inicia sesión para seguir" />
           ))}
       </div>
 
       {isSelf ? (
         <ProfileTabs
           tabs={[
-            { key: "profile", label: "Profile", href: `/users/${profile.id}` },
+            { key: "profile", label: "Perfil", href: `/users/${profile.id}` },
             {
               key: "settings",
-              label: "Settings",
+              label: "Ajustes",
               href: `/users/${profile.id}?view=settings`,
             },
           ]}
@@ -282,10 +290,10 @@ export default async function UserProfilePage({
       ) : (
         <ProfileTabs
           tabs={[
-            { key: "collection", label: "Collection", href: `/users/${profile.id}` },
+            { key: "collection", label: "Colección", href: `/users/${profile.id}` },
             {
               key: "wishlist",
-              label: "Wishlist",
+              label: "Lista de deseos",
               href: `/users/${profile.id}?view=wishlist`,
             },
           ]}
@@ -305,7 +313,7 @@ export default async function UserProfilePage({
         </div>
       ) : showWishlist ? (
         wishlistItems.length === 0 ? (
-          <p className="text-room-dim">Nothing on this wishlist yet.</p>
+          <p className="text-room-dim">Todavía no hay nada en esta lista de deseos.</p>
         ) : (
           <ReleaseGrid
             items={wishlistItems}
@@ -318,7 +326,7 @@ export default async function UserProfilePage({
           {wrapped && <WrappedSection stats={wrapped} />}
 
           {items.length === 0 ? (
-            <p className="text-room-dim">No public records yet.</p>
+            <p className="text-room-dim">Todavía no hay discos públicos.</p>
           ) : (
             <ReleaseGrid
               items={items}

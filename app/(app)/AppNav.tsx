@@ -8,10 +8,10 @@ import { SetUsernamePrompt } from "./SetUsernamePrompt";
 import { Avatar } from "./Avatar";
 
 const NAV_LINKS = [
-  { href: "/collection", label: "Collection" },
-  { href: "/wishlist", label: "Wishlist" },
-  { href: "/friends", label: "Friends" },
-  { href: "/recommendations", label: "Discover" },
+  { href: "/collection", label: "Colección" },
+  { href: "/wishlist", label: "Lista de deseos" },
+  { href: "/friends", label: "Amigos" },
+  { href: "/recommendations", label: "Descubrir" },
   { href: "/stores", label: "Disquerías" },
 ];
 
@@ -107,7 +107,7 @@ function NavLinks({ pathname }: { pathname: string }) {
 function BottomTabBar({ pathname }: { pathname: string }) {
   return (
     <nav
-      aria-label="Primary"
+      aria-label="Principal"
       className="fixed inset-x-0 bottom-0 z-40 border-t border-room-rule bg-room-surface pb-[env(safe-area-inset-bottom)] sm:hidden"
     >
       <div className="flex">
@@ -177,7 +177,7 @@ function AccountMenu({
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        aria-label="Account menu"
+        aria-label="Menú de cuenta"
         aria-haspopup="true"
         aria-expanded={open}
         aria-controls={menuId}
@@ -202,14 +202,14 @@ function AccountMenu({
                 onClick={() => setOpen(false)}
                 className={itemClass}
               >
-                Profile
+                Perfil
               </Link>
               <Link
                 href={`/users/${userId}?view=settings`}
                 onClick={() => setOpen(false)}
                 className={itemClass}
               >
-                Settings
+                Ajustes
               </Link>
               <SignOutButton className={itemClass} />
             </div>
@@ -248,7 +248,7 @@ export function AppNav({
         <div className="flex items-center gap-2 sm:gap-4">
           <Link
             href={SEARCH_HREF}
-            aria-label="Search records and artists"
+            aria-label="Buscar discos y artistas"
             className="inline-flex h-11 w-11 items-center justify-center rounded-full text-room-fg transition-colors hover:text-room-accent active:text-room-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-room-accent sm:border sm:border-room-rule sm:hover:border-room-accent"
           >
             <SearchIcon />
