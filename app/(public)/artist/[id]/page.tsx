@@ -1,12 +1,15 @@
 import { cache } from "react";
 import Link from "next/link";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getOptionalSession } from "@/lib/auth-session";
 import { getArtist, searchArtistVinylAlbums } from "@/lib/discogs/client";
 import { getArtistImageUrl, parsePositiveInteger } from "@/lib/discogs/artistPage";
 import { DiscoveryAlbumCard } from "@/app/(app)/recommendations/DiscoveryAlbumCard";
+import { ShareLinkButton } from "@/app/(app)/ShareLinkButton";
 import { JsonLd } from "@/app/JsonLd";
+import { shareUrlForPath } from "@/lib/shareUrl";
 import { absoluteUrl } from "@/lib/site";
 
 // Deduped across generateMetadata and the page render within one request.
@@ -84,6 +87,7 @@ export default async function ArtistPage({
   const returnTo = `/artist/${artist.id}?page=${catalog.page}`;
   const backHref = "/explore?focus=search";
   const backLabel = "← Volver a la búsqueda";
+  const shareUrl = shareUrlForPath(`/artist/${artistId}`, await headers());
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -128,6 +132,12 @@ export default async function ArtistPage({
               {artist.profile}
             </p>
           )}
+          <ShareLinkButton
+            url={shareUrl}
+            label="Compartir"
+            title={artist.name}
+            className="mt-4 min-h-11 w-fit rounded-lg border border-room-rule px-4 py-2 text-sm font-medium transition-colors hover:border-room-dim active:border-room-dim sm:min-h-0"
+          />
         </div>
       </section>
 

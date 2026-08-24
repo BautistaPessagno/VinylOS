@@ -19,3 +19,14 @@ test("user profile page is publicly readable with optional session", () => {
   assert.doesNotMatch(source, /Follow .* to see their wishlist/);
   assert.doesNotMatch(source, /Log in and follow .* to see their wishlist/);
 });
+
+test("user profile page shares collection or wishlist URLs and specializes metadata", () => {
+  const source = readFileSync(pagePath, "utf8");
+  assert.match(source, /ShareLinkButton/);
+  assert.match(source, /shareUrlForPath/);
+  assert.match(source, /`\/users\/\$\{profile\.id\}\?view=wishlist`/);
+  assert.match(source, /Colección de \$\{profile\.name\} en VinylOS/);
+  assert.match(source, /Lista de deseos de \$\{profile\.name\} en VinylOS/);
+  assert.match(source, /generateMetadata\(\{[\s\S]*searchParams/);
+  assert.match(source, /resolveProfileView\(view,/);
+});

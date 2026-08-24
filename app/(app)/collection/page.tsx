@@ -10,6 +10,7 @@ import { CollectionFiltersForm } from "./CollectionFiltersForm";
 import { removeItemAction } from "./actions";
 import { ConfirmSubmitButton } from "../SubmitButton";
 import { ShareLinkButton } from "../ShareLinkButton";
+import { shareUrlForPath } from "@/lib/shareUrl";
 
 const PAGE_SIZE = 48;
 
@@ -49,11 +50,7 @@ export default async function CollectionPage({
 }) {
   const session = await requireSession();
   const { q, genre, year, label, sort, page } = await searchParams;
-  const requestHeaders = await headers();
-  const host = requestHeaders.get("host");
-  const protocol = requestHeaders.get("x-forwarded-proto") ?? "http";
-  const sharePath = `/users/${session.user.id}`;
-  const shareUrl = host ? `${protocol}://${host}${sharePath}` : sharePath;
+  const shareUrl = shareUrlForPath(`/users/${session.user.id}`, await headers());
   const selectedFilters = {
     q: q?.trim() || undefined,
     genre: genre?.trim() || undefined,

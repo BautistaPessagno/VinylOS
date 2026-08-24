@@ -1,5 +1,6 @@
 import { cache, Suspense } from "react";
 import Link from "next/link";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getOptionalSession } from "@/lib/auth-session";
@@ -8,8 +9,10 @@ import { getRelease } from "@/lib/discogs/client";
 import { getAlbumInfo, getArtistInfo } from "@/lib/lastfm/client";
 import { addReleaseToWishlistAction } from "@/app/(app)/wishlist/actions";
 import { addAlbumToCollectionAction, dismissAlbumAction } from "./actions";
+import { ShareLinkButton } from "@/app/(app)/ShareLinkButton";
 import { SubmitButton } from "@/app/(app)/SubmitButton";
 import { JsonLd } from "@/app/JsonLd";
+import { shareUrlForPath } from "@/lib/shareUrl";
 import { absoluteUrl } from "@/lib/site";
 
 // Deduped across generateMetadata and the page render within one request.
@@ -262,6 +265,11 @@ export default async function AlbumDetailPage({
     ? `/album/${release.releaseId}?from=${encodeURIComponent(origin)}`
     : `/album/${release.releaseId}`;
   const loginHref = `/login?next=${encodeURIComponent(returnTo)}`;
+  const shareUrl = shareUrlForPath(`/album/${release.releaseId}`, await headers());
+  const artist = release.artistNames.join(", ");
+  const shareTitle = artist ? `${release.title} — ${artist}` : release.title;
+  const shareButtonClassName =
+    "min-h-11 w-full rounded-lg border border-room-rule px-4 py-2 text-sm font-medium transition-colors hover:border-room-dim active:border-room-dim sm:min-h-0 sm:w-auto";
 
   return (
     <div className="flex flex-col gap-6">
@@ -363,6 +371,12 @@ export default async function AlbumDetailPage({
                 Inicia sesión para añadir o guardar
               </Link>
             )}
+            <ShareLinkButton
+              url={shareUrl}
+              label="Compartir"
+              title={shareTitle}
+              className={shareButtonClassName}
+            />
           </div>
         </div>
       </div>

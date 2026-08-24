@@ -19,10 +19,15 @@ import { SettingsForm } from "@/app/(app)/settings/SettingsForm";
 import { PasswordForm } from "@/app/(app)/settings/PasswordForm";
 import { DeleteAccountSection } from "@/app/(app)/settings/DeleteAccountSection";
 import { WrappedSection } from "./WrappedSection";
+import { ShareLinkButton } from "@/app/(app)/ShareLinkButton";
 import { SubmitButton } from "@/app/(app)/SubmitButton";
+import { publicProfilePath, resolveProfileView } from "@/lib/profileView";
+import { shareUrlForPath } from "@/lib/shareUrl";
 
 // Deduped across generateMetadata and the page render within one request.
 const getProfileCached = cache(getPublicUserProfile);
+const listPublicCollectionItemsCached = cache(listPublicCollectionItems);
+const listWishlistItemsCached = cache(listWishlistItems);
 
 const ANONYMOUS_FOLLOW_STATUS: FollowStatus = {
   isSelf: false,
@@ -32,17 +37,34 @@ const ANONYMOUS_FOLLOW_STATUS: FollowStatus = {
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ userId: string }>;
+  searchParams: Promise<{ view?: string }>;
 }): Promise<Metadata> {
   const { userId } = await params;
+  const { view } = await searchParams;
   const profile = await getProfileCached(userId);
   if (!profile) {
     return { title: "Perfil no encontrado", robots: { index: false, follow: false } };
   }
 
-  const title = profile.handle ? `${profile.name} (@${profile.handle})` : profile.name;
-  const description = `La colección de vinilos de ${profile.name} en VinylOS.`;
+  const isWishlist = resolveProfileView(view, false) === "wishlist";
+  const title = isWishlist
+    ? `Lista de deseos de ${profile.name} en VinylOS`
+    : profile.handle
+      ? `${profile.name} (@${profile.handle})`
+      : profile.name;
+  const description = isWishlist
+    ? `La lista de deseos de vinilos de ${profile.name} en VinylOS.`
+    : `La colección de vinilos de ${profile.name} en VinylOS.`;
+  const canonical = publicProfilePath(userId, isWishlist ? "wishlist" : "profile");
+  const items = isWishlist
+    ? await listWishlistItemsCached(profile.id)
+    : await listPublicCollectionItemsCached(profile.id);
+  const cover = items.find((item) => item.coverUrl)?.coverUrl;
+  const images = cover ? [cover] : undefined;
+
   return {
     title,
     description,
@@ -50,9 +72,19 @@ export async function generateMetadata({
     // to publish into search results on the owner's behalf. `follow` still lets
     // crawlers walk through to the album pages, which are meant to be indexed.
     robots: { index: false, follow: true },
-    alternates: { canonical: `/users/${userId}` },
-    openGraph: { title, description, url: `/users/${userId}` },
-    twitter: { card: "summary_large_image", title, description },
+    alternates: { canonical },
+    openGraph: {
+      title,
+      description,
+      url: canonical,
+      ...(images ? { images } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      ...(images ? { images } : {}),
+    },
   };
 }
 
@@ -74,8 +106,8 @@ function FollowForm({
         pendingText={isFollowing ? "Dejando de seguir…" : "Siguiendo…"}
         className={
           isFollowing
-            ? "min-h-11 rounded border border-room-rule px-4 py-2 text-sm active:bg-room-sunk sm:min-h-0"
-            : "min-h-11 rounded bg-room-accent px-4 py-2 text-sm text-room-on-accent active:opacity-90 sm:min-h-0"
+            ? "min-h-11 w-full rounded border border-room-rule px-4 py-2 text-sm active:bg-room-sunk sm:min-h-0 sm:w-auto"
+            : "min-h-11 w-full rounded bg-room-accent px-4 py-2 text-sm text-room-on-accent active:opacity-90 sm:min-h-0 sm:w-auto"
         }
       >
         {isFollowing ? "Dejar de seguir" : "Seguir"}
@@ -89,7 +121,7 @@ function SignInCta({ returnTo, label }: { returnTo: string; label: string }) {
   return (
     <Link
       href={href}
-      className="min-h-11 rounded bg-room-accent px-4 py-2 text-sm text-room-on-accent active:opacity-90 sm:min-h-0"
+      className="inline-flex min-h-11 w-full items-center justify-center rounded bg-room-accent px-4 py-2 text-sm text-room-on-accent active:opacity-90 sm:min-h-0 sm:w-auto"
     >
       {label}
     </Link>
@@ -220,14 +252,16 @@ export default async function UserProfilePage({
     session
       ? getFollowStatus(session.user.id, profile.id)
       : Promise.resolve(ANONYMOUS_FOLLOW_STATUS),
-    listPublicCollectionItems(profile.id),
+    listPublicCollectionItemsCached(profile.id),
   ]);
   const isSelf = followStatus.isSelf;
-  const showSettings = isSelf && view === "settings";
-  const showWishlist = !isSelf && view === "wishlist";
+  const profileView = resolveProfileView(view, isSelf);
+  const showSettings = profileView === "settings";
+  const showWishlist = profileView === "wishlist";
   // Wishlist is public like collection; only actions (wishlist a record, follow) need auth.
-  const wishlistItems = showWishlist ? await listWishlistItems(profile.id) : [];
-  const wrapped = isSelf && !showSettings ? await getWrappedStats(profile.id) : null;
+  const wishlistItems = showWishlist ? await listWishlistItemsCached(profile.id) : [];
+  const visibleItems = showWishlist ? wishlistItems : items;
+  const wrapped = isSelf && !showSettings && !showWishlist ? await getWrappedStats(profile.id) : null;
   const username = session
     ? (session.user.username ?? session.user.displayUsername ?? "")
     : "";
@@ -236,10 +270,15 @@ export default async function UserProfilePage({
     const accounts = await auth.api.listUserAccounts({ headers: await headers() });
     hasPassword = accounts.some((account) => account.providerId === "credential");
   }
-  const returnTo = `/users/${profile.id}`;
-  const wishlistReturnTo = `/users/${profile.id}?view=wishlist`;
+  const returnTo = publicProfilePath(profile.id, "profile");
+  const wishlistReturnTo = publicProfilePath(profile.id, "wishlist");
   // Wishlist action only for signed-in non-self viewers (server action requires session).
   const showWishlistAction = Boolean(session) && !isSelf;
+  const sharePath = showWishlist ? wishlistReturnTo : returnTo;
+  const shareUrl = shareUrlForPath(sharePath, await headers());
+  const shareTitle = showWishlist
+    ? `Lista de deseos de ${profile.name} en VinylOS`
+    : `Colección de ${profile.name} en VinylOS`;
 
   return (
     <div className="flex flex-col gap-8">
@@ -256,26 +295,34 @@ export default async function UserProfilePage({
           )}
           <div className="mt-2 flex gap-2 text-xs text-room-dim">
             <span className="rounded bg-room-surface px-2 py-1">
-              {items.length} {items.length === 1 ? "record" : "records"}
+              {visibleItems.length} {visibleItems.length === 1 ? "record" : "records"}
             </span>
             {followStatus.followsYou && (
               <span className="rounded bg-room-surface px-2 py-1">Te sigue</span>
             )}
           </div>
         </div>
-        {!followStatus.isSelf &&
-          (session ? (
-            <FollowForm
-              userId={profile.id}
-              returnTo={returnTo}
-              isFollowing={followStatus.isFollowing}
-            />
-          ) : (
-            <SignInCta returnTo={returnTo} label="Inicia sesión para seguir" />
-          ))}
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
+          <ShareLinkButton
+            url={shareUrl}
+            label={showWishlist ? "Compartir lista" : "Compartir colección"}
+            title={shareTitle}
+            className="min-h-11 w-full rounded-lg border border-room-rule px-4 py-2 text-sm font-medium transition-colors hover:bg-room-sunk active:bg-room-sunk sm:min-h-0 sm:w-fit"
+          />
+          {!followStatus.isSelf &&
+            (session ? (
+              <FollowForm
+                userId={profile.id}
+                returnTo={returnTo}
+                isFollowing={followStatus.isFollowing}
+              />
+            ) : (
+              <SignInCta returnTo={returnTo} label="Inicia sesión para seguir" />
+            ))}
+        </div>
       </div>
 
-      {isSelf ? (
+      {isSelf && !showWishlist ? (
         <ProfileTabs
           tabs={[
             { key: "profile", label: "Perfil", href: `/users/${profile.id}` },

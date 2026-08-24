@@ -5,17 +5,17 @@ import { listWishlistItems } from "@/lib/services/wishlistService";
 import { moveToCollectionAction, removeFromWishlistAction } from "./actions";
 import { ConfirmSubmitButton, SubmitButton } from "../SubmitButton";
 import { ShareLinkButton } from "../ShareLinkButton";
+import { shareUrlForPath } from "@/lib/shareUrl";
 
 export const metadata = { title: "Lista de deseos" };
 
 export default async function WishlistPage() {
   const session = await requireSession();
   const items = await listWishlistItems(session.user.id);
-  const requestHeaders = await headers();
-  const host = requestHeaders.get("host");
-  const protocol = requestHeaders.get("x-forwarded-proto") ?? "http";
-  const sharePath = `/users/${session.user.id}?view=wishlist`;
-  const shareUrl = host ? `${protocol}://${host}${sharePath}` : sharePath;
+  const shareUrl = shareUrlForPath(
+    `/users/${session.user.id}?view=wishlist`,
+    await headers(),
+  );
 
   return (
     <div className="flex flex-col gap-6">

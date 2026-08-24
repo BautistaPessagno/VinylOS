@@ -78,16 +78,20 @@ async function renderLandingPage() {
   );
 }
 
-test("the guest landing page leads with search before account actions", async () => {
+test("the landing page keeps account actions in the header and leads to Explore", async () => {
   const html = await renderLandingPage();
 
-  const searchIndex = html.indexOf('action="/explore"');
+  const headerStart = html.indexOf("<header");
+  const headerEnd = html.indexOf("</header>");
   const signupIndex = html.indexOf('href="/login?mode=signup"');
   const loginIndex = html.indexOf('href="/login"');
+  const exploreIndex = html.indexOf('href="/explore"');
 
-  assert.ok(searchIndex >= 0, "the search form is on the landing page");
-  assert.ok(searchIndex < signupIndex, "search appears before Sign up");
-  assert.ok(signupIndex < loginIndex, "Log in is the quietest final action");
+  assert.ok(headerStart >= 0, "the landing page has a header");
+  assert.ok(signupIndex > headerStart && signupIndex < headerEnd);
+  assert.ok(loginIndex > headerStart && loginIndex < headerEnd);
+  assert.ok(exploreIndex > headerEnd, "Explore is the hero action");
+  assert.match(html, />Explorar discos<\/a>/);
 });
 
 test("the landing page hands genres to the search chips", async () => {
