@@ -14,3 +14,12 @@ test("album detail page is publicly readable with optional session", () => {
   assert.match(source, /from\.startsWith\("\/explore"\)/);
   assert.match(source, /Volver a Explorar/);
 });
+
+test("album detail page shares the canonical album URL", () => {
+  const source = readFileSync(pagePath, "utf8");
+  assert.match(source, /ShareLinkButton/);
+  assert.match(source, /shareUrlForPath/);
+  assert.match(source, /`\/album\/\$\{release\.releaseId\}`/);
+  assert.doesNotMatch(source, /shareUrlForPath\(`\/album\/\$\{release\.releaseId\}\?/);
+  assert.match(source, /label="Compartir"/);
+});

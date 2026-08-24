@@ -14,6 +14,7 @@ import { InviteFriendsButton } from "./InviteFriendsButton";
 import { FriendSearchInput } from "./FriendSearchInput";
 import { Avatar } from "../Avatar";
 import { SubmitButton } from "../SubmitButton";
+import { shareUrlForPath } from "@/lib/shareUrl";
 
 export const metadata = { title: "Amigos" };
 
@@ -184,11 +185,7 @@ export default async function FriendsPage({
   const { q } = await searchParams;
   const query = q?.trim() ?? "";
   const returnTo = query ? `/friends?q=${encodeURIComponent(query)}` : "/friends";
-  const requestHeaders = await headers();
-  const host = requestHeaders.get("host");
-  const protocol = requestHeaders.get("x-forwarded-proto") ?? "http";
-  const profilePath = `/users/${session.user.id}`;
-  const profileUrl = host ? `${protocol}://${host}${profilePath}` : profilePath;
+  const profileUrl = shareUrlForPath(`/users/${session.user.id}`, await headers());
 
   const [following, followers, searchResults] = await Promise.all([
     listFollowing(session.user.id),

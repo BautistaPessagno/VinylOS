@@ -25,6 +25,15 @@ test("artist page loads Discogs identity and paginated vinyl records", () => {
   assert.match(source, /page=\$\{catalog\.page \+ 1\}/);
 });
 
+test("artist page shares the canonical artist URL without pagination", () => {
+  const source = readFileSync(pagePath, "utf8");
+  assert.match(source, /ShareLinkButton/);
+  assert.match(source, /shareUrlForPath/);
+  assert.match(source, /`\/artist\/\$\{artistId\}`/);
+  assert.doesNotMatch(source, /shareUrlForPath\(`\/artist\/\$\{artistId\}\?/);
+  assert.match(source, /label="Compartir"/);
+});
+
 test("artist route has no loading.tsx, so a missing artist is a real 404", () => {
   // A loading.tsx wraps the page in a Suspense boundary, which flushes the shell
   // — and a 200 — before the page can call notFound(). Every unknown artist id
