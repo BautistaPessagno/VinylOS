@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
-import { getEditItemData, updateItemAction } from "../../actions";
+import { requireSession } from "@/lib/auth-session";
+import { getCollectionItem } from "@/lib/services/collectionService";
+import { updateItemAction } from "../../actions";
 import { EditEditionSection } from "./EditEditionSection";
 import { SubmitButton } from "../../../SubmitButton";
 
@@ -46,7 +48,8 @@ export default async function EditCollectionItemPage({
   params: Promise<{ itemId: string }>;
 }) {
   const { itemId } = await params;
-  const item = await getEditItemData(Number(itemId));
+  const session = await requireSession();
+  const item = await getCollectionItem(session.user.id, Number(itemId));
   if (!item) notFound();
 
   return (

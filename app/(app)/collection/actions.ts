@@ -15,7 +15,6 @@ import {
   updateCollectionItem,
   updateCollectionItemRelease,
   removeCollectionItem,
-  getCollectionItem,
 } from "@/lib/services/collectionService";
 import {
   releaseFormSchema,
@@ -193,9 +192,4 @@ export async function removeItemAction(formData: FormData) {
   await removeCollectionItem(session.user.id, itemId);
   revalidatePath("/collection");
   redirect(appendToast("/collection", "item-removed"));
-}
-
-export async function getEditItemData(itemId: number) {
-  const session = await requireSession();
-  return getCollectionItem(session.user.id, itemId);
 }

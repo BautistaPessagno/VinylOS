@@ -34,3 +34,6 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Verify Server Actions
+        run: pnpm verify:server-actions
