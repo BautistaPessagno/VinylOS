@@ -1,0 +1,129 @@
+{
+  "actions": [
+    {
+      "module": "app/(app)/collection/actions.ts",
+      "export": "addAlbumFromDiscogsAction",
+      "access": "authenticated"
+    },
+    {
+      "module": "app/(app)/collection/actions.ts",
+      "export": "addAlbumsFromDiscogsAction",
+      "access": "authenticated"
+    },
+    {
+      "module": "app/(app)/collection/actions.ts",
+      "export": "changeItemEditionAction",
+      "access": "authenticated"
+    },
+    {
+      "module": "app/(app)/collection/actions.ts",
+      "export": "getAlbumEditionsAction",
+      "access": "authenticated"
+    },
+    {
+      "module": "app/(app)/collection/actions.ts",
+      "export": "removeItemAction",
+      "access": "authenticated"
+    },
+    {
+      "module": "app/(app)/collection/actions.ts",
+      "export": "searchDiscogsAction",
+      "access": "authenticated"
+    },
+    {
+      "module": "app/(app)/collection/actions.ts",
+      "export": "submitAddReleaseAction",
+      "access": "authenticated"
+    },
+    {
+      "module": "app/(app)/collection/actions.ts",
+      "export": "updateItemAction",
+      "access": "authenticated"
+    },
+    {
+      "module": "app/(app)/friends/actions.ts",
+      "export": "followUserAction",
+      "access": "authenticated"
+    },
+    {
+      "module": "app/(app)/friends/actions.ts",
+      "export": "unfollowUserAction",
+      "access": "authenticated"
+    },
+    {
+      "module": "app/(app)/recommendations/actions.ts",
+      "export": "addExploreAlbumAction",
+      "access": "authenticated"
+    },
+    {
+      "module": "app/(app)/recommendations/actions.ts",
+      "export": "addRecommendationToCollectionAction",
+      "access": "authenticated"
+    },
+    {
+      "module": "app/(app)/recommendations/actions.ts",
+      "export": "beginExploreAuthAction",
+      "access": "anonymous"
+    },
+    {
+      "module": "app/(app)/recommendations/actions.ts",
+      "export": "completePendingExploreAction",
+      "access": "authenticated"
+    },
+    {
+      "module": "app/(app)/recommendations/actions.ts",
+      "export": "dismissRecommendationAction",
+      "access": "authenticated"
+    },
+    {
+      "module": "app/(app)/recommendations/actions.ts",
+      "export": "openExploreAlbumAction",
+      "access": "anonymous"
+    },
+    {
+      "module": "app/(app)/recommendations/actions.ts",
+      "export": "refreshRecommendationsAction",
+      "access": "authenticated"
+    },
+    {
+      "module": "app/(app)/recommendations/actions.ts",
+      "export": "searchExploreAction",
+      "access": "anonymous"
+    },
+    {
+      "module": "app/(app)/recommendations/actions.ts",
+      "export": "wishlistExploreAlbumAction",
+      "access": "authenticated"
+    },
+    {
+      "module": "app/(app)/wishlist/actions.ts",
+      "export": "addAlbumToWishlistFromDiscogsAction",
+      "access": "authenticated"
+    },
+    {
+      "module": "app/(app)/wishlist/actions.ts",
+      "export": "addReleaseToWishlistAction",
+      "access": "authenticated"
+    },
+    {
+      "module": "app/(app)/wishlist/actions.ts",
+      "export": "moveToCollectionAction",
+      "access": "authenticated"
+    },
+    {
+      "module": "app/(app)/wishlist/actions.ts",
+      "export": "removeFromWishlistAction",
+      "access": "authenticated"
+    },
+    {
+      "module": "app/(public)/album/[id]/actions.ts",
+      "export": "addAlbumToCollectionAction",
+      "access": "authenticated"
+    },
+    {
+      "module": "app/(public)/album/[id]/actions.ts",
+      "export": "dismissAlbumAction",
+      "access": "authenticated"
+    }
+  ]
+}
