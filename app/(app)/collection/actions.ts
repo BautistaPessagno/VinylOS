@@ -7,9 +7,11 @@ import * as discogs from "@/lib/discogs/client";
 import { releaseInputFromDiscogs } from "@/lib/discogs/mapRelease";
 import { isSearchQueryReady, normalizeSearchQuery } from "@/lib/search/searchQuery";
 import { appendToast } from "@/lib/toast/flash";
+import type { LibraryActionResult } from "@/lib/toast/messages";
 import {
   upsertRelease,
   addCollectionItem,
+  getLibraryDiscogsReleaseIds,
   updateCollectionItem,
   updateCollectionItemRelease,
   removeCollectionItem,
@@ -20,11 +22,38 @@ import {
   collectionItemFormSchema,
 } from "@/lib/validation/collectionItem";
 
-export async function searchDiscogsAction(query: string) {
-  await requireSession();
+export type DiscogsCollectionSearchResult = {
+  albums: Awaited<ReturnType<typeof discogs.searchVinylAlbums>>;
+  library: { collection: number[]; wishlist: number[] };
+};
+
+function isPositiveInteger(value: number): boolean {
+  return Number.isSafeInteger(value) && value > 0;
+}
+
+const MAX_BATCH_ADD_COUNT = 50;
+
+export async function searchDiscogsAction(
+  query: string,
+): Promise<DiscogsCollectionSearchResult> {
+  const session = await requireSession();
   const normalizedQuery = normalizeSearchQuery(query);
-  if (!isSearchQueryReady(normalizedQuery)) return [];
-  return discogs.searchVinylAlbums(normalizedQuery);
+  if (!isSearchQueryReady(normalizedQuery)) {
+    return { albums: [], library: { collection: [], wishlist: [] } };
+  }
+
+  const albums = await discogs.searchVinylAlbums(normalizedQuery);
+  const library = await getLibraryDiscogsReleaseIds(
+    session.user.id,
+    albums.map((album) => album.releaseId),
+  );
+  return {
+    albums,
+    library: {
+      collection: [...library.collection],
+      wishlist: [...library.wishlist],
+    },
+  };
 }
 
 export async function getAlbumEditionsAction(masterId: number) {
@@ -32,26 +61,68 @@ export async function getAlbumEditionsAction(masterId: number) {
   return discogs.getMasterVersions(masterId);
 }
 
-/** One-click add: fetches the chosen pressing and saves it straight to the collection. */
-export async function addAlbumFromDiscogsAction(discogsReleaseId: number) {
+/**
+ * One-click add: fetches the chosen pressing and saves it straight to the collection,
+ * leaving the user on the search results so they can keep adding. Revalidating anything
+ * here would re-render this page and throw away the in-progress search.
+ */
+export async function addAlbumFromDiscogsAction(
+  discogsReleaseId: number,
+): Promise<LibraryActionResult> {
   const session = await requireSession();
-  const detail = await discogs.getRelease(discogsReleaseId);
-  const releaseId = await upsertRelease(releaseInputFromDiscogs(detail));
-  await addCollectionItem(session.user.id, releaseId, {}, "discogs_sync");
-  revalidatePath("/collection");
-  redirect(appendToast("/collection", "collection-added"));
+  try {
+    if (!isPositiveInteger(discogsReleaseId)) throw new Error("Invalid release id");
+    const detail = await discogs.getRelease(discogsReleaseId);
+    const releaseId = await upsertRelease(releaseInputFromDiscogs(detail));
+    const itemId = await addCollectionItem(
+      session.user.id,
+      releaseId,
+      {},
+      "discogs_sync",
+    );
+    return {
+      toast: itemId ? "collection-added" : "collection-already",
+      inList: true,
+    };
+  } catch {
+    return { toast: "collection-add-failed", inList: false };
+  }
 }
 
 /** Multi-select add: adds each chosen album's default pressing in one batch. */
-export async function addAlbumsFromDiscogsAction(discogsReleaseIds: number[]) {
+export async function addAlbumsFromDiscogsAction(
+  discogsReleaseIds: number[],
+): Promise<LibraryActionResult> {
   const session = await requireSession();
-  for (const discogsReleaseId of discogsReleaseIds) {
-    const detail = await discogs.getRelease(discogsReleaseId);
-    const releaseId = await upsertRelease(releaseInputFromDiscogs(detail));
-    await addCollectionItem(session.user.id, releaseId, {}, "discogs_sync");
+  try {
+    const uniqueReleaseIds = [...new Set(discogsReleaseIds)];
+    if (
+      uniqueReleaseIds.length === 0 ||
+      discogsReleaseIds.length > MAX_BATCH_ADD_COUNT ||
+      uniqueReleaseIds.some((id) => !isPositiveInteger(id))
+    ) {
+      throw new Error("Invalid release ids");
+    }
+
+    let addedAny = false;
+    for (const discogsReleaseId of uniqueReleaseIds) {
+      const detail = await discogs.getRelease(discogsReleaseId);
+      const releaseId = await upsertRelease(releaseInputFromDiscogs(detail));
+      const itemId = await addCollectionItem(
+        session.user.id,
+        releaseId,
+        {},
+        "discogs_sync",
+      );
+      addedAny ||= itemId !== null;
+    }
+    return {
+      toast: addedAny ? "collection-added" : "collection-already",
+      inList: true,
+    };
+  } catch {
+    return { toast: "collection-add-failed", inList: false };
   }
-  revalidatePath("/collection");
-  redirect(appendToast("/collection", "collection-added"));
 }
 
 /** Advanced edition picker on the edit page: swap an owned item to a different pressing. */

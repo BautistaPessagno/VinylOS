@@ -6,6 +6,11 @@ import {
   wishlistExploreAlbumAction,
 } from "./actions";
 import { SubmitButton } from "../SubmitButton";
+import { LibraryActionForm } from "../LibraryActionForm";
+
+const ACTION_CLASS = "-mx-1 min-h-11 px-1 underline underline-offset-2 active:opacity-70";
+/** Same slot, same height, no affordance: the action no longer applies to this record. */
+const IN_LIST_CLASS = "-mx-1 inline-flex min-h-11 items-center px-1 text-room-dim";
 
 export type DiscoveryAlbum = {
   artist: string;
@@ -26,11 +31,16 @@ export function DiscoveryAlbumCard({
   signedIn = true,
   /** Explore keeps the selected guest action through login; other public cards keep one login link. */
   guestActionMode = "login-link",
+  /** Already owned / already wanted, so the matching action is stated rather than offered. */
+  inCollection = false,
+  inWishlist = false,
 }: {
   album: DiscoveryAlbum;
   returnTo: string;
   signedIn?: boolean;
   guestActionMode?: "login-link" | "pending";
+  inCollection?: boolean;
+  inWishlist?: boolean;
 }) {
   const loginHref = `/login?next=${encodeURIComponent(returnTo)}`;
   // Already in the catalog: link straight to it, so the page is reachable by a
@@ -104,28 +114,26 @@ export function DiscoveryAlbumCard({
       <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
         {signedIn ? (
           <>
-            <form action={addExploreAlbumAction}>
-              <input type="hidden" name="artist" value={album.artist} />
-              <input type="hidden" name="album" value={album.title} />
-              <input type="hidden" name="returnTo" value={returnTo} />
-              <SubmitButton
-                pendingText="Añadiendo…"
-                className="-mx-1 min-h-11 px-1 underline underline-offset-2 active:opacity-70"
-              >
-                Añadir
-              </SubmitButton>
-            </form>
-            <form action={wishlistExploreAlbumAction}>
-              <input type="hidden" name="artist" value={album.artist} />
-              <input type="hidden" name="album" value={album.title} />
-              <input type="hidden" name="returnTo" value={returnTo} />
-              <SubmitButton
-                pendingText="Añadiendo…"
-                className="-mx-1 min-h-11 px-1 underline underline-offset-2 active:opacity-70"
-              >
-                Lista de deseos
-              </SubmitButton>
-            </form>
+            <LibraryActionForm
+              action={addExploreAlbumAction}
+              fields={{ artist: album.artist, album: album.title }}
+              label="Añadir"
+              inListLabel="En tu colección"
+              pendingText="Añadiendo…"
+              inList={inCollection}
+              className={ACTION_CLASS}
+              inListClassName={IN_LIST_CLASS}
+            />
+            <LibraryActionForm
+              action={wishlistExploreAlbumAction}
+              fields={{ artist: album.artist, album: album.title }}
+              label="Lista de deseos"
+              inListLabel="En tu lista de deseos"
+              pendingText="Añadiendo…"
+              inList={inWishlist}
+              className={ACTION_CLASS}
+              inListClassName={IN_LIST_CLASS}
+            />
           </>
         ) : guestActionMode === "pending" ? (
           <>
@@ -134,10 +142,7 @@ export function DiscoveryAlbumCard({
               <input type="hidden" name="artist" value={album.artist} />
               <input type="hidden" name="album" value={album.title} />
               <input type="hidden" name="returnTo" value={returnTo} />
-              <SubmitButton
-                pendingText="Continuando…"
-                className="-mx-1 min-h-11 px-1 underline underline-offset-2 active:opacity-70"
-              >
+              <SubmitButton pendingText="Continuando…" className={ACTION_CLASS}>
                 Añadir
               </SubmitButton>
             </form>
@@ -146,10 +151,7 @@ export function DiscoveryAlbumCard({
               <input type="hidden" name="artist" value={album.artist} />
               <input type="hidden" name="album" value={album.title} />
               <input type="hidden" name="returnTo" value={returnTo} />
-              <SubmitButton
-                pendingText="Continuando…"
-                className="-mx-1 min-h-11 px-1 underline underline-offset-2 active:opacity-70"
-              >
+              <SubmitButton pendingText="Continuando…" className={ACTION_CLASS}>
                 Lista de deseos
               </SubmitButton>
             </form>

@@ -26,13 +26,22 @@ function loadSearchAction() {
     if (id === "next/headers") return { cookies: async () => ({}) };
     if (id === "@/lib/auth-session") {
       return {
+        getOptionalSession: async () => null,
         requireSession: async () => {
           throw new Error("session required");
         },
       };
     }
     if (id === "@/lib/services/collectionService") {
-      return { addCollectionItem: async () => null };
+      return {
+        addCollectionItem: async () => null,
+        getLibraryAlbumKeys: async () => {
+          throw new Error("guest library lookup");
+        },
+      };
+    }
+    if (id === "@/lib/services/albumKey") {
+      return { albumMatchKey: (artist, title) => `${artist}::${title}` };
     }
     if (id === "@/lib/services/wishlistService") {
       return { addWishlistItem: async () => null };
@@ -150,6 +159,7 @@ test("Explore search returns public catalog results without a session", async ()
         },
       ],
       songs: [],
+      library: { collection: [], wishlist: [] },
     },
   );
 });

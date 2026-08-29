@@ -1,7 +1,7 @@
 import { desc, isNotNull, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { artists, releases } from "@/lib/db/schema";
-import { albumMatchKey } from "@/lib/services/collectionService";
+import { albumMatchKey } from "@/lib/services/albumKey";
 
 /**
  * Catalog rows that have a public detail page, for the sitemap.

@@ -4,7 +4,8 @@ import {
   listExploreGenres,
   listExploreAlbums,
 } from "@/lib/services/exploreService";
-import { getLibraryAlbumKeys, albumMatchKey } from "@/lib/services/collectionService";
+import { albumMatchKey } from "@/lib/services/albumKey";
+import { getLibraryAlbumKeys } from "@/lib/services/collectionService";
 import { getReleaseIdsByAlbumKey } from "@/lib/services/catalogService";
 import {
   EXPLORE_SORT_OPTIONS,
@@ -37,14 +38,12 @@ export async function ExploreTab({
   const selectedSort = parseExploreSort(sort);
   const [allAlbums, libraryKeys, releaseIdsByKey] = await Promise.all([
     listExploreAlbums(selected),
-    userId ? getLibraryAlbumKeys(userId) : Promise.resolve(new Set<string>()),
+    userId
+      ? getLibraryAlbumKeys(userId)
+      : Promise.resolve({ collection: new Set<string>(), wishlist: new Set<string>() }),
     getReleaseIdsByAlbumKey(),
   ]);
-  // Hide albums the user already owns or has wishlisted (matched by normalized artist+title).
-  const albums = sortExploreAlbums(
-    allAlbums.filter((a) => !libraryKeys.has(albumMatchKey(a.artist, a.album))),
-    selectedSort,
-  );
+  const albums = sortExploreAlbums(allAlbums, selectedSort);
   const returnParams = new URLSearchParams({ genre: selected });
   if (selectedSort !== "relevance") returnParams.set("sort", selectedSort);
   const returnTo = `/explore?${returnParams.toString()}`;
@@ -116,22 +115,25 @@ export async function ExploreTab({
           </p>
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-            {albums.map((album) => (
-              <DiscoveryAlbumCard
-                key={`${album.artist}::${album.album}`}
-                album={{
-                  artist: album.artist,
-                  title: album.album,
-                  imageUrl: album.imageUrl,
-                  releaseId: releaseIdsByKey.get(
-                    albumMatchKey(album.artist, album.album),
-                  ),
-                }}
-                returnTo={returnTo}
-                signedIn={Boolean(userId)}
-                guestActionMode="pending"
-              />
-            ))}
+            {albums.map((album) => {
+              const key = albumMatchKey(album.artist, album.album);
+              return (
+                <DiscoveryAlbumCard
+                  key={`${album.artist}::${album.album}`}
+                  album={{
+                    artist: album.artist,
+                    title: album.album,
+                    imageUrl: album.imageUrl,
+                    releaseId: releaseIdsByKey.get(key),
+                  }}
+                  returnTo={returnTo}
+                  signedIn={Boolean(userId)}
+                  guestActionMode="pending"
+                  inCollection={libraryKeys.collection.has(key)}
+                  inWishlist={libraryKeys.wishlist.has(key)}
+                />
+              );
+            })}
           </div>
         )}
       </div>

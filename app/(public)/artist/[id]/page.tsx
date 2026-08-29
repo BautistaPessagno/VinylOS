@@ -6,6 +6,8 @@ import type { Metadata } from "next";
 import { getOptionalSession } from "@/lib/auth-session";
 import { getArtist, searchArtistVinylAlbums } from "@/lib/discogs/client";
 import { getArtistImageUrl, parsePositiveInteger } from "@/lib/discogs/artistPage";
+import { albumMatchKey } from "@/lib/services/albumKey";
+import { getLibraryAlbumKeys } from "@/lib/services/collectionService";
 import { DiscoveryAlbumCard } from "@/app/(app)/recommendations/DiscoveryAlbumCard";
 import { ShareLinkButton } from "@/app/(app)/ShareLinkButton";
 import { JsonLd } from "@/app/JsonLd";
@@ -84,6 +86,11 @@ export default async function ArtistPage({
   }
 
   const imageUrl = getArtistImageUrl(artist);
+  // Which of this artist's records the viewer already has, so each card offers only
+  // the action that still applies.
+  const libraryKeys = session
+    ? await getLibraryAlbumKeys(session.user.id)
+    : { collection: new Set<string>(), wishlist: new Set<string>() };
   const returnTo = `/artist/${artist.id}?page=${catalog.page}`;
   const backHref = "/explore?focus=search";
   const backLabel = "← Volver a la búsqueda";
@@ -176,6 +183,12 @@ export default async function ArtistPage({
                 }}
                 returnTo={returnTo}
                 signedIn={Boolean(session)}
+                inCollection={libraryKeys.collection.has(
+                  albumMatchKey(album.artist, album.title),
+                )}
+                inWishlist={libraryKeys.wishlist.has(
+                  albumMatchKey(album.artist, album.title),
+                )}
               />
             ))}
           </div>

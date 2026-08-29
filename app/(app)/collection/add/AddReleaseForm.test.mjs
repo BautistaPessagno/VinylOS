@@ -44,3 +44,11 @@ test("Add Record server search enforces normalized ready queries", () => {
   assert.match(action, /isSearchQueryReady/);
   assert.match(action, /searchVinylAlbums\(normalizedQuery\)/);
 });
+
+test("already-collected search results cannot be submitted through multi-add", () => {
+  const source = readFileSync(componentPath, "utf8");
+
+  assert.match(source, /disabled=\{added\}/);
+  assert.match(source, /selectedToAdd/);
+  assert.match(source, /next\.delete\(discogsReleaseId\)/);
+});

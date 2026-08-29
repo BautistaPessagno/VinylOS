@@ -4,48 +4,54 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth-session";
 import { appendToast } from "@/lib/toast/flash";
+import type { LibraryActionResult } from "@/lib/toast/messages";
 import * as discogs from "@/lib/discogs/client";
 import { releaseInputFromDiscogs } from "@/lib/discogs/mapRelease";
 import { upsertRelease, addCollectionItem } from "@/lib/services/collectionService";
 import { addWishlistItem, removeWishlistItem } from "@/lib/services/wishlistService";
 
-function getSafeReturnPath(formData: FormData) {
-  const value = formData.get("returnTo");
-  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) {
-    return "/wishlist";
-  }
-  return value;
-}
-
 /**
- * Add a release (already cached locally) to the wishlist and return to the page
- * the button was clicked from. Used by the recommendations and public-profile pages.
+ * Add a release (already cached locally) to the wishlist without moving the user.
+ *
+ * Deliberately revalidates nothing: any revalidation would make Next re-render the
+ * page the click came from, and a discovery grid that filters out wishlisted records
+ * would pull the card out from under the tap. `/wishlist` is a dynamic route, so it
+ * reads fresh whenever the user follows the toast link there.
  */
-export async function addReleaseToWishlistAction(formData: FormData) {
+export async function addReleaseToWishlistAction(
+  _previous: LibraryActionResult | null,
+  formData: FormData,
+): Promise<LibraryActionResult> {
   const session = await requireSession();
   const releaseId = Number(formData.get("releaseId"));
-
-  let code: "wishlist-added" | "wishlist-add-failed" = "wishlist-added";
-  try {
-    await addWishlistItem(session.user.id, releaseId);
-  } catch {
-    code = "wishlist-add-failed";
+  if (!Number.isSafeInteger(releaseId) || releaseId <= 0) {
+    return { toast: "wishlist-add-failed", inList: false };
   }
 
-  const returnTo = getSafeReturnPath(formData);
-  revalidatePath(returnTo);
-  revalidatePath("/wishlist");
-  redirect(appendToast(returnTo, code));
+  try {
+    const itemId = await addWishlistItem(session.user.id, releaseId);
+    return { toast: itemId ? "wishlist-added" : "wishlist-already", inList: true };
+  } catch {
+    return { toast: "wishlist-add-failed", inList: false };
+  }
 }
 
 /** One-click wishlist from Discogs search: fetches the pressing, caches it, then wishlists it. */
-export async function addAlbumToWishlistFromDiscogsAction(discogsReleaseId: number) {
+export async function addAlbumToWishlistFromDiscogsAction(
+  discogsReleaseId: number,
+): Promise<LibraryActionResult> {
   const session = await requireSession();
-  const detail = await discogs.getRelease(discogsReleaseId);
-  const releaseId = await upsertRelease(releaseInputFromDiscogs(detail));
-  await addWishlistItem(session.user.id, releaseId);
-  revalidatePath("/wishlist");
-  redirect(appendToast("/wishlist", "wishlist-added"));
+  if (!Number.isSafeInteger(discogsReleaseId) || discogsReleaseId <= 0) {
+    return { toast: "wishlist-add-failed", inList: false };
+  }
+  try {
+    const detail = await discogs.getRelease(discogsReleaseId);
+    const releaseId = await upsertRelease(releaseInputFromDiscogs(detail));
+    const itemId = await addWishlistItem(session.user.id, releaseId);
+    return { toast: itemId ? "wishlist-added" : "wishlist-already", inList: true };
+  } catch {
+    return { toast: "wishlist-add-failed", inList: false };
+  }
 }
 
 export async function removeFromWishlistAction(formData: FormData) {

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth-session";
 import { appendToast } from "@/lib/toast/flash";
+import type { LibraryActionResult } from "@/lib/toast/messages";
 import { addCollectionItem } from "@/lib/services/collectionService";
 import {
   dismissReleaseForUser,
@@ -18,20 +19,37 @@ function safeReturnPath(formData: FormData, fallback: string) {
   return value;
 }
 
-/** Add this album to the collection from its detail page. */
-export async function addAlbumToCollectionAction(formData: FormData) {
+/**
+ * Add this album to the collection from its detail page, without leaving it.
+ * `/collection` is a dynamic route, so it reads fresh when the toast link is followed
+ * and there is nothing here worth revalidating.
+ */
+export async function addAlbumToCollectionAction(
+  _previous: LibraryActionResult | null,
+  formData: FormData,
+): Promise<LibraryActionResult> {
   const session = await requireSession();
   const releaseId = Number(formData.get("releaseId"));
+  if (!Number.isSafeInteger(releaseId) || releaseId <= 0) {
+    return { toast: "collection-add-failed", inList: false };
+  }
 
-  let code: "collection-added" | "collection-add-failed" = "collection-added";
+  let itemId: number | null;
   try {
-    await addCollectionItem(session.user.id, releaseId, {}, "manual");
+    itemId = await addCollectionItem(session.user.id, releaseId, {}, "manual");
+  } catch {
+    return { toast: "collection-add-failed", inList: false };
+  }
+
+  try {
     await dismissRecommendationForRelease(session.user.id, releaseId);
   } catch {
-    code = "collection-add-failed";
+    // The add already succeeded. Library membership filters the stale recommendation.
   }
-  revalidatePath("/collection");
-  redirect(appendToast(safeReturnPath(formData, `/album/${releaseId}`), code));
+  return {
+    toast: itemId ? "collection-added" : "collection-already",
+    inList: true,
+  };
 }
 
 /** Mark this album as "not interested" so it won't resurface in recommendations. */

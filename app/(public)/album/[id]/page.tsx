@@ -4,13 +4,14 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getOptionalSession } from "@/lib/auth-session";
-import { getReleaseById } from "@/lib/services/collectionService";
+import { getReleaseById, getLibraryReleaseIds } from "@/lib/services/collectionService";
 import { getRelease } from "@/lib/discogs/client";
 import { getAlbumInfo, getArtistInfo } from "@/lib/lastfm/client";
 import { addReleaseToWishlistAction } from "@/app/(app)/wishlist/actions";
 import { addAlbumToCollectionAction, dismissAlbumAction } from "./actions";
 import { ShareLinkButton } from "@/app/(app)/ShareLinkButton";
 import { SubmitButton } from "@/app/(app)/SubmitButton";
+import { LibraryActionForm } from "@/app/(app)/LibraryActionForm";
 import { JsonLd } from "@/app/JsonLd";
 import { shareUrlForPath } from "@/lib/shareUrl";
 import { absoluteUrl } from "@/lib/site";
@@ -250,6 +251,13 @@ export default async function AlbumDetailPage({
   const release = await getReleaseCached(Number(id));
   if (!release) notFound();
 
+  // Which of the two actions still apply to this record for this viewer.
+  const library = session
+    ? await getLibraryReleaseIds(session.user.id, [release.releaseId])
+    : null;
+  const inCollection = library?.collection.has(release.releaseId) ?? false;
+  const inWishlist = library?.wishlist.has(release.releaseId) ?? false;
+
   const coverUrl = release.coverUrl || "";
   // Genres and styles can overlap (e.g. "Reggae" in both); keep first occurrence only.
   const tags = [...new Set([...(release.genres ?? []), ...(release.styles ?? [])])];
@@ -260,7 +268,7 @@ export default async function AlbumDetailPage({
     : session
       ? "Volver a Descubrir"
       : "Volver a Explorar";
-  // Keep the origin through add/wishlist actions so the back link survives a round-trip.
+  // Sign-in bounces back to this exact URL so the back link survives the round-trip.
   const returnTo = origin
     ? `/album/${release.releaseId}?from=${encodeURIComponent(origin)}`
     : `/album/${release.releaseId}`;
@@ -268,8 +276,13 @@ export default async function AlbumDetailPage({
   const shareUrl = shareUrlForPath(`/album/${release.releaseId}`, await headers());
   const artist = release.artistNames.join(", ");
   const shareTitle = artist ? `${release.title} — ${artist}` : release.title;
+  const primaryButtonClassName =
+    "min-h-11 w-full rounded-lg bg-room-accent px-4 py-2 text-sm font-medium text-room-on-accent shadow-sm transition-colors hover:opacity-90 active:opacity-90 sm:min-h-0 sm:w-auto";
   const shareButtonClassName =
     "min-h-11 w-full rounded-lg border border-room-rule px-4 py-2 text-sm font-medium transition-colors hover:border-room-dim active:border-room-dim sm:min-h-0 sm:w-auto";
+  // Holds the button's footprint so the row doesn't reflow, minus the affordance.
+  const inListChipClassName =
+    "inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-dashed border-room-rule px-4 py-2 text-sm font-medium text-room-dim sm:min-h-0 sm:w-auto";
 
   return (
     <div className="flex flex-col gap-6">
@@ -331,29 +344,32 @@ export default async function AlbumDetailPage({
           <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             {session ? (
               <>
-                <form action={addAlbumToCollectionAction} className="w-full sm:w-auto">
-                  <input type="hidden" name="releaseId" value={release.releaseId} />
-                  <input type="hidden" name="returnTo" value={returnTo} />
-                  <SubmitButton
-                    pendingText="Añadiendo…"
-                    className="min-h-11 w-full rounded-lg bg-room-accent px-4 py-2 text-sm font-medium text-room-on-accent shadow-sm transition-colors hover:opacity-90 active:opacity-90 sm:min-h-0 sm:w-auto"
-                  >
-                    Añadir a la colección
-                  </SubmitButton>
-                </form>
-                <form action={addReleaseToWishlistAction} className="w-full sm:w-auto">
-                  <input type="hidden" name="releaseId" value={release.releaseId} />
-                  <input type="hidden" name="returnTo" value={returnTo} />
-                  <SubmitButton
-                    pendingText="Añadiendo…"
-                    className="min-h-11 w-full rounded-lg border border-room-rule px-4 py-2 text-sm font-medium transition-colors hover:border-room-dim active:border-room-dim sm:min-h-0 sm:w-auto"
-                  >
-                    Lista de deseos
-                  </SubmitButton>
-                </form>
+                <LibraryActionForm
+                  action={addAlbumToCollectionAction}
+                  fields={{ releaseId: release.releaseId }}
+                  label="Añadir a la colección"
+                  inListLabel="En tu colección"
+                  pendingText="Añadiendo…"
+                  inList={inCollection}
+                  formClassName="w-full sm:w-auto"
+                  className={primaryButtonClassName}
+                  inListClassName={inListChipClassName}
+                />
+                <LibraryActionForm
+                  action={addReleaseToWishlistAction}
+                  fields={{ releaseId: release.releaseId }}
+                  label="Lista de deseos"
+                  inListLabel="En tu lista de deseos"
+                  pendingText="Añadiendo…"
+                  inList={inWishlist}
+                  formClassName="w-full sm:w-auto"
+                  className={shareButtonClassName}
+                  inListClassName={inListChipClassName}
+                />
                 <form action={dismissAlbumAction} className="w-full sm:w-auto">
                   <input type="hidden" name="releaseId" value={release.releaseId} />
-                  {/* Dismiss returns to wherever the user came from, like the other actions. */}
+                  {/* Unlike add/wishlist, dismissing is a "take me away from this" action,
+                      so it still returns to wherever the user came from. */}
                   <input type="hidden" name="returnTo" value={origin ?? "/recommendations"} />
                   <SubmitButton
                     pendingText="Descartando…"
@@ -366,7 +382,7 @@ export default async function AlbumDetailPage({
             ) : (
               <Link
                 href={loginHref}
-                className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-room-accent px-4 py-2 text-sm font-medium text-room-on-accent shadow-sm transition-colors hover:opacity-90 active:opacity-90 sm:min-h-0 sm:w-auto"
+                className={`inline-flex items-center justify-center ${primaryButtonClassName}`}
               >
                 Inicia sesión para añadir o guardar
               </Link>

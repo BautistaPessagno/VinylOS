@@ -8,17 +8,26 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import Link from "next/link";
 import {
   TOAST_MESSAGES,
   isToastCode,
+  type ToastAction,
   type ToastCode,
   type ToastMessage,
   type ToastVariant,
 } from "@/lib/toast/messages";
 
 const TOAST_DURATION_MS = 4000;
+/** Longer when there's a link to take: the toast has to outlive the reading of it. */
+const TOAST_WITH_ACTION_DURATION_MS = 7000;
 
-type ActiveToast = { id: number; message: string; variant: ToastVariant };
+type ActiveToast = {
+  id: number;
+  message: string;
+  variant: ToastVariant;
+  action?: ToastAction;
+};
 
 type ToastContextValue = {
   showToast: (toast: ToastCode | ToastMessage) => void;
@@ -42,13 +51,20 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   const showToast = useCallback(
     (toast: ToastCode | ToastMessage) => {
-      const resolved =
-        typeof toast === "string" && isToastCode(toast) ? TOAST_MESSAGES[toast] : toast;
-      if (typeof resolved === "string") return;
+      const resolved: ToastMessage | null =
+        typeof toast === "string"
+          ? isToastCode(toast)
+            ? TOAST_MESSAGES[toast]
+            : null
+          : toast;
+      if (!resolved) return;
 
       const id = nextId.current++;
       setToasts((current) => [...current, { id, ...resolved }]);
-      setTimeout(() => dismiss(id), TOAST_DURATION_MS);
+      setTimeout(
+        () => dismiss(id),
+        resolved.action ? TOAST_WITH_ACTION_DURATION_MS : TOAST_DURATION_MS,
+      );
     },
     [dismiss],
   );
@@ -73,7 +89,19 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 : "border-room-danger bg-room-surface text-room-fg"
             }`}
           >
-            <span className="flex-1">{toast.message}</span>
+            <div className="flex flex-1 flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span className="flex-1">{toast.message}</span>
+              {/* Staying put is the default; this is the opt-in way out. */}
+              {toast.action && (
+                <Link
+                  href={toast.action.href}
+                  onClick={() => dismiss(toast.id)}
+                  className="shrink-0 font-medium text-room-accent underline underline-offset-2 active:opacity-70"
+                >
+                  {toast.action.label}
+                </Link>
+              )}
+            </div>
             <button
               type="button"
               onClick={() => dismiss(toast.id)}

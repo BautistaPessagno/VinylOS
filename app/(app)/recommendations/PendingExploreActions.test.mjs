@@ -110,6 +110,9 @@ function loadActions({
         },
       };
     }
+    if (id === "@/lib/services/albumKey") {
+      return { albumMatchKey: (artist, album) => `${artist}::${album}` };
+    }
     if (id === "@/lib/services/wishlistService") {
       return {
         addWishlistItem: async (userId, releaseId) => {
