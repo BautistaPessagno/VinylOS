@@ -5,6 +5,7 @@ import type {
   DiscogsSongResult,
 } from "@/lib/discogs/types";
 import { matchScore, rankSections } from "@/lib/search/rankSearchResults";
+import { albumMatchKey } from "@/lib/services/albumKey";
 import type { ExploreSearchResult } from "./actions";
 import { openExploreAlbumAction } from "./actions";
 import { DiscoveryAlbumCard } from "./DiscoveryAlbumCard";
@@ -163,6 +164,9 @@ export function ExploreSearchResults({
         : result.songs.length > 0,
   );
 
+  const inCollection = new Set(result.library.collection);
+  const inWishlist = new Set(result.library.wishlist);
+
   const artists =
     heroSection === "artists" ? result.artists.slice(1) : result.artists;
   const albums = heroSection === "albums" ? result.albums.slice(1) : result.albums;
@@ -214,6 +218,10 @@ export function ExploreSearchResults({
                   returnTo={returnTo}
                   signedIn={signedIn}
                   guestActionMode="pending"
+                  inCollection={inCollection.has(
+                    albumMatchKey(album.artist, album.title),
+                  )}
+                  inWishlist={inWishlist.has(albumMatchKey(album.artist, album.title))}
                 />
               ))}
             </div>
@@ -241,6 +249,10 @@ export function ExploreSearchResults({
                 returnTo={returnTo}
                 signedIn={signedIn}
                 guestActionMode="pending"
+                inCollection={inCollection.has(
+                  albumMatchKey(song.artist, song.albumTitle),
+                )}
+                inWishlist={inWishlist.has(albumMatchKey(song.artist, song.albumTitle))}
               />
             ))}
           </div>

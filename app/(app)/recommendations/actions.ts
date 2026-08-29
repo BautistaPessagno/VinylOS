@@ -3,8 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { requireSession } from "@/lib/auth-session";
-import { addCollectionItem } from "@/lib/services/collectionService";
+import { getOptionalSession, requireSession } from "@/lib/auth-session";
+import {
+  addCollectionItem,
+  getLibraryAlbumKeys,
+} from "@/lib/services/collectionService";
+import { albumMatchKey } from "@/lib/services/albumKey";
 import { addWishlistItem } from "@/lib/services/wishlistService";
 import * as discogs from "@/lib/discogs/client";
 import type {
@@ -15,6 +19,7 @@ import type {
 import { isSearchQueryReady, normalizeSearchQuery } from "@/lib/search/searchQuery";
 import { findBestTrack } from "@/lib/search/rankSearchResults";
 import { appendToast } from "@/lib/toast/flash";
+import type { LibraryActionResult } from "@/lib/toast/messages";
 import {
   generateRecommendations,
   dismissRecommendation,
@@ -32,12 +37,38 @@ import {
 const EXPLORE_RETURN = "/explore";
 const COMPLETE_EXPLORE_ACTION_PATH = "/auth/complete-explore-action";
 
+/** Normalized `albumMatchKey`s, narrowed to the current results, already in each list. */
+export type ExploreLibraryKeys = { collection: string[]; wishlist: string[] };
+
 export type ExploreSearchResult = {
   query: string;
   artists: DiscogsArtistSearchResult[];
   albums: DiscogsAlbumGroup[];
   songs: DiscogsSongResult[];
+  library: ExploreLibraryKeys;
 };
+
+const NO_LIBRARY_KEYS: ExploreLibraryKeys = { collection: [], wishlist: [] };
+
+/**
+ * Which of these results the viewer already has. Sent as keys rather than per-card flags
+ * so only the handful of matches crosses the wire, and only for signed-in searchers.
+ */
+async function libraryKeysForResults(
+  userId: string,
+  albums: DiscogsAlbumGroup[],
+  songs: DiscogsSongResult[],
+): Promise<ExploreLibraryKeys> {
+  const keys = await getLibraryAlbumKeys(userId);
+  const shown = new Set([
+    ...albums.map((album) => albumMatchKey(album.artist, album.title)),
+    ...songs.map((song) => albumMatchKey(song.artist, song.albumTitle)),
+  ]);
+  return {
+    collection: [...keys.collection].filter((key) => shown.has(key)),
+    wishlist: [...keys.wishlist].filter((key) => shown.has(key)),
+  };
+}
 
 const MAX_SONG_RESULTS = 4;
 
@@ -94,16 +125,26 @@ export async function refreshRecommendationsAction() {
 export async function searchExploreAction(query: string): Promise<ExploreSearchResult> {
   const normalizedQuery = normalizeSearchQuery(query);
   if (!isSearchQueryReady(normalizedQuery)) {
-    return { query: normalizedQuery, artists: [], albums: [], songs: [] };
+    return {
+      query: normalizedQuery,
+      artists: [],
+      albums: [],
+      songs: [],
+      library: NO_LIBRARY_KEYS,
+    };
   }
 
-  const [artists, albums, trackAlbums] = await Promise.all([
+  const [session, artists, albums, trackAlbums] = await Promise.all([
+    getOptionalSession(),
     discogs.searchArtists(normalizedQuery),
     discogs.searchVinylAlbums(normalizedQuery),
     discogs.searchVinylAlbumsByTrack(normalizedQuery),
   ]);
   const songs = await resolveSongResults(normalizedQuery, trackAlbums);
-  return { query: normalizedQuery, artists, albums, songs };
+  const library = session
+    ? await libraryKeysForResults(session.user.id, albums, songs)
+    : NO_LIBRARY_KEYS;
+  return { query: normalizedQuery, artists, albums, songs, library };
 }
 
 /** Save a guest's selected Explore mutation through login or signup. */
@@ -187,65 +228,87 @@ export async function dismissRecommendationAction(formData: FormData) {
   redirect(appendToast("/recommendations", "dismissed"));
 }
 
-export async function addRecommendationToCollectionAction(formData: FormData) {
+/**
+ * In-place adds deliberately revalidate nothing. Any revalidation re-renders the page
+ * the click came from, and both discovery grids drop records that are already in the
+ * library, so the card would vanish mid-tap instead of stating its new state.
+ */
+export async function addRecommendationToCollectionAction(
+  _previous: LibraryActionResult | null,
+  formData: FormData,
+): Promise<LibraryActionResult> {
   const session = await requireSession();
   const releaseId = Number(formData.get("releaseId"));
+  if (!Number.isSafeInteger(releaseId) || releaseId <= 0) {
+    return { toast: "collection-add-failed", inList: false };
+  }
 
-  let code: "collection-added" | "collection-add-failed" = "collection-added";
+  let itemId: number | null;
   try {
     // The release is already cached locally from generation, so no Discogs fetch needed.
-    await addCollectionItem(session.user.id, releaseId, {}, "manual");
+    itemId = await addCollectionItem(session.user.id, releaseId, {}, "manual");
+  } catch {
+    return { toast: "collection-add-failed", inList: false };
+  }
+
+  try {
     await dismissRecommendationForRelease(session.user.id, releaseId);
   } catch {
-    code = "collection-add-failed";
+    // The add already succeeded. Library membership filters the stale recommendation.
   }
-  revalidatePath("/recommendations");
-  revalidatePath("/collection");
-  redirect(appendToast("/recommendations", code));
+  return {
+    toast: itemId ? "collection-added" : "collection-already",
+    inList: true,
+  };
 }
 
 /** Resolve an Explore card (Last.fm artist + album) to a release, then add it to the collection. */
-export async function addExploreAlbumAction(formData: FormData) {
+export async function addExploreAlbumAction(
+  _previous: LibraryActionResult | null,
+  formData: FormData,
+): Promise<LibraryActionResult> {
   const session = await requireSession();
-  const artist = String(formData.get("artist") ?? "");
-  const album = String(formData.get("album") ?? "");
-
-  const returnTo = exploreReturnPath(formData);
-  const releaseId = await resolveReleaseFromNames(artist, album);
-  if (!releaseId) {
-    redirect(appendToast(returnTo, "not-found"));
+  const artist = String(formData.get("artist") ?? "").trim();
+  const album = String(formData.get("album") ?? "").trim();
+  if (!artist || !album || artist.length > 300 || album.length > 300) {
+    return { toast: "collection-add-failed", inList: false };
   }
 
-  let code: "collection-added" | "collection-add-failed" = "collection-added";
   try {
-    await addCollectionItem(session.user.id, releaseId, {}, "manual");
-    revalidatePath("/collection");
+    const releaseId = await resolveReleaseFromNames(artist, album);
+    if (!releaseId) return { toast: "not-found", inList: false };
+
+    const itemId = await addCollectionItem(session.user.id, releaseId, {}, "manual");
+    return {
+      toast: itemId ? "collection-added" : "collection-already",
+      inList: true,
+    };
   } catch {
-    code = "collection-add-failed";
+    return { toast: "collection-add-failed", inList: false };
   }
-  redirect(appendToast(returnTo, code));
 }
 
 /** Resolve an Explore card to a release, then add it to the wishlist. */
-export async function wishlistExploreAlbumAction(formData: FormData) {
+export async function wishlistExploreAlbumAction(
+  _previous: LibraryActionResult | null,
+  formData: FormData,
+): Promise<LibraryActionResult> {
   const session = await requireSession();
-  const artist = String(formData.get("artist") ?? "");
-  const album = String(formData.get("album") ?? "");
-
-  const returnTo = exploreReturnPath(formData);
-  const releaseId = await resolveReleaseFromNames(artist, album);
-  if (!releaseId) {
-    redirect(appendToast(returnTo, "not-found"));
+  const artist = String(formData.get("artist") ?? "").trim();
+  const album = String(formData.get("album") ?? "").trim();
+  if (!artist || !album || artist.length > 300 || album.length > 300) {
+    return { toast: "wishlist-add-failed", inList: false };
   }
 
-  let code: "wishlist-added" | "wishlist-add-failed" = "wishlist-added";
   try {
-    await addWishlistItem(session.user.id, releaseId);
-    revalidatePath("/wishlist");
+    const releaseId = await resolveReleaseFromNames(artist, album);
+    if (!releaseId) return { toast: "not-found", inList: false };
+
+    const itemId = await addWishlistItem(session.user.id, releaseId);
+    return { toast: itemId ? "wishlist-added" : "wishlist-already", inList: true };
   } catch {
-    code = "wishlist-add-failed";
+    return { toast: "wishlist-add-failed", inList: false };
   }
-  redirect(appendToast(returnTo, code));
 }
 
 /** Resolve a Discogs release and navigate to its public album page. No session required. */

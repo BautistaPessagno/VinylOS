@@ -5,7 +5,10 @@ import { headers } from "next/headers";
 import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { getOptionalSession } from "@/lib/auth-session";
-import { listPublicCollectionItems } from "@/lib/services/collectionService";
+import {
+  getLibraryReleaseIds,
+  listPublicCollectionItems,
+} from "@/lib/services/collectionService";
 import { listWishlistItems } from "@/lib/services/wishlistService";
 import {
   getFollowStatus,
@@ -21,6 +24,7 @@ import { DeleteAccountSection } from "@/app/(app)/settings/DeleteAccountSection"
 import { WrappedSection } from "./WrappedSection";
 import { ShareLinkButton } from "@/app/(app)/ShareLinkButton";
 import { SubmitButton } from "@/app/(app)/SubmitButton";
+import { LibraryActionForm } from "@/app/(app)/LibraryActionForm";
 import { publicProfilePath, resolveProfileView } from "@/lib/profileView";
 import { shareUrlForPath } from "@/lib/shareUrl";
 
@@ -162,10 +166,13 @@ function ReleaseGrid({
   items,
   returnTo,
   showWishlistAction,
+  wishlistedReleaseIds,
 }: {
   items: ReleaseGridItem[];
   returnTo: string;
   showWishlistAction: boolean;
+  /** Releases the viewer already wants, so their button states that instead. */
+  wishlistedReleaseIds: Set<number>;
 }) {
   const albumHref = (releaseId: number) =>
     `/album/${releaseId}?from=${encodeURIComponent(returnTo)}`;
@@ -218,16 +225,17 @@ function ReleaseGrid({
             </div>
           )}
           {showWishlistAction && (
-            <form action={addReleaseToWishlistAction} className="mt-auto text-sm">
-              <input type="hidden" name="releaseId" value={item.releaseId} />
-              <input type="hidden" name="returnTo" value={returnTo} />
-              <SubmitButton
-                pendingText="Añadiendo…"
-                className="-mx-2 min-h-11 px-2 underline active:opacity-70"
-              >
-                Lista de deseos
-              </SubmitButton>
-            </form>
+            <LibraryActionForm
+              action={addReleaseToWishlistAction}
+              fields={{ releaseId: item.releaseId }}
+              label="Lista de deseos"
+              inListLabel="En tu lista de deseos"
+              pendingText="Añadiendo…"
+              inList={wishlistedReleaseIds.has(item.releaseId)}
+              formClassName="mt-auto text-sm"
+              className="-mx-2 min-h-11 px-2 underline active:opacity-70"
+              inListClassName="-mx-2 mt-auto inline-flex min-h-11 items-center px-2 text-sm text-room-dim"
+            />
           )}
         </div>
       ))}
@@ -274,6 +282,15 @@ export default async function UserProfilePage({
   const wishlistReturnTo = publicProfilePath(profile.id, "wishlist");
   // Wishlist action only for signed-in non-self viewers (server action requires session).
   const showWishlistAction = Boolean(session) && !isSelf;
+  const wishlistedReleaseIds =
+    showWishlistAction && session
+      ? (
+          await getLibraryReleaseIds(
+            session.user.id,
+            visibleItems.map((item) => item.releaseId),
+          )
+        ).wishlist
+      : new Set<number>();
   const sharePath = showWishlist ? wishlistReturnTo : returnTo;
   const shareUrl = shareUrlForPath(sharePath, await headers());
   const shareTitle = showWishlist
@@ -366,6 +383,7 @@ export default async function UserProfilePage({
             items={wishlistItems}
             returnTo={wishlistReturnTo}
             showWishlistAction={showWishlistAction}
+            wishlistedReleaseIds={wishlistedReleaseIds}
           />
         )
       ) : (
@@ -379,6 +397,7 @@ export default async function UserProfilePage({
               items={items}
               returnTo={returnTo}
               showWishlistAction={showWishlistAction}
+              wishlistedReleaseIds={wishlistedReleaseIds}
             />
           )}
         </>

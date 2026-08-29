@@ -59,12 +59,14 @@ function loadExploreTab({ libraryKeys, throwOnLibraryLookup = false }) {
     }
     if (id === "@/lib/services/collectionService") {
       return {
-        albumMatchKey: (artist, album) => `${artist}::${album}`,
         getLibraryAlbumKeys: async () => {
           if (throwOnLibraryLookup) throw new Error("guest library lookup");
           return libraryKeys;
         },
       };
+    }
+    if (id === "@/lib/services/albumKey") {
+      return { albumMatchKey: (artist, album) => `${artist}::${album}` };
     }
     if (id === "@/lib/services/exploreSort") return exploreSort;
     if (id === "./ExploreSearch") {
@@ -76,8 +78,14 @@ function loadExploreTab({ libraryKeys, throwOnLibraryLookup = false }) {
     }
     if (id === "./DiscoveryAlbumCard") {
       return {
-        DiscoveryAlbumCard({ album }) {
-          return React.createElement("article", null, album.title);
+        DiscoveryAlbumCard({ album, inCollection, inWishlist }) {
+          return React.createElement(
+            "article",
+            null,
+            album.title,
+            inCollection ? "|collection" : "",
+            inWishlist ? "|wishlist" : "",
+          );
         },
       };
     }
@@ -89,7 +97,7 @@ function loadExploreTab({ libraryKeys, throwOnLibraryLookup = false }) {
 
 test("guest Explore renders the full chart without loading a user library", async () => {
   const ExploreTab = loadExploreTab({
-    libraryKeys: new Set(),
+    libraryKeys: { collection: new Set(), wishlist: new Set() },
     throwOnLibraryLookup: true,
   });
   const element = await ExploreTab({ focusSearch: false });
@@ -99,12 +107,28 @@ test("guest Explore renders the full chart without loading a user library", asyn
   assert.match(html, /href="\/explore\?genre=rock"/);
 });
 
-test("member Explore hides albums already in the member library", async () => {
+test("member Explore keeps wishlisted albums visible with the wishlist action retired", async () => {
   const ExploreTab = loadExploreTab({
-    libraryKeys: new Set(["Charly Garcia::Clics Modernos"]),
+    libraryKeys: {
+      collection: new Set(),
+      wishlist: new Set(["Charly Garcia::Clics Modernos"]),
+    },
   });
   const element = await ExploreTab({ userId: "user-1", focusSearch: false });
   const html = ReactDOMServer.renderToStaticMarkup(element);
 
-  assert.doesNotMatch(html, /Clics Modernos/);
+  assert.match(html, /Clics Modernos\|wishlist/);
+});
+
+test("member Explore keeps collected albums visible with the add action retired", async () => {
+  const ExploreTab = loadExploreTab({
+    libraryKeys: {
+      collection: new Set(["Charly Garcia::Clics Modernos"]),
+      wishlist: new Set(),
+    },
+  });
+  const element = await ExploreTab({ userId: "user-1", focusSearch: false });
+  const html = ReactDOMServer.renderToStaticMarkup(element);
+
+  assert.match(html, /Clics Modernos\|collection/);
 });

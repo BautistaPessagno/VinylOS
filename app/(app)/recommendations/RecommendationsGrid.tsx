@@ -15,7 +15,11 @@ import {
 } from "./actions";
 import { RecommendationsFilters } from "./RecommendationsFilters";
 import { addReleaseToWishlistAction } from "../wishlist/actions";
+import { LibraryActionForm } from "../LibraryActionForm";
 import { SubmitButton } from "../SubmitButton";
+
+const ACTION_CLASS = "-mx-1 min-h-11 px-1 underline active:opacity-70";
+const IN_LIST_CLASS = "-mx-1 inline-flex min-h-11 items-center px-1 text-room-dim";
 
 /**
  * Async server component streamed inside a <Suspense>. On first visit (no cached
@@ -101,25 +105,26 @@ export async function RecommendationsGrid({
             <span className="text-xs text-room-dim">{item.reason}</span>
           </div>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-            <form action={addRecommendationToCollectionAction}>
-              <input type="hidden" name="releaseId" value={item.releaseId} />
-              <SubmitButton
-                pendingText="Añadiendo…"
-                className="-mx-1 min-h-11 px-1 underline active:opacity-70"
-              >
-                Añadir
-              </SubmitButton>
-            </form>
-            <form action={addReleaseToWishlistAction}>
-              <input type="hidden" name="releaseId" value={item.releaseId} />
-              <input type="hidden" name="returnTo" value="/recommendations" />
-              <SubmitButton
-                pendingText="Añadiendo…"
-                className="-mx-1 min-h-11 px-1 underline active:opacity-70"
-              >
-                Lista de deseos
-              </SubmitButton>
-            </form>
+            {/* Recommendations already exclude anything in the library, so these two
+                only ever start in the offerable state. */}
+            <LibraryActionForm
+              action={addRecommendationToCollectionAction}
+              fields={{ releaseId: item.releaseId }}
+              label="Añadir"
+              inListLabel="En tu colección"
+              pendingText="Añadiendo…"
+              className={ACTION_CLASS}
+              inListClassName={IN_LIST_CLASS}
+            />
+            <LibraryActionForm
+              action={addReleaseToWishlistAction}
+              fields={{ releaseId: item.releaseId }}
+              label="Lista de deseos"
+              inListLabel="En tu lista de deseos"
+              pendingText="Añadiendo…"
+              className={ACTION_CLASS}
+              inListClassName={IN_LIST_CLASS}
+            />
             <form action={dismissRecommendationAction} className="ml-auto">
               <input type="hidden" name="recId" value={item.recId} />
               <SubmitButton

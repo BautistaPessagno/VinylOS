@@ -44,7 +44,15 @@ function loadResults() {
     (id) => (id === "./searchQuery" ? searchQuery : require(id)),
   );
 
+  const albumKey = loadModule(
+    transpile(new URL("../../../lib/services/albumKey.ts", import.meta.url)),
+    require,
+  );
+
   const localRequire = (id) => {
+    if (id === "@/lib/services/albumKey") {
+      return albumKey;
+    }
     if (id === "next/link") {
       return function Link({ href, children, ...props }) {
         return React.createElement("a", { href, ...props }, children);
@@ -58,7 +66,13 @@ function loadResults() {
     }
     if (id === "./DiscoveryAlbumCard") {
       return {
-        DiscoveryAlbumCard({ album, guestActionMode, signedIn }) {
+        DiscoveryAlbumCard({
+          album,
+          guestActionMode,
+          signedIn,
+          inCollection,
+          inWishlist,
+        }) {
           const label = album.containsTrack
             ? `Contains ${album.containsTrack}: ${album.title} — ${album.artist}`
             : `${album.title} — ${album.artist}`;
@@ -66,7 +80,11 @@ function loadResults() {
             !signedIn && guestActionMode === "pending"
               ? " Guest Add Guest Wishlist"
               : "";
-          return React.createElement("article", null, label, guestActions);
+          const state = [
+            inCollection ? " InCollection" : "",
+            inWishlist ? " InWishlist" : "",
+          ].join("");
+          return React.createElement("article", null, label, guestActions, state);
         },
       };
     }
@@ -102,6 +120,7 @@ test("mixed search renders top result, artists, and records", () => {
           },
         ],
         songs: [],
+        library: { collection: [], wishlist: [] },
       },
       returnTo,
     }),
@@ -133,6 +152,7 @@ test("an exact album match outranks a partial artist as top result", () => {
           },
         ],
         songs: [],
+        library: { collection: [], wishlist: [] },
       },
       returnTo,
     }),
@@ -169,6 +189,7 @@ test("an exact song match leads as a 'contains' record and lists remaining recor
             albumTitle: "The Song Remains The Same",
           },
         ],
+        library: { collection: [], wishlist: [] },
       },
       returnTo,
     }),
@@ -186,7 +207,13 @@ test("mixed search explains when Discogs finds nothing", () => {
   const ExploreSearchResults = loadResults();
   const html = ReactDOMServer.renderToStaticMarkup(
     React.createElement(ExploreSearchResults, {
-      result: { query: "missing", artists: [], albums: [], songs: [] },
+      result: {
+        query: "missing",
+        artists: [],
+        albums: [],
+        songs: [],
+        library: { collection: [], wishlist: [] },
+      },
       returnTo,
     }),
   );
@@ -220,6 +247,7 @@ test("guest record search results retain separate deferred actions", () => {
           },
         ],
         songs: [],
+        library: { collection: [], wishlist: [] },
       },
       returnTo,
       signedIn: false,
@@ -228,4 +256,49 @@ test("guest record search results retain separate deferred actions", () => {
 
   assert.match(html, /Piano Bar/);
   assert.match(html, /Guest Add Guest Wishlist/);
+});
+
+test("records already in a list are marked so their action can retire", () => {
+  const ExploreSearchResults = loadResults();
+  const html = ReactDOMServer.renderToStaticMarkup(
+    React.createElement(ExploreSearchResults, {
+      result: {
+        query: "charly",
+        artists: [],
+        albums: [
+          {
+            key: "m:1",
+            releaseId: 10,
+            artist: "Charly Garcia",
+            title: "Clics Modernos",
+            genres: ["Rock"],
+            editionCount: 3,
+          },
+          {
+            key: "m:2",
+            releaseId: 11,
+            artist: "Charly Garcia",
+            title: "Piano Bar (Remastered)",
+            genres: ["Rock"],
+            editionCount: 2,
+          },
+          {
+            key: "m:3",
+            releaseId: 12,
+            artist: "Charly Garcia",
+            title: "Yendo De La Cama Al Living",
+            genres: ["Rock"],
+            editionCount: 1,
+          },
+        ],
+        songs: [],
+        // Normalized key, so the "(Remastered)" pressing still matches what's owned.
+        library: { collection: ["charly garcia::piano bar"], wishlist: [] },
+      },
+      returnTo,
+    }),
+  );
+
+  assert.match(html, /Piano Bar \(Remastered\) — Charly Garcia InCollection/);
+  assert.doesNotMatch(html, /Yendo De La Cama Al Living — Charly Garcia InCollection/);
 });

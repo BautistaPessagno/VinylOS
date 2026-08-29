@@ -10,7 +10,9 @@ import {
 import { addAlbumToWishlistFromDiscogsAction } from "../../wishlist/actions";
 import { EditionPicker } from "../EditionPicker";
 import { SubmitButton } from "../../SubmitButton";
+import { useToast } from "../../toast/ToastProvider";
 import type { DiscogsAlbumGroup } from "@/lib/discogs/types";
+import type { DiscogsCollectionSearchResult } from "../actions";
 import {
   isLatestSearchRequest,
   isSearchQueryReady,
@@ -53,6 +55,10 @@ function Field({
   );
 }
 
+/** Same footprint as the button it replaces, minus the affordance. */
+const DONE_CLASS =
+  "inline-flex min-h-11 items-center justify-center rounded border border-dashed border-room-rule px-3 py-1.5 text-sm text-room-dim sm:min-h-0";
+
 function AlbumCard({
   album,
   pendingId,
@@ -61,6 +67,8 @@ function AlbumCard({
   onWishlist,
   selected,
   onToggleSelect,
+  added,
+  wishlisted,
 }: {
   album: DiscogsAlbumGroup;
   pendingId: number | null;
@@ -69,6 +77,9 @@ function AlbumCard({
   onWishlist: (discogsReleaseId: number) => void;
   selected: boolean;
   onToggleSelect: (album: DiscogsAlbumGroup) => void;
+  /** Set once this search session has put the record in that list. */
+  added: boolean;
+  wishlisted: boolean;
 }) {
   const isPicking = pendingId !== null;
   const isThisPending = pendingId === album.releaseId;
@@ -86,10 +97,11 @@ function AlbumCard({
         <label className="-m-3 flex shrink-0 cursor-pointer items-center p-3">
           <input
             type="checkbox"
-            checked={selected}
+            checked={selected && !added}
             onChange={() => onToggleSelect(album)}
+            disabled={added}
             aria-label={`Seleccionar ${album.title}`}
-            className="h-5 w-5 shrink-0"
+            className="h-5 w-5 shrink-0 disabled:opacity-40"
           />
         </label>
         <div className="h-14 w-14 shrink-0 overflow-hidden rounded bg-room-sunk">
@@ -115,22 +127,30 @@ function AlbumCard({
           </span>
         </div>
         <div className="flex shrink-0 flex-col gap-1">
-          <button
-            type="button"
-            onClick={() => onAdd(album.releaseId)}
-            disabled={busy}
-            className="min-h-11 rounded bg-room-accent px-3 py-1.5 text-sm text-room-on-accent active:opacity-90 disabled:opacity-50 sm:min-h-0"
-          >
-            {isThisPending ? "Añadiendo…" : "Añadir"}
-          </button>
-          <button
-            type="button"
-            onClick={() => onWishlist(album.releaseId)}
-            disabled={busy}
-            className="min-h-11 rounded border border-room-rule px-3 py-1.5 text-sm active:bg-room-sunk disabled:opacity-50 sm:min-h-0"
-          >
-            {isThisWishlistPending ? "Añadiendo…" : "Lista de deseos"}
-          </button>
+          {added ? (
+            <span className={DONE_CLASS}>En tu colección</span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => onAdd(album.releaseId)}
+              disabled={busy}
+              className="min-h-11 rounded bg-room-accent px-3 py-1.5 text-sm text-room-on-accent active:opacity-90 disabled:opacity-50 sm:min-h-0"
+            >
+              {isThisPending ? "Añadiendo…" : "Añadir"}
+            </button>
+          )}
+          {wishlisted ? (
+            <span className={DONE_CLASS}>En tu lista de deseos</span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => onWishlist(album.releaseId)}
+              disabled={busy}
+              className="min-h-11 rounded border border-room-rule px-3 py-1.5 text-sm active:bg-room-sunk disabled:opacity-50 sm:min-h-0"
+            >
+              {isThisWishlistPending ? "Añadiendo…" : "Lista de deseos"}
+            </button>
+          )}
         </div>
       </div>
       {album.masterId && (
@@ -149,16 +169,23 @@ export function AddReleaseForm() {
   const [searchError, setSearchError] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<number | null>(null);
   const [wishlistPendingId, setWishlistPendingId] = useState<number | null>(null);
+  // Seeded by each search response, then extended by actions during this visit.
+  const [addedIds, setAddedIds] = useState<Set<number>>(new Set());
+  const [wishlistedIds, setWishlistedIds] = useState<Set<number>>(new Set());
+  const { showToast } = useToast();
   const [, startAdd] = useTransition();
   const [selected, setSelected] = useState<Map<number, DiscogsAlbumGroup>>(new Map());
   const [isBatchAdding, startBatchAdd] = useTransition();
-  const resultCache = useRef(new Map<string, DiscogsAlbumGroup[]>());
+  const resultCache = useRef(new Map<string, DiscogsCollectionSearchResult>());
   const pendingSearches = useRef(
-    new Map<string, Promise<DiscogsAlbumGroup[]>>(),
+    new Map<string, Promise<DiscogsCollectionSearchResult>>(),
   );
   const latestSearchRequestId = useRef(0);
   const normalizedQuery = normalizeSearchQuery(query);
   const queryIsReady = isSearchQueryReady(normalizedQuery);
+  const selectedToAdd = [...selected.values()].filter(
+    (album) => !addedIds.has(album.releaseId),
+  );
 
   function handleQueryChange(value: string) {
     setQuery(value);
@@ -182,8 +209,14 @@ export function AddReleaseForm() {
   }
 
   function handleAddSelected() {
+    const releaseIds = selectedToAdd.map((album) => album.releaseId);
     startBatchAdd(async () => {
-      await addAlbumsFromDiscogsAction([...selected.keys()]);
+      const result = await addAlbumsFromDiscogsAction(releaseIds);
+      showToast(result.toast);
+      if (result.inList) {
+        setAddedIds((prev) => new Set([...prev, ...releaseIds]));
+        setSelected(new Map());
+      }
     });
   }
 
@@ -198,7 +231,11 @@ export function AddReleaseForm() {
       const cached = resultCache.current.get(normalizedQuery);
       if (cached) {
         if (isLatestSearchRequest(requestId, latestSearchRequestId.current)) {
-          setResults(cached);
+          setResults(cached.albums);
+          setAddedIds((prev) => new Set([...prev, ...cached.library.collection]));
+          setWishlistedIds((prev) =>
+            new Set([...prev, ...cached.library.wishlist]),
+          );
         }
         return;
       }
@@ -214,7 +251,13 @@ export function AddReleaseForm() {
           const nextResults = await pending;
           resultCache.current.set(normalizedQuery, nextResults);
           if (isLatestSearchRequest(requestId, latestSearchRequestId.current)) {
-            setResults(nextResults);
+            setResults(nextResults.albums);
+            setAddedIds((prev) =>
+              new Set([...prev, ...nextResults.library.collection]),
+            );
+            setWishlistedIds((prev) =>
+              new Set([...prev, ...nextResults.library.wishlist]),
+            );
           }
         } catch (err) {
           if (isLatestSearchRequest(requestId, latestSearchRequestId.current)) {
@@ -237,21 +280,37 @@ export function AddReleaseForm() {
     }
   }, []);
 
+  /**
+   * Adding confirms in place and leaves the search results standing, so a run of
+   * records can be added one after another. The toast carries the link to the
+   * collection for whoever does want to go there.
+   */
   function handleAdd(discogsReleaseId: number) {
     setPendingId(discogsReleaseId);
     startAdd(async () => {
-      // addAlbumFromDiscogsAction redirects to /collection on success; if it throws
-      // (rare network/API failure), we don't swallow it here so the redirect isn't
-      // masked — the nearest error boundary handles that case.
-      await addAlbumFromDiscogsAction(discogsReleaseId);
+      const result = await addAlbumFromDiscogsAction(discogsReleaseId);
+      setPendingId(null);
+      showToast(result.toast);
+      if (result.inList) {
+        setAddedIds((prev) => new Set(prev).add(discogsReleaseId));
+        setSelected((prev) => {
+          const next = new Map(prev);
+          next.delete(discogsReleaseId);
+          return next;
+        });
+      }
     });
   }
 
   function handleWishlist(discogsReleaseId: number) {
     setWishlistPendingId(discogsReleaseId);
     startAdd(async () => {
-      // Redirects to /wishlist on success (same throw behavior as handleAdd).
-      await addAlbumToWishlistFromDiscogsAction(discogsReleaseId);
+      const result = await addAlbumToWishlistFromDiscogsAction(discogsReleaseId);
+      setWishlistPendingId(null);
+      showToast(result.toast);
+      if (result.inList) {
+        setWishlistedIds((prev) => new Set(prev).add(discogsReleaseId));
+      }
     });
   }
 
@@ -340,17 +399,21 @@ export function AddReleaseForm() {
               wishlistPendingId={wishlistPendingId}
               onAdd={handleAdd}
               onWishlist={handleWishlist}
-              selected={selected.has(album.releaseId)}
+              selected={selected.has(album.releaseId) && !addedIds.has(album.releaseId)}
               onToggleSelect={toggleSelect}
+              added={addedIds.has(album.releaseId)}
+              wishlisted={wishlistedIds.has(album.releaseId)}
             />
           ))}
         </ul>
       </div>
 
-      {selected.size > 0 && (
+      {selectedToAdd.length > 0 && (
         // Sticky offset clears the mobile bottom tab bar and the iOS home indicator.
         <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] flex w-full max-w-2xl items-center justify-between rounded-lg border border-room-rule bg-room-surface px-4 py-3 shadow-lg sm:bottom-4">
-          <span className="text-sm font-medium">{selected.size} seleccionados</span>
+          <span className="text-sm font-medium">
+            {selectedToAdd.length} seleccionados
+          </span>
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -365,7 +428,9 @@ export function AddReleaseForm() {
               disabled={isBatchAdding}
               className="min-h-11 rounded bg-room-accent px-4 py-2 text-sm text-room-on-accent active:opacity-90 disabled:opacity-50 sm:min-h-0"
             >
-              {isBatchAdding ? "Añadiendo…" : `Añadir ${selected.size} disco${selected.size === 1 ? "" : "s"}`}
+              {isBatchAdding
+                ? "Añadiendo…"
+                : `Añadir ${selectedToAdd.length} disco${selectedToAdd.length === 1 ? "" : "s"}`}
             </button>
           </div>
         </div>

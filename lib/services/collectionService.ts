@@ -4,6 +4,7 @@ import {
   artists,
   releaseArtists,
   collectionItems,
+  wishlistItems,
 } from "@/lib/db/schema";
 import { eq, and, ilike, arrayContains, asc, desc, inArray, isNotNull, ne, sql } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
@@ -16,6 +17,7 @@ import {
   type CollectionFilterOptions,
 } from "./collectionFilterOptions";
 import type { CollectionSort } from "./collectionSort";
+import { albumMatchKey } from "./albumKey";
 
 export {
   COLLECTION_SORT_OPTIONS,
@@ -462,38 +464,106 @@ export async function listPublicCollectionItems(userId: string) {
   }));
 }
 
-/**
- * Builds a normalized `artist::title` match key. Since Explore cards are raw Last.fm strings
- * with no resolved release id, matching is by text — so we lowercase and strip parenthetical/
- * bracketed suffixes (e.g. "(Remastered)", "[Deluxe Edition]") and punctuation, so
- * "Abbey Road" and "Abbey Road (Remastered)" collapse to the same key.
- */
-export function albumMatchKey(artist: string, title: string): string {
-  const normalize = (s: string) =>
-    s
-      .toLowerCase()
-      .replace(/\([^)]*\)/g, "")
-      .replace(/\[[^\]]*\]/g, "")
-      .replace(/[^a-z0-9]+/g, " ")
-      .trim();
-  return `${normalize(artist)}::${normalize(title)}`;
-}
+/** Which of the user's two lists a record is already in. */
+export type LibraryAlbumKeys = { collection: Set<string>; wishlist: Set<string> };
 
 /**
- * Normalized match keys for every artist/title pair across the user's collection ∪ wishlist.
- * Used to hide already-owned/wishlisted albums from the Explore tab.
+ * Normalized match keys for every artist/title pair in the user's collection and
+ * wishlist, kept apart so a card can retire just the action that no longer applies.
+ * Cards built from raw Discogs/Last.fm strings have no local release id, which is why
+ * membership is decided by text key here rather than by id.
  */
-export async function getLibraryAlbumKeys(userId: string): Promise<Set<string>> {
-  const result = await db.execute<{ artist: string; title: string }>(sql`
-    select a.name as artist, r.title as title
-    from releases r
+export async function getLibraryAlbumKeys(userId: string): Promise<LibraryAlbumKeys> {
+  const result = await db.execute<{ artist: string; title: string; list: string }>(sql`
+    select a.name as artist, r.title as title, l.list as list
+    from (
+      select release_id, 'collection' as list from collection_items where user_id = ${userId}
+      union all
+      select release_id, 'wishlist' as list from wishlist_items where user_id = ${userId}
+    ) l
+    join releases r on r.id = l.release_id
     join release_artists ra on ra.release_id = r.id
     join artists a on a.id = ra.artist_id
-    where r.id in (
-      select release_id from collection_items where user_id = ${userId}
-      union
-      select release_id from wishlist_items where user_id = ${userId}
-    )
   `);
-  return new Set(result.rows.map((r) => albumMatchKey(r.artist, r.title)));
+
+  const keys: LibraryAlbumKeys = { collection: new Set(), wishlist: new Set() };
+  for (const row of result.rows) {
+    const target = row.list === "wishlist" ? keys.wishlist : keys.collection;
+    target.add(albumMatchKey(row.artist, row.title));
+  }
+  return keys;
+}
+
+/** Same question as `getLibraryAlbumKeys`, for cards that already carry a local release id. */
+export async function getLibraryReleaseIds(
+  userId: string,
+  releaseIds: number[],
+): Promise<{ collection: Set<number>; wishlist: Set<number> }> {
+  const unique = [...new Set(releaseIds)];
+  if (unique.length === 0) return { collection: new Set(), wishlist: new Set() };
+
+  const [owned, wanted] = await Promise.all([
+    db
+      .select({ releaseId: collectionItems.releaseId })
+      .from(collectionItems)
+      .where(
+        and(
+          eq(collectionItems.userId, userId),
+          inArray(collectionItems.releaseId, unique),
+        ),
+      ),
+    db
+      .select({ releaseId: wishlistItems.releaseId })
+      .from(wishlistItems)
+      .where(
+        and(eq(wishlistItems.userId, userId), inArray(wishlistItems.releaseId, unique)),
+      ),
+  ]);
+
+  return {
+    collection: new Set(owned.map((row) => row.releaseId)),
+    wishlist: new Set(wanted.map((row) => row.releaseId)),
+  };
+}
+
+/** Same membership lookup for Discogs search cards, which carry external release ids. */
+export async function getLibraryDiscogsReleaseIds(
+  userId: string,
+  discogsReleaseIds: number[],
+): Promise<{ collection: Set<number>; wishlist: Set<number> }> {
+  const unique = [...new Set(discogsReleaseIds)];
+  if (unique.length === 0) return { collection: new Set(), wishlist: new Set() };
+
+  const [owned, wanted] = await Promise.all([
+    db
+      .select({ discogsReleaseId: releases.discogsReleaseId })
+      .from(collectionItems)
+      .innerJoin(releases, eq(collectionItems.releaseId, releases.id))
+      .where(
+        and(
+          eq(collectionItems.userId, userId),
+          inArray(releases.discogsReleaseId, unique),
+        ),
+      ),
+    db
+      .select({ discogsReleaseId: releases.discogsReleaseId })
+      .from(wishlistItems)
+      .innerJoin(releases, eq(wishlistItems.releaseId, releases.id))
+      .where(
+        and(eq(wishlistItems.userId, userId), inArray(releases.discogsReleaseId, unique)),
+      ),
+  ]);
+
+  return {
+    collection: new Set(
+      owned.flatMap((row) =>
+        row.discogsReleaseId === null ? [] : [row.discogsReleaseId],
+      ),
+    ),
+    wishlist: new Set(
+      wanted.flatMap((row) =>
+        row.discogsReleaseId === null ? [] : [row.discogsReleaseId],
+      ),
+    ),
+  };
 }

@@ -35,6 +35,28 @@ function loadCard() {
         wishlistExploreAlbumAction: "/direct-wishlist",
       };
     }
+    if (id === "../LibraryActionForm") {
+      // Mirrors the real component's one branch: an applied action states itself
+      // instead of rendering a form.
+      return {
+        LibraryActionForm({ action, fields, label, inListLabel, inList }) {
+          if (inList) return React.createElement("span", null, inListLabel);
+          return React.createElement(
+            "form",
+            { action },
+            Object.entries(fields).map(([name, value]) =>
+              React.createElement("input", {
+                key: name,
+                type: "hidden",
+                name,
+                value,
+              }),
+            ),
+            React.createElement("button", { type: "submit" }, label),
+          );
+        },
+      };
+    }
     if (id === "../SubmitButton") {
       return {
         SubmitButton({ children, ...props }) {
@@ -89,4 +111,20 @@ test("member cards submit directly without creating a pending intent", () => {
   assert.match(html, /action="\/direct-add"/);
   assert.match(html, /action="\/direct-wishlist"/);
   assert.doesNotMatch(html, /action="\/begin-auth"/);
+});
+
+test("a record already in the collection offers only the wishlist action", () => {
+  const html = render({ signedIn: true, inCollection: true });
+
+  assert.doesNotMatch(html, /action="\/direct-add"/);
+  assert.match(html, />En tu colección</);
+  assert.match(html, /action="\/direct-wishlist"/);
+});
+
+test("a record already wishlisted offers only the collection action", () => {
+  const html = render({ signedIn: true, inWishlist: true });
+
+  assert.doesNotMatch(html, /action="\/direct-wishlist"/);
+  assert.match(html, />En tu lista de deseos</);
+  assert.match(html, /action="\/direct-add"/);
 });
