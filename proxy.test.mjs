@@ -61,3 +61,8 @@ test("legacy Explore URLs redirect publicly and preserve Explore filters", () =>
     },
   );
 });
+
+test("/stores is not gated by the proxy matcher", () => {
+  const source = readFileSync(fileURLToPath(new URL("./proxy.ts", import.meta.url)), "utf8");
+  assert.doesNotMatch(source, /"\/stores/);
+});

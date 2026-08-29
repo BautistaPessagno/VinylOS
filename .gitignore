@@ -41,4 +41,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 /.claude
-/.env.example
+
+# Overpass discovery cache (local only; re-fetch with pnpm stores:discover)
+.overpass-cache.json

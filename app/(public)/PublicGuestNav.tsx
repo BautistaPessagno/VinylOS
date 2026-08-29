@@ -5,7 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 
 /**
  * Minimal header for signed-out visitors on public pages.
- * No account menu, bottom tabs, or search — only brand, Explore, and auth CTAs.
+ * No account menu, bottom tabs, or search — only brand, Explore, Disquerías, and auth CTAs.
  * Login/signup round-trip back to the page the visitor was viewing.
  */
 export function PublicGuestNav() {
@@ -33,6 +33,12 @@ export function PublicGuestNav() {
             className="rounded-lg px-2 py-2 text-sm text-room-fg hover:text-room-accent active:text-room-accent sm:px-3"
           >
             Explorar
+          </Link>
+          <Link
+            href="/stores"
+            className="rounded-lg px-2 py-2 text-sm text-room-fg hover:text-room-accent active:text-room-accent sm:px-3"
+          >
+            Disquerías
           </Link>
           <Link
             href={loginHref}

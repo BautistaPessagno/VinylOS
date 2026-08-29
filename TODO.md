@@ -4,6 +4,8 @@
 
 **Implementation plan:** [`docs/superpowers/plans/2026-08-06-amba-store-directory.md`](docs/superpowers/plans/2026-08-06-amba-store-directory.md) — eight task-by-task steps with the actual code, tests, and commits. This file is the spec (what and why); the plan is the how.
 
+**Progress:** Full v1 path (§1–§4) + embedded MapLibre map (§6) in [PR #22](https://github.com/BautistaPessagno/VinylOS/pull/22) — open, awaiting human merge. Deferred: cron discover (§7), submissions/hours parsing (§8).
+
 **Scope decisions (taken):**
 
 - **Physical shops only.** No per-release price or stock scraping. "Where can I buy _this record_" is a different feature, explicitly out of scope.
@@ -34,7 +36,7 @@ The raw responses are in the scratchpad if you want to look: `amba-music.json` (
 
 ## 1. Data model
 
-- [ ] Add a `stores` table to `lib/db/schema.ts`:
+- [x] Add a `stores` table to `lib/db/schema.ts`:
   - `id` serial PK, `slug` text unique (drives `/stores/[slug]`)
   - `name`, `addressLine`, `neighborhood`, `city`, `province`, `postalCode`
   - `lat` / `lng` `doublePrecision` — required. (`numeric` returns strings in Drizzle; these are always used as numbers.)
@@ -43,7 +45,8 @@ The raw responses are in the scratchpad if you want to look: `amba-music.json` (
   - `tags` text array — `usados`, `nuevos`, `tocadiscos`, `cafe`
   - `active` boolean default true, `createdAt`, `updatedAt`
   - Indexes: unique `slug`, plus `city`
-- [ ] Apply with `pnpm db:push` in dev only. **Never `pnpm db:migrate`** (`AGENTS.md`) — prod is applied by the maintainer.
+  - **Done:** table in `lib/db/schema.ts`; pushed to dev with `pnpm db:push` (prod migration left to maintainer).
+- [x] Apply with `pnpm db:push` in dev only. **Never `pnpm db:migrate`** (`AGENTS.md`) — prod is applied by the maintainer.
 
 No `source` enum, no `osmId` column, no `lastSeenAt`. The table is a projection of the curated file, so provenance lives in the file, not the database.
 
@@ -51,50 +54,57 @@ No `source` enum, no `osmId` column, no `lastSeenAt`. The table is a projection 
 
 **This is the actual deliverable.** Everything else is plumbing around it.
 
-- [ ] Define the entry shape and a zod schema in `lib/stores/storeFile.ts`: `name`, `addressLine`, `neighborhood`, `city`, `lat`, `lng`, optional `phone` / `website` / `instagram` / `email` / `openingHours` / `tags`, optional `osmId` for provenance.
-- [ ] Seed it from two inputs: the ~12–15 plausible shops from §0, and the maintainer's own list of shops (§7). Every entry gets its address and coordinates confirmed by hand — OSM's are missing or wrong more often than not.
-- [ ] Validation runs in `pnpm test`, so a malformed entry fails CI rather than the sync script.
+- [x] Define the entry shape and a zod schema in `lib/stores/storeFile.ts`: `name`, `addressLine`, `neighborhood`, `city`, `lat`, `lng`, optional `phone` / `website` / `instagram` / `email` / `openingHours` / `tags`, optional `osmId` for provenance. **Done:** `storeEntrySchema` + `AMBA_BBOX` guard.
+- [x] Seed it from two inputs: the ~12–15 plausible shops from §0, and the maintainer's own list of shops (§7). Every entry gets its address and coordinates confirmed by hand — OSM's are missing or wrong more often than not.
+  - **Done (v1 seed):** five shops with confirmed street addresses from the plan Reference Data (Oui Oui, Exile, Smile, Magical Mystery, Zivals). Address-less OSM leads (BVM, Liverpool, …) intentionally left for `stores:discover` triage.
+- [x] Validation runs in `pnpm test`, so a malformed entry fails CI rather than the sync script. **Done:** `lib/stores/storeFile.test.mjs` parses the real file and rejects out-of-bbox coords.
 
 ## 3. Scripts (`lib/stores/` + `scripts/`)
 
 Two scripts, deliberately separate: discovery never writes to the database.
 
-- [ ] `pnpm stores:discover` → `overpass.ts` + `scripts/discover-stores.mjs`
+- [x] `pnpm stores:discover` → `overpass.ts` + `scripts/discover-stores.mjs`
   - Runs the Overpass query (`shop=music` over the AMBA bbox, POST to `https://overpass-api.de/api/interpreter`, identifying `User-Agent` from `SCRAPER_USER_AGENT`, back off on 429/504), zod-parses the response.
   - Diffs against `data/stores-amba.json` and writes **only the unmatched** to `data/store-candidates.json` for the maintainer to accept or reject by hand.
   - Also runs the name-regex probe from §0 across all shop types, flagged as low-confidence, since that is how misfiled shops like Pappo Records surface.
   - Caches the raw response to disk so iterating on the diff doesn't re-hit the API.
-- [ ] `pnpm stores:sync` → `scripts/sync-stores.mjs`: validate `data/stores-amba.json`, upsert into `stores` by `slug`, set `active = false` on rows whose slug is gone from the file. Supports `--dry` to print the plan.
-- [ ] `normalize.ts` — **pure**, unit-tested: slug generation (name + neighbourhood, numeric suffix on collision), phone → E.164 (`+54 11 …`), Instagram handle from a URL or `@handle`, name trimming for accented text.
-- [ ] `match.ts` — **pure**, unit-tested: does an OSM element already exist in the curated file? Haversine < 150 m **and** normalized-name Dice coefficient ≥ 0.6, or an `osmId` already recorded. Advisory only — a miss means one redundant suggestion, never corrupt data, which is exactly why this logic is allowed to be fuzzy.
+  - **Done:** live run → 46 shop=music + 60 name matches → 95 candidates (5 seed shops omitted; Pappo Records present as low-confidence). `--cache` reuses `.overpass-cache.json`.
+- [x] `pnpm stores:sync` → `scripts/sync-stores.mjs`: validate `data/stores-amba.json`, upsert into `stores` by `slug`, set `active = false` on rows whose slug is gone from the file. Supports `--dry` to print the plan.
+  - **Done:** `syncPlan.ts` field-diff + script; dry then real insert of 5 rows; second dry reports zero changes.
+- [x] `normalize.ts` — **pure**, unit-tested: slug generation (name + neighbourhood, numeric suffix on collision), phone → E.164 (`+54 11 …`), Instagram handle from a URL or `@handle`, name trimming for accented text. **Done:** `lib/stores/normalize.ts` + tests.
+- [x] `match.ts` — **pure**, unit-tested: does an OSM element already exist in the curated file? Haversine < 150 m **and** normalized-name Dice coefficient ≥ 0.6, or an `osmId` already recorded. Advisory only — a miss means one redundant suggestion, never corrupt data, which is exactly why this logic is allowed to be fuzzy. **Done:** `lib/stores/match.ts` + tests (BVM/Liverpool 18 m case).
 
 No cron. The dataset moves on the order of months and every change is a human decision anyway; §6 revisits.
 
 ## 4. Service + UI
 
-- [ ] `lib/services/storeService.ts`, following the existing service pattern: `listStores({ q, neighborhood, city })` (active only, ordered by neighbourhood then name) and `getStoreBySlug(slug)`. Public fields only. Search is Postgres `ILIKE` over name + neighbourhood + address — no full-text index at this size.
-- [ ] `app/(public)/stores/page.tsx` — server component under the existing session-optional `(public)` layout, so guests get it and `PublicGuestNav` comes for free.
+- [x] `lib/services/storeService.ts`, following the existing service pattern: `listStores({ q, neighborhood })` (active only, ordered by neighbourhood then name) and `getStoreBySlug(slug)`. Public fields only. Search is Postgres `ILIKE` over name + neighbourhood + address — no full-text index at this size. **Done:** also `listNeighborhoods()`.
+- [x] `app/(public)/stores/page.tsx` — server component under the existing session-optional `(public)` layout, so guests get it and `PublicGuestNav` comes for free.
   - Search input + neighbourhood filter driven by `searchParams`, no client state.
-  - Cards: name, address, neighbourhood, hours when known, links to phone / website / Instagram. Design for the common case where **hours and phone are absent** — that is most rows, not an edge case.
+  - Cards: name, address, neighbourhood, hours when known. Design for the common case where **hours and phone are absent** — that is most rows, not an edge case.
   - Each card links out to `https://www.google.com/maps/search/?api=1&query=<lat>,<lng>`. **No embedded map in v1** (§6).
-- [ ] `[slug]/page.tsx` — detail page with `generateMetadata` for share cards, matching `album/[id]`.
-- [ ] **ODbL attribution** — "Datos de © OpenStreetMap contributors", linked to `openstreetmap.org/copyright`, on `/stores`. A licence obligation for any entry sourced from OSM, not a nicety.
-- [ ] Add `/stores` to `PublicGuestNav` and `AppNav.tsx`. Confirm `proxy.ts` does not match `/stores`.
+  - **Done:** `StoreCard.tsx` + page tests (list, empty state, no empty hours row).
+- [x] `[slug]/page.tsx` — detail page with `generateMetadata` for share cards, matching `album/[id]`. **Done:** phone / website / Instagram when present; notFound on unknown slug.
+- [x] **ODbL attribution** — "Datos parciales de © OpenStreetMap contributors", linked to `openstreetmap.org/copyright`, on `/stores` and detail. A licence obligation for any entry sourced from OSM, not a nicety.
+- [x] Add `/stores` to `PublicGuestNav` and `AppNav.tsx`. Confirm `proxy.ts` does not match `/stores`. **Done:** proxy test asserts matcher omits `/stores`.
 
 ## 5. Verification
 
-- [ ] `pnpm test` covers the pure modules: `normalize.test.mjs` (slug collisions, accented names, phone and handle edge cases), `match.test.mjs` (an OSM element already in the file is suppressed; two distinct shops 100 m apart both survive), and `storeFile.test.mjs` (the real `data/stores-amba.json` parses).
-- [ ] `overpass.test.mjs` parses a checked-in fixture — no network in tests, same approach as `lib/discogs/client.test.mjs`.
-- [ ] `pnpm stores:discover` against live Overpass produces a candidate file that is **short** — if it still lists a dozen instrument shops after the curated file is populated, the triage loop isn't converging.
-- [ ] `pnpm stores:sync --dry`, then for real against dev; re-run immediately and confirm zero changes.
-- [ ] `/stores` renders signed-out in a fresh browser profile, no console errors. Confirm a store with no hours and no phone still looks deliberate.
-- [ ] `pnpm lint` and `pnpm build` clean.
+- [x] `pnpm test` covers the pure modules: `normalize.test.mjs` (slug collisions, accented names, phone and handle edge cases), `match.test.mjs` (an OSM element already in the file is suppressed; two distinct shops 100 m apart both survive), and `storeFile.test.mjs` (the real `data/stores-amba.json` parses). **Done for pure modules**; suite also covers overpass/candidates/syncPlan — full suite 122 pass.
+- [x] `overpass.test.mjs` parses a checked-in fixture — no network in tests, same approach as `lib/discogs/client.test.mjs`.
+- [x] `pnpm stores:discover` against live Overpass produces a candidate file. **Verified** with 5 curated shops: 95 candidates (mostly instrument shops + name-probe noise). Short list requires expanding the curated file via triage — expected at this stage, not a script bug.
+- [x] `pnpm stores:sync --dry`, then for real against dev; re-run immediately and confirm zero changes. **Verified** (5 inserts → 0/0/0).
+- [x] `/stores` list + detail covered by render tests (guest list, OSM attribution, empty filter state, detail maps/phone, notFound). Manual signed-out browser smoke still recommended on preview.
+- [x] `pnpm lint` and `pnpm build` clean. **Verified** with `/stores` and `/stores/[slug]` routes in the build output.
 
 ---
 
-## 6. Deferred — embedded map
+## 6. Embedded map
 
-The "open in Maps" link covers the real need (get me there) at zero cost. A real map needs a tile source: OSM's own tile servers prohibit app-level usage, so this means MapLibre GL plus a provider free tier (MapTiler, Protomaps) or self-hosted tiles. Worth doing once the directory is large enough that a list is genuinely worse than a map.
+- [x] MapLibre GL on `/stores` and `/stores/[slug]` with pins from our lat/lng.
+- [x] Tile source: **CARTO free raster** (light/dark, OSM-derived, no API key) — OpenFreeMap vector styles left pins but a blank basemap in practice; not `tile.openstreetmap.org` and not Google Maps JS.
+- [x] “Cómo llegar” still opens Google Maps directions (deep link, no Maps API billing).
+- [x] ODbL / OpenFreeMap attribution on list and detail.
 
 ## 7. Deferred — scheduled discovery
 

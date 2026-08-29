@@ -37,3 +37,14 @@ test("mobile navigation is a fixed bottom tab bar, not a hover-only hamburger", 
   assert.match(source, /Settings/);
   assert.match(source, /SignOutButton/);
 });
+
+test("member navigation keeps Spanish labels and the stores destination", () => {
+  const source = readFileSync(filename, "utf8");
+
+  assert.doesNotMatch(source, /<<<<<<<|=======|>>>>>>>/);
+  assert.match(source, /href: "\/collection", label: "Colección"/);
+  assert.match(source, /href: "\/wishlist", label: "Lista de deseos"/);
+  assert.match(source, /href: "\/friends", label: "Amigos"/);
+  assert.match(source, /href: "\/recommendations", label: "Descubrir"/);
+  assert.match(source, /href: "\/stores", label: "Disquerías"/);
+});

@@ -1,0 +1,47 @@
+{
+  "elements": [
+    {
+      "type": "node",
+      "id": 4944505488,
+      "lat": -34.5769646,
+      "lon": -58.4376601,
+      "tags": {
+        "shop": "music",
+        "name": "Oui Oui Records",
+        "addr:street": "Soler",
+        "addr:housenumber": "6090",
+        "addr:suburb": "Palermo",
+        "addr:city": "Ciudad Autónoma de Buenos Aires",
+        "addr:postcode": "1425",
+        "phone": "+54 11 4773-5875",
+        "website": "http://www.ouioui-records.com/"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5353274195,
+      "lat": -34.5620046,
+      "lon": -58.4575964,
+      "tags": { "shop": "music", "name": "Liverpool Discos" }
+    },
+    {
+      "type": "way",
+      "id": 473162796,
+      "center": { "lat": -34.6046054, "lon": -58.3920697 },
+      "tags": {
+        "shop": "music",
+        "name": "Zivals",
+        "addr:street": "Avenida Callao",
+        "addr:housenumber": "395",
+        "website": "http://www.zivals.com/"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1769949021,
+      "lat": -34.6,
+      "lon": -58.4,
+      "tags": { "shop": "music" }
+    }
+  ]
+}
